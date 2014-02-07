@@ -1,0 +1,223 @@
+\documentclass{article} % For LaTeX2e
+\usepackage[a4paper,margin=1.5in]{geometry}
+\usepackage[mathlines]{lineno}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{latexsym,amsbsy,amssymb,color,xspace, booktabs}
+
+\include{macros}
+\include{local_macros}
+\def\linenumberfont{\normalfont\small\sffamily}
+
+\title{Multiple Output Regression}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+%\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+\maketitle
+\linenumbers
+
+\section{Model Description}
+We describe a multiple-output regression model.
+Suppose that we have inputs $\X = \{\vx_n\}_{n=1}^N$ and outputs $\vy = \{\vy_n\}_{n=1}^N$, with $\vx_n \in \calR^D$ and $\vy_n \in \calR^P$, i.e. the output is $P$-dimensional.
+For ease of exposition, we assume that there are no missing values in any output dimension.
+The most dominant approach in GP-based multiple output regression is to compose the different outputs as some \textit{linear} mixing (combination) of some basic processes (random functions).
+Our model is also underpinned by this composition approach.
+However, to really address the issue of scalability, this model is built upon sparse GPs from the ground up.
+
+
+\subsection{Prior and Likelihood}
+We use a simple composition:
+\begin{align}
+f_i(\vx) = w_i g(\vx) + h_i(\vx), \quad i = 1 \hdots P,
+\end{align}
+where each (latent) output is the sum of two functions: one scaled latent function that is shared by all outputs and one latent function unique to the output.
+This allows the outputs to be correlated via the shared function $g(\vx)$ while still having their own independent processes.
+Furthermore we assume that $g(\vx) \sim \GP(0, k^g(\vx,\vx'; \vectheta^g))$ and $h_i(\vx) \sim \GP(0, k_i(\vx,\vx'; \vectheta_i))$, and that $h_i$ are independent GPs with their own set of hyperparameters. \\
+
+\noindent The auto-variance of the latent output using this composition is
+\begin{align}
+\nonumber
+cov[f_i(\vx), f_i(\vx')] 
+&= cov \left[ \left(w_i g(\vx) + h_i(\vx) \right) \left(w_{i} g(\vx') + h_i(\vx') \right) \right] \\
+&= w_i^2 k^g(\vx, \vx') + k_i(\vx,\vx').
+\end{align}
+\\
+\noindent The cross-covariance of the latent outputs is
+\begin{align}
+\nonumber
+cov[f_i(\vx), f_{i'}(\vx')] 
+&= cov \left[ \left(w_i g(\vx) + h_i(\vx) \right) \left(w_{i'} g(\vx') + h_{i'}(\vx') \right) \right] \\
+&= w_i w_{i'} k^g(\vx, \vx').
+\end{align} 
+
+\noindent It can be seen that the induced covariance function of $f_i(\vx)$ is very similar to that in the MTGP model.
+Specifically, in MTGP the task-correlation matrix is a free-form positive definite matrix $B$ whereas here it is the matrix $\vw \vw^T$ where $\vw = [w_1, \hdots, w_P]^T$.
+However this model is more flexible compared to MTGP because each output is also influenced by its own independent process $h_i(\vx)$.
+Note that we can also use more than one shared function $g(\vx)$, in which case it becomes the semiparametric latent force model (SLFM), again with the addition of independent process in each output dimension. \\
+
+\noindent 
+\textbf{Augmented sparse GPs}
+Toward scalable modeling, we replace standard GPs with sparse GPs augmented with \textit{different} set of inducing inputs.
+This adds much flexibility to the model as the roles of $g(\vx)$ and $h_i(\vx)$ can be quite different, so it is necessary that each has its own inducing inputs.
+Furthermore, $g(\vx)$ can be seen as a \textit{global} function operating on the entire input space (of all output dimensions), while each $h_i(\vx)$ operates only on the inputs of the $i$-th output, which can be smaller than that of $g(\vx)$.
+If more than one $g(\vx)$ is used, each $g(\vx)$ may capture a different pattern so they should also have separate inducing inputs. \\
+
+\noindent
+\textbf{Prior}
+\newcommand{\Zg}{\mat{Z}^g}
+\newcommand{\Zi}{\mat{Z}_i}
+Let $\vg = g(\X), \vh_i = h_i(\X), \vh = \{\vh_i \}_{i=1}^P$. Let $\Zg$ and $\mat{Z}^h = \{\Zi \}_{i=1}^P$ be the set of inducing inputs for $g(\vx)$ and $h_i(\vx)$; the corresponding inducing points $\vu^g$ and $\vu^h = \{\vu_i \}_{i=1}^P$.
+The prior of the augmented model is given by:
+\begin{align}
+p(\vg | \vu^g) &= \Normal(\vg; \BigMu^g, \tilde{\K}^g )\\
+p(\vu^g) &= \Normal(\vu^g; \vec{0}, k^g(\Zg, \Zg)) \\
+p(\vh | \vu^h) &= \prod_{i=1}^P \Normal(\vh_i; \BigMu_i, \tilde{\K}_i)\\
+p(\vu^h) &= \prod_{i=1}^P \Normal(\vu_i; \vec{0}, k_i(\Zi, \Zi)),
+\end{align}
+where $\BigMu^g = k^g(\X,\Zg)k(\Zg,\Zg)^{-1}\vu^g$ and $\tilde{\K}^g = k^g(\X,\X) - k(\X,\Zg)k(\Zg,\Zg)^{-1}k(\Zg,\X)$ and $\BigMu_i, \tilde{\K}_i$ are similarly defined.
+
+\noindent
+\textbf{Likelihood}
+The likelihood as usual follows the standard iid Gaussian likelihood,
+\begin{align}
+p(\vy | \vg, \vh ) = \prod_{i=1}^P p( \vy_i ; \vg, \vh_i) = \prod_{i=1}^P \Normal( \vy_i ; \vg + \vh_i, \beta_i^{-1} \I).
+\end{align}
+
+\subsection{Variational Inference in Sparse GPs Revisited}
+In this section we review inference in sparse GPs (as presented in Titsias).
+The posterior in an augmented model is $p(\vf, \vu | \vy) = p(\vf | \vu, \vy) p(\vu | \vy)$.
+The key property of such augmented GPs  is the notation of \textit{sufficient statistics}: given the inducing points $\vu$, the latent values $\vf$ are independent with any other set of latent values (e.g. the test set).
+In the optimal setting when $\vu$ is the sufficient statistics of $\vf$, it should hold that $p(\vf | \vu, \vy) = p(\vf | \vu)$ as $\vy$ is only the noisy version of $\vf$.
+This leads to choosing a variational approximation of the posterior which factorizes as $q(\vf, \vu | \vy) = p(\vf | \vu) q(\vu | \vy)$.
+Since the conditional $p(\vf | \vu)$ is known, variational inference becomes learning an optimal posterior $q(\vu | \vy)$ only. \\
+
+\noindent Also as a consequence of sufficient statistics, the approximate prediction for test targets $\vfstar$ is
+\begin{align}
+\nonumber
+p(\vfstar | \vy, \X_*) &= \int p(\vfstar | \vf, \vu, \X_*) q(\vf, \vu | \vy) \der \vf \der \vu \\
+\nonumber
+&= \int p(\vfstar | \vu) q(\vu| \vy) p(\vf | \vu) \der \vf \der \vu \\
+\label{eq:sorprediction}
+&= \int p(\vfstar | \vu) q(\vu| \vy) \der \vu
+\end{align}
+which is the same as the prediction of a SoR model (of course with a different posterior in $q(\vu | \vy)$). 
+
+\subsection{Variational Inference}
+\newcommand{\ug}{\vu^g}
+\newcommand{\uh}{\vu^h}
+Our goal of inference is to find the posterior $p(\vg, \vh, \ug, \uh | \vy)$. 
+Following the previous discussion, we assume a variational distribution which factorizes as:
+\begin{align}
+\nonumber
+q(\vg, \vh, \ug, \uh | \vy)
+ &= p(\vg | \ug) q(\ug | \vy) \prod_{i=1}^P p(\vh_i | \vu_i) q(\vu_i | \vy) \\
+ &=  q(\ug, \uh) p(\vg | \ug) \prod_{i=1}^P p(\vh_i | \vu_i)
+\end{align}
+Since the conditionals $p(\vg | \ug)$ and $p(\vh_i | \vu_i)$ are given, we need only to find the optimum $q(\ug, \uh) = q(\ug | \vy) \prod_{i=1}^P q(\vu_i | \vy)$.
+Let $q(\ug | \vy) = \Normal(\ug; \vm^g, \S^g)$ and $q(\vu_i | \vy) = \Normal(\vu_i; \vm_i, \S_i)$. \\
+
+\noindent
+To find the optimum $q(\ug, \uh)$ we optimize the evidence lowerbound of the log marginal,
+\begin{align}
+\nonumber
+\log p(\vy) \ge& \int q(\ug, \uh) \log \frac{p(\vy | \ug, \uh) p(\ug, \uh)}{q(\ug, \uh)} \der \ug \der \uh \\
+\nonumber
+=& \int q(\ug, \uh) \log p(\vy | \ug, \uh)  \der \ug \der \uh 
++ \int q(\ug, \uh) \log \frac{p(\ug, \uh)}{q(\ug, \uh)} \der \ug \der \uh \\
+\label{eq:elbo}
+=& \int q(\ug, \uh) \log p(\vy | \ug, \uh)  \der \ug \der \uh 
+- \left( KL[q(\ug) || p(\ug)] + \sum_{i=1}^P KL[q(\vu_i) || p(\vu_i)] \right),
+\end{align}
+where the last equality occurs because both of $q(\ug, \uh)$ and $p(\ug, \uh)$ fully factorize.
+Since $q(\ug), q(\vu_i), p(\ug), p(\vu_i)$ are all multivariate Gaussian distribution, the KL divergences are analytically tractable and require $\calO(M^3)$ computation, where $M$ is the largest number of inducing inputs (recall that $g(\vx)$ and $h_i(\vx)$ use separate set of inducing inputs). \\
+
+\noindent To compute the above equation we first focus on the term:
+\newcommand{\llangle}{\left\langle}
+\newcommand{\rrangle}{\right\rangle}
+\begin{align}
+\nonumber
+\log p(\vy | \ug, \uh)
+ &= \log \llangle p(\vy | \vg, \vh) \rrangle_{p(\vg,\vh | \ug, \uh)} \\
+ \nonumber
+&\ge \llangle \log p(\vy | \vg, \vh) \rrangle_{p(\vg,\vh | \ug, \uh)} \quad &\text{(Jensen's inequality)} \\
+\nonumber
+&=  \llangle \sum_{i=1}^P \sum_{n=1}^N \log p(y_{in} | g_n, h_{in}) \rrangle_{p(\vg,\vh | \ug, \uh)}  \quad &\text{(factorized likelihood)} \\
+&= \sum_{i=1}^P \sum_{n=1}^N \llangle \log p(y_{in} | g_n, h_{in}) \rrangle_{p(\vg,\vh_i | \ug, \vu_i)} \quad &\text{(linear operation)}
+\end{align}
+Observe that this is very similar to the SVI for standard GP in Hensman et al. 
+In this multiple-output model, the outputs factorize given $\vg$ and $\vh$ hence the lowerbound can be seen as sum of the lowerbounds in the single-output setting.
+
+\noindent Each individual term $l_{in} = \llangle \log p(y_{in} | g_n, h_{in}) \rrangle_{p(\vg,\vh_i | \ug, \vu_i)}$ can be computed as follows:
+\begin{align}
+\nonumber
+l_{in} &= \int \log p(y_{in} | g_n, h_{in}) p(\vg | \ug) p(\vh_i | \vu_i) \der \vg \der \vh_i \\
+\nonumber
+&= \int \log \Normal(y_{in} ; w_i g_n + h_{in}, \beta_i^{-1}) 
+\Normal(g_n ; \mu^g_n, \tilde{k}^g_{nn})
+\Normal(h_{in} ; \mu_{in}, (\tilde{k}_{inn}) \der g_n \der h_{in} \\
+\nonumber
+&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int (y_{in} - w_i g_n - h_{in}) \beta (y_{in} - w_i g_n - h_{in})
+\Normal(g_n ; \mu^g_n, \tilde{k}^g_{nn})
+\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn} \der g_n \der h_{in} \\
+\nonumber
+&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int \left[(y_{in} - h_{in} - w_i \mu^g_n) \beta (y_{in} - h_{in} - w_i \mu^g_n) + w_i^2 \beta \tilde{k}^g_{nn} \right] 
+\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn} \der h_{in} \\
+\nonumber
+&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} w_i^2 \beta \tilde{k}^g_{nn}
+- \frac{1}{2} \beta \tilde{k}_{inn} - \frac{1}{2} (y_{in} - w_i \mu^g_n - \mu_{in}) \beta (y_{in} - w_i \mu^g_n - \mu_{in}) \\
+&= \log \Normal(y_{in}; w_i \mu^g_n + \mu_{in}, \beta_i^{-1})  - \frac{1}{2} \beta_i (w_i^2 \tilde{k}^g_{nn} + \tilde{k}_{inn}).
+\end{align}
+Notice that the above expression is very similar to the single-output case.
+Hence our derivation here can be seen as the \textit{generalization} of SVI from the standard GP regression to multiple-output regression.
+
+\noindent Substituting $l_{in}$ into equation \ref{eq:elbo} and carrying similar integration we get,
+\begin{align}
+\log p(\vy)
+\ge& \sum_{i=1}^P \sum_{n=1}^N
+ \left( \log \Normal(y_{in}; \tilde{\mu}_{in}, \beta^{-1})
+         - \frac{1}{2} \beta_i (w_i^2 \tilde{k}^g_{nn} + \tilde{k}_{inn})
+         - \frac{1}{2} \trace \left( w_i^2 \S^g \mat{\Lambda}^g_n + \S_i \mat{\Lambda}_{in} \right)
+\right) \\
+&- \left( KL[q(\ug) || p(\ug)] + \sum_{i=1}^P KL[q(\vu_i) || p(\vu_i)] \right),
+\end{align}
+where 
+\begin{align}
+\tilde{\mu}_{in}
+&= w_i k^g(\vx_n, \Zg)k^g(\Zg,\Zg)^{-1}\vm^g + k_i(\vx_n, \Zi)k_i(\Zi,\Zi)^{-1}\vm_i \\
+\mat{\Lambda}^g_n
+&= \beta k^g(\Zg,\Zg)^{-1} k^g(\Zg, \vx_n) k^g(\vx_n, \Zg) k^g(\Zg,\Zg)^{-1} \\
+\mat{\Lambda}_{in}
+&= \beta k_i(\Zi,\Zi)^{-1} k_i(\Zi, \vx_n) k_i(\vx_n, \Zg) k_i(\Zg,\Zg)^{-1}.
+\end{align}
+
+\noindent Again, this clearly shows that this model generalizes the standard GP regression. This can be verified by setting $P = 1$, $w_i = 1$ and $h_i(\vx) = 0$ to recover the bound in Hensman et al.
+Due to the decomposition of this bound, we can use stochastic gradient descent to learn the variational parameters.
+
+\subsection{Prediction}
+The predictive distribution of the $i$-th output for a test input $\vx_*$ is 
+\begin{align}
+p(\fstar | \vy, \vx_*) = \int \Normal(\fstar; w_i g_* + h_{i*}, 0) p(g_* | \vy, \vx_*) p(h_{i*} | \vy, \vx_*) \der g_* \der h_{i*},
+\end{align}
+where $p(g_* | \vy, \vx_*) = \Normal(g_*; \mu^g_*, s^g_*)$ and $p(h_{i*} | \vy, \vx_*) = p(h_{i*}; \mu_{i*}, s_{i*})$ are the predictive distributions of the sparse GPs as given in \ref{eq:sorprediction}.
+Therefore we have:
+\begin{align}
+p(\fstar | \vy, \vx_*) = \Normal(\fstar; w_i \mu^g_* + \mu_{i*}, s^g_* + s_{i*}). 
+\end{align}
+
+%\begin{linenomath}
+%\begin{align}
+%\sum_{i,h} \lambda_i \lambda_h cov [f(\vx, \vx')]
+%&= \sum_{i,h}   \sum_{j,j'} \lambda_i g(\vx_i - \vs_j) k(\vs_j, \vs_{j'}) \lambda_h g(\vx_h - \vs_j') \\
+%\end{align}
+%\end{linenomath}
+  
+\end{document}
