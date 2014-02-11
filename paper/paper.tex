@@ -181,6 +181,7 @@ Hence our derivation here can be seen as the \textit{generalization} of SVI from
 
 \noindent Substituting $l_{in}$ into equation \ref{eq:elbo} and carrying similar integration we get,
 \begin{align}
+\nonumber
 \log p(\vy)
 \ge& \sum_{i=1}^P \sum_{n=1}^N
  \left( \log \Normal(y_{in}; \tilde{\mu}_{in}, \beta^{-1})
@@ -219,5 +220,99 @@ p(\fstar | \vy, \vx_*) = \Normal(\fstar; w_i \mu^g_* + \mu_{i*}, s^g_* + s_{i*})
 %&= \sum_{i,h}   \sum_{j,j'} \lambda_i g(\vx_i - \vs_j) k(\vs_j, \vs_{j'}) \lambda_h g(\vx_h - \vs_j') \\
 %\end{align}
 %\end{linenomath}
-  
+
+\section{Appendix}
+Here we derive the gradients of the lower bound wrt the  hyperparameters.
+Consider the lower bound in Hensman et al (as a function of the hyperparameters):
+\begin{align}
+\nonumber
+\calL
+=& \log \Normal(\vy; \K_{NM} \K_{MM}^{-1} \vm, \beta^{-1}\I)
+ - \frac{1}{2} \beta \trace \tilde{\K}
+ - \frac{1}{2} \beta \trace (\S\K_{MM}^{-1} \K_{MN} \K_{NM} \K_{MM}^{-1}) \\  \nonumber
+&- \frac{1}{2} \left( \log |\K_{MM}| + \trace(\K_{MM}^{-1}(\vm \vm^T + \S)) \right) \\ \nonumber
+=& \underbrace{\log \Normal(\vy; \A \vm, \beta^{-1}\I)}_{\calL_1}
+ - \underbrace{\frac{1}{2} \beta \trace (\K_{NN} - \A\K_{MN})}_{\calL_2}
+ - \underbrace{\frac{1}{2} \beta \trace (\S\A^T\A)}_{\calL_3} \\  
+&- \underbrace{\frac{1}{2} \left( \log |\K_{MM}| + \trace(\K_{MM}^{-1}(\vm \vm^T + \S)) \right)}_{\calL_4},
+\end{align}
+where $\A = \K_{NM} \K_{MM}^{-1}$.
+Notice that we have re-written the sum of individual terms in matrix form which will make the derivation and also computation easier.
+
+\subsection{Derivative of the Noise Hyperparameter}
+The derivative of the noise hyperparameter $\beta$ is easily computed as:
+\begin{align}
+\frac{d \calL}{d\beta} = \frac{N}{2\beta} - \frac{1}{2} (\vy - \A\vm)^T (\vy - \A\vm) - \frac{\calL_2}{\beta} - \frac{\calL_3}{\beta}.
+\end{align}
+\subsection{Derivatives of the Covariance Hyperparameters}  
+To simplify the math, we utilize the matrix $\A$ defined above.
+Firstly, the derivative of $\A$ wrt a covariance hyperparameter $t$ is given by:
+\begin{align}
+\frac{d \A}{dt} = \left(\frac{d\K_{NM}}{dt} - \A \frac{d \K_{MM}}{dt}\right)\K_{MM}^{-1}.
+\end{align}
+The derivatives of $\calL_1, \calL_2, \calL_3 \text{ and } \calL_4$ are thus given by:
+\begin{align}
+\frac{d \calL_1}{dt} &= \beta (\vy - \A\vm)^T \frac{d \A}{dt} \vm \\
+\frac{d \calL_2}{dt} &= \frac{1}{2}\beta \trace \left(\frac{d\K_{NN}}{dt} - \A \frac{d\K_{MN}}{dt} - \frac{d\A}{dt} \K_{MN}\right) \\
+\frac{d \calL_3}{dt} &= \beta \trace \left(\A \S \frac{d\A^T}{dt} \right) \\
+\frac{d \calL_4}{dt} &= \frac{1}{2}  \trace \left(\K_{MM}^{-1} \frac{d \K_{MM}}{dt}\right) - \frac{1}{2} \trace \left(\K_{MM}^{-1} \frac{d \K_{MM}}{dt} \K_{MM}^{-1} (\vm \vm^T + \S) \right) 
+\end{align}
+The derivatives are then computed by taking the derivatives of the covariance matrices $\K_{NN} (\text{the diagonal only}), \K_{NM} \text{ and }  \K_{MM}$, hence the covariance function, wrt the hyperparameters. 
+
+\subsection{Derivatives of the Inducing Inputs}
+To compute the derivatives of $\calL$ wrt the inducing inputs, first notice that $\Z = \{\vz_m\}_{m=1}^M$ are also parameters of the covariance matrices $\K_{NM}$ and $\K_{MM}$.
+Hence the derivative wrt a dimension of an inducing input, i.e. $z_{mj}$, is the same as that of $\frac{d \calL}{dt}$.
+
+%Since $MD$ parameters are needed for the inducing inputs, it appears that the derivatives of all inducing inputs would require $\calO(MD \times M^3)$ in computation.
+%However, this complexity can actually be reduced to $\calO(DM^3)$ using the following lemma. \\
+%
+%\noindent \textbf{Lemma} Let $A, B$ be two matrices of size $N \times M$ and $M \times N$, respectively. Furthermore, $B$ has the property that only one of its rows or columns is non-zero. The complexity of $\trace(AB)$ is only $\calO(N)$. \\
+%
+%\noindent \textbf{Proof} Let $m <= M$ be the non-zero row of $B$. We have
+%\begin{align}
+%\trace (AB) = \sum_{i=1}^N \sum_{j=1}^M A_{ij} B_{ji} = \sum_{i=1}^N A_{im} B_{mi},
+%\end{align}
+%which clearly takes $\calO(N)$. It is easy to see that the lemma also holds when $B$ is symmetric and only one of its row and the corresponding column is non-zero. \\
+%
+%\noindent To exploit the property in the Lemma, we re-write $\frac{d \calL_1}{dt}, \frac{d \calL_2}{dt}, \frac{d \calL_3}{dt}, \frac{d \calL_4}{dt}$ by expanding $\frac{d\A}{dt}$ (here $t = z_{mj}$):
+
+\noindent We re-write $\frac{d \calL_1}{dt}, \frac{d \calL_2}{dt}, \frac{d \calL_3}{dt}, \frac{d \calL_4}{dt}$ by expanding $\frac{d\A}{dt}$ (here $t = z_{mj}$):
+\begin{align}
+\nonumber
+% dL1
+\frac{d \calL_1}{dt}
+ &= \beta \trace (\vy - \A\vm)^T \left(\frac{d\K_{NM}}{dt} -  \A \frac{d \K_{MM}}{dt}\right)\K_{MM}^{-1} \vm \\
+&= \beta \trace \K_{MM}^{-1} \vm (\vy - \A\vm)^T \frac{d\K_{NM}}{dt} 
+-\beta \trace \K_{MM}^{-1} \vm (\vy - \A\vm)^T \A \frac{d \K_{MM}}{dt} \\
+%dL2
+\frac{d \calL_2}{dt}
+&= - \beta \trace \A^T \frac{d \K_{NM}}{dt}
+ + \frac{1}{2} \beta \trace \A^T \A \frac{d \K_{MM}}{dt}  \\
+% dL3
+\frac{d \calL_3}{dt}
+&= \beta \trace \K_{MM}^{-1} \S \A^T \frac{d \K_{NM}}{dt}
+ - \beta \trace \K_{MM}^{-1} \S \A^T \A \frac{d\K_{MM}}{dt}\\
+% dL4
+\frac{d \calL_4}{dt}
+ &= \frac{1}{2}  \trace \K_{MM}^{-1} \frac{d \K_{MM}}{dt}
+  - \frac{1}{2} \trace \K_{MM}^{-1} (\vm \vm^T + \S) \K_{MM}^{-1} \frac{d \K_{MM}}{dt} 
+\end{align}
+From the above equations we see that,
+\begin{align}
+\frac{d\calL}{dt} = \trace \D_1 \frac{d\K_{NM}}{dt} + \trace \D_2 \frac{d \K_{MM}}{dt},
+\end{align}
+where 
+\begin{align}
+\D_1 =& \beta \K_{MM}^{-1} \vm (\vy - \A\vm)^T
+ + \beta \A^T
+ - \beta \K_{MM}^{-1} \S \A^T \\ \nonumber
+\D_2 =& -\beta \trace \K_{MM}^{-1} \vm (\vy - \A\vm)^T \A
+ - \frac{1}{2} \beta \A^T \A
+  + \beta \K_{MM}^{-1} \S \A^T \A	 \\ 
+  &-\frac{1}{2} \K_{MM}^{-1} + \frac{1}{2} \K_{MM}^{-1} (\vm \vm^T + \S) \K_{MM}^{-1}
+\end{align}
+Notice that $\D_1$ and $\D_2$ can be pre-computed with a cost of $\calO(M^3)$ (or $\calO(N_bM^2)$ if the minibatch size $N_b > M$).
+The computational cost of taking derivatives of $MD$ inducing parameters is thus $\calO(M^3 + MDM) = \calO(M^3)$ as the cost of $\trace \D_2 \frac{d \K_{MM}}{dt}$ is $\calO(M)$ due to the fact that only one row (and its corresponding column) of $\frac{d \K_{MM}}{dt}$ is non-zero.
+This fact can be further exploited to perform vectorized operation, for e.g. in Matlab, such that the iteration over all inducing inputs can be avoided.
+
 \end{document}
