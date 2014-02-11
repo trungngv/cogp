@@ -1,5 +1,5 @@
-function [logL,dloghyp,dbeta] = sviELBO(x,y,z,m,S,cf,Lmm,Kmminv,Knm,A)
-%SVIUPDATE [fval,dloghyp,dbeta] = sviELBO(x,y,z,m,S,mem,cf)
+function [logL,dloghyp,dbeta,dz] = sviELBO(x,y,z,m,S,cf,Lmm,Kmminv,Knm,A)
+%SVIELBO [fval,dloghyp,dbeta,dz] = sviELBO(x,y,z,m,S,cf,Lmm,Kmminv,Knm,A)
 %   
 % Lowerbound as a function of the hyperparameters (and inducing inputs) and
 % their derivatives.
@@ -20,17 +20,17 @@ function [logL,dloghyp,dbeta] = sviELBO(x,y,z,m,S,cf,Lmm,Kmminv,Knm,A)
 % 10/02/14
 N = size(x,1);
 M = size(z,1);
-betaval = cf.betaval;
+betaval = cf.beta;
 if isempty(Lmm)
   Kmm = feval(cf.covfunc, cf.loghyp, z);
-  Lmm = jit_chol(Kmm,3); clear Kmm;
+  Lmm = jit_chol(Kmm,3);
   Kmminv = invChol(Lmm);
   Knm = feval(cf.covfunc, cf.loghyp, x, z);
   A = Knm*Kmminv;
 end
 
 %TODO
-% 1) optimize some code if possible
+% 1) optimize code if possible
 % 2) remove terms independent of hypers: S, M, N,pi
 diagKnn = feval(cf.covfunc, cf.loghyp, x, 'diag');
 yMinusAm = y - A*m;
@@ -57,7 +57,40 @@ if nargout >= 2
   end
   % noise precision betaval
   dbeta = 0.5*N/betaval - 0.5*sum(yMinusAm.^2) -logTilde/betaval - logTrace/betaval;
+  
+  % inducing inputs
+  dz = zeros(size(z));
+  ell2 = exp(2*cf.loghyp(1:end-1));
+  ASKmminv = A*S*Kmminv;
+  D1 = yMinusAm*m'*Kmminv + A - ASKmminv;
+  D1 = betaval*D1;
+  D2 = -betaval*Kmminv*m*yMinusAm'*A - 0.5*betaval*(A')*A + betaval*ASKmminv'*A;
+  D2 = D2 - 0.5*Kmminv + 0.5*Kmminv*(m*m'+S)*Kmminv;
+  for i=1:size(z,2)
+    DKmm = bsxfun(@minus,z(:,i),z(:,i)');
+    DKmm = -(Kmm.*DKmm)/ell2(i);
+    DKmn = bsxfun(@minus,z(:,i),x(:,i)');
+    DKmn = -(Knm'.*DKmn)/ell2(i);
+    dz(:,i) = sum(D1'.*DKmn,2) + sum(D2.*DKmm,2) + sum(D2'.*DKmm,2) - diag(D2).*diag(DKmm);
+  end
 end
 
 return;
+end
 
+% non-vectorized version of inducing derivatives for sanity check
+function dz = dzslow(D1,D2,Kmm,Knm,M,N,x,z,ell2)
+  dz = zeros(size(z));
+  for m=1:size(z,1)
+    for j=1:size(z,2)
+      DKmm = zeros(M,M);
+      DKmm(:,m) = repmat(z(m,j),M,1) - z(:,j);
+      DKmm(m,:) = DKmm(:,m)';
+      DKmm = -(Kmm.*DKmm)/ell2(j);
+      DKmn = zeros(M,N);
+      DKmn(m,:) = repmat(z(m,j),1,N) - x(:,j)';
+      DKmn = -(Knm'.*DKmn)/ell2(j);
+      dz(m,j) = trace(D1*DKmn) + trace(D2*DKmm);
+    end
+  end
+end
