@@ -6,20 +6,20 @@ function chkGradELBO()
 % See also
 %   sviELBO
 
-rng(1110, 'twister');
+%rng(1110, 'twister');
 N = 1000; M = 50; D = 2;
 x = 10*rand(N,D);
 y = 2*rand(N,1);
-z = 10*rand(M,D);
-m = rand(M,1);
-L = rand(M,M);
-S = L'*L;
-cf.beta = 1e-2;
 cf.covfunc = 'covSEard';
-cf.loghyp = [log(rand(D,1)); 1+rand];
+params.z = 10*rand(M,D);
+params.m = rand(M,1);
+L = rand(M,M);
+params.S = L'*L;
+params.beta = 1e-2;
+params.loghyp = [log(rand(D,1)); 1+rand];
 % test for hyperparameters
-theta = [cf.loghyp; cf.beta];
-[mygrad, delta] = gradchek(theta', @f, @grad, x,y,z,m,S,cf);
+theta = [params.loghyp; params.beta];
+[mygrad, delta] = gradchek(theta', @f, @grad, x,y,params,cf);
 delta = abs(delta);
 [valDiff,idx] = max(delta);
 percentageDiff = (valDiff*100/abs(mygrad(idx)));
@@ -33,8 +33,8 @@ else
 end
 
 % test for inducing inputs
-theta = z(:);
-[mygrad, delta] = gradchek(theta', @fz, @gradz, x,y,m,S,cf);
+theta = params.z(:);
+[mygrad, delta] = gradchek(theta', @fz, @gradz, x,y,params,cf);
 delta = abs(delta);
 [valDiff,idx] = max(delta);
 percentageDiff = (valDiff*100/abs(mygrad(idx)));
@@ -49,26 +49,28 @@ end
 
 end
 
-function fval = f(theta,x,y,z,m,S,cf)
-  cf.loghyp = theta(1:end-1)';
-  cf.beta = theta(end);
-  fval = sviELBO(x,y,z,m,S,cf,[],[],[],[]);
+function fval = f(theta,x,y,params,cf)
+  params.loghyp = theta(1:end-1)';
+  params.beta = theta(end);
+  fval = sviELBO(x,y,params,cf,[],[],[],[]);
 end
 
-function g = grad(theta,x,y,z,m,S,cf)
-  cf.loghyp = theta(1:end-1)';
-  cf.beta = theta(end);
-  [~, gloghyp,gbeta] = sviELBO(x,y,z,m,S,cf,[],[],[],[]);
+function g = grad(theta,x,y,params,cf)
+  params.loghyp = theta(1:end-1)';
+  params.beta = theta(end);
+  [~, gloghyp,gbeta] = sviELBO(x,y,params,cf,[],[],[],[]);
   g = [gloghyp; gbeta]';
 end
 
-function fval = fz(theta,x,y,m,S,cf)
-  z = reshape(theta,numel(m),[]);
-  fval = sviELBO(x,y,z,m,S,cf,[],[],[],[]);
+function fval = fz(theta,x,y,params,cf)
+  z = reshape(theta,numel(params.m),[]);
+  params.z = z;
+  fval = sviELBO(x,y,params,cf,[],[],[],[]);
 end
 
-function g = gradz(theta,x,y,m,S,cf)
-  z = reshape(theta,numel(m),[]);
-  [~,~,~,gz] = sviELBO(x,y,z,m,S,cf,[],[],[],[]);
+function g = gradz(theta,x,y,params,cf)
+  z = reshape(theta,numel(params.m),[]);
+  params.z = z;
+  [~,~,~,gz] = sviELBO(x,y,params,cf,[],[],[],[]);
   g = gz(:)';
 end

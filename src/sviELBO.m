@@ -1,38 +1,40 @@
-function [logL,dloghyp,dbeta,dz] = sviELBO(x,y,z,m,S,cf,Lmm,Kmminv,Knm,A)
-%SVIELBO [fval,dloghyp,dbeta,dz] = sviELBO(x,y,z,m,S,cf,Lmm,Kmminv,Knm,A)
+function [logL,dloghyp,dbeta,dz] = sviELBO(x,y,params,cf,Lmm,Kmminv,Knm,A)
+%SVIELBO [fval,dloghyp,dbeta,dz] = sviELBO(x,y,params,cf,Lmm,Kmminv,Knm,A)
 %   
 % Lowerbound as a function of the hyperparameters (and inducing inputs) and
-% their derivatives.
+% their derivatives. Note that the inducing derivatives are for the
+% SEard covariance function only.
 %
 % INPUT
 %   - x : inputs (in SVI, this is a mini-batch)
 %   - y : outputs (of inputs x)
-%   - z : inducing inputs
-%   - m,S : current variational parameters
-%   - cf : options for the optimization procedure and hyperparameters
+%   - params : parameters structure
+%   - cf : cf.covfunc 
 %   - Lmm, Kmminv, Knm, A : [optional] previously computed values of those
 %   (see also SVIUPDATE).
 %
 % OUTPUT
-%   - logL, dloghyp : objective value and its derivatives
+%   - logL, dloghyp, dbeta, dz : objective value and its derivatives
 %
 % Trung Nguyen
-% 10/02/14
+% 11/02/14
+z = params.z;
+m = params.m;
+S = params.S;
+betaval = params.beta;
+loghyp = params.loghyp;
 N = size(x,1);
 M = size(z,1);
-betaval = cf.beta;
+Kmm = feval(cf.covfunc, loghyp, z);
 if isempty(Lmm)
-  Kmm = feval(cf.covfunc, cf.loghyp, z);
   Lmm = jit_chol(Kmm,3);
   Kmminv = invChol(Lmm);
-  Knm = feval(cf.covfunc, cf.loghyp, x, z);
+  Knm = feval(cf.covfunc, loghyp, x, z);
   A = Knm*Kmminv;
 end
 
-%TODO
-% 1) optimize code if possible
-% 2) remove terms independent of hypers: S, M, N,pi
-diagKnn = feval(cf.covfunc, cf.loghyp, x, 'diag');
+%TODO optimize code if possible
+diagKnn = feval(cf.covfunc, loghyp, x, 'diag');
 yMinusAm = y - A*m;
 logN = -0.5*N*log(2*pi/betaval) - 0.5*betaval*sum(yMinusAm.^2); % \sum logN() part
 logTilde = 0.5*betaval*sum(diagKnn - diagProd(A,Knm')); % Ktilde part
@@ -41,13 +43,13 @@ logKL = 0.5*(logdetChol(Lmm) - logdet(S) + traceABsym(Kmminv,S) + m'*Kmminv*m - 
 logL = logN - logTilde - logTrace - logKL;
 %logLTrue = l3bound(y,Knm,Lmm,Kmminv,diagKnn - diagProd(A,Knm'),betaval,m,S);
 
-if nargout >= 2
-  dloghyp = zeros(size(cf.loghyp));
-  for i=1:numel(cf.loghyp)
+if nargout >= 2     %covariance derivatives
+  dloghyp = zeros(size(params.loghyp));
+  for i=1:numel(params.loghyp)
     % covSEard returns dK / dloghyper 
-    dKnm = feval(cf.covfunc, cf.loghyp, x, z, i);
-    dKmm = feval(cf.covfunc, cf.loghyp, z, [], i);
-    dKnn = feval(cf.covfunc, cf.loghyp, x, 'diag', i);
+    dKnm = feval(cf.covfunc, loghyp, x, z, i);
+    dKmm = feval(cf.covfunc, loghyp, z, [], i);
+    dKnn = feval(cf.covfunc, loghyp, x, 'diag', i);
     dA = (dKnm - A*dKmm)*Kmminv;
     dlogN = betaval*(yMinusAm'*dA)*m;
     dTilde = 0.5*betaval*(sum(dKnn) - sum(diagProd(A,dKnm')) - sum(diagProd(dA,Knm')));
@@ -55,12 +57,15 @@ if nargout >= 2
     dKL = 0.5*(traceABsym(Kmminv,dKmm) - traceABsym(Kmminv,dKmm*Kmminv*(m*m'+S)));
     dloghyp(i) = dlogN - dTilde - dTrace - dKL;
   end
-  % noise precision betaval
+end
+
+if nargout >= 3   % noise derivative
   dbeta = 0.5*N/betaval - 0.5*sum(yMinusAm.^2) -logTilde/betaval - logTrace/betaval;
-  
-  % inducing inputs
+end
+
+if nargout == 4   % inducing inputs derivatives
   dz = zeros(size(z));
-  ell2 = exp(2*cf.loghyp(1:end-1));
+  ell2 = exp(2*loghyp(1:end-1));
   ASKmminv = A*S*Kmminv;
   D1 = yMinusAm*m'*Kmminv + A - ASKmminv;
   D1 = betaval*D1;
