@@ -380,4 +380,82 @@ Notice that $\D_1$ and $\D_2$ can be pre-computed with a cost of $\calO(M^3)$ (o
 The computational cost of taking derivatives of $MD$ inducing parameters is thus $\calO(M^3 + MDM) = \calO(M^3)$ as the cost of the two $\trace$ operators is $\calO(M)$ due to the fact that only $\calO(M)$ elements of $\deriv{\K_{MM}}{t}$ or $\deriv{\K_{NM}}{t}$ are non-zero.
 This fact can be further exploited to perform vectorized operation, for e.g. in Matlab, such that the iteration over all inducing inputs can be avoided.
 
+\subsection{Analysis on Learning of the Inducing Inputs}
+In this section we present some analysis on learning of the inducing inputs under the stochastic variational inference procedure on some toy problems.
+We use three real-valued truth functions of scalar inputs: the first one was used in Snelson et al, the second one is a function $f(x) = \sin(x) + \cos(x)$, and the third one is a sample function generated from a GP with squared exponential with ARD covariance function with a lengthscale of 2 and signal variance of 1.
+
+\noindent \paragraph{Experimental Settings} We use gpsvi to optimize for \textit{all} of the parameters in the model, i.e. the variational parameters of the posterior, the covariance hyperparameters, the noise hyperparameter, and the inducing inputs.
+For the hyperparameters, we use a momentum of $0.9$ and a fixed learn rate of $1e-5$. 
+For the variational parameters, we use a learn rate of $0.01$ (no momentum was used).
+We vary the learn rate of the inducing inputs from $1e{-2}$ to $1e{-6}$.
+Using momentum for the inducing inputs does not seem to have much effects.
+The maximum number of iterations is 500, the batch size 5, and the number of inducing values 10.
+
+% effect of learn rate on inducing inputs
+\noindent \paragraph{Effects of the Learn Rates }
+In Figure \ref{fig1}, \ref{fig2}, and \ref{fig3}, we show the lower bounds, predictive distributions, and the learned inducing inputs using stochastic variational inference with varying learn rates for the inducing inputs.
+We also show the results with FITC for comparison.
+It can be seen from the figures that, as typical in stochastic optimization, the behavior of GPSVI is very sensitive to the learn rate.
+In particular, when the rate is slow e.g. $1e{-5}$, almost no progress was made in learning the inducing inputs.
+However, when the rate increases to e.g. $1e{-3}$, the inducing inputs are spread out more evenly in the input space compared to the initial locations.
+Although not shown the in figures, when the learn rate is too large, e.g. $1e{-02}$, the inducing inputs may spread to regions far outside of the training intervals.
+An example of this phenomenon can be observed in the top left figure in Figure \ref{fig1}.
+The learn rates also affect the evidence lower bound which seems to wiggle more compared to not learning the inducing inputs.
+The predictive distributions are sensible particularly because the toy functions exhibit sparsity and are easy to learn.  \\
+
+\noindent The results of this qualitative analysis do not seem to suggest that learning of the inducing inputs does not work in GPSVI.
+Its effectiveness perhaps rests upon empirical performance on real datasets.
+
+\noindent \paragraph{The Noise Parameter} It seems harder to set the initial value and the learning rate of the noise parameter compared to standard GP. 
+While a large range of values of noise can be used in standard gp or fitc (e.g. 0.5), a very small value of noise $1e{-02}$, which is the true noise, is required for gpsvi to work well.
+It appears that an adaptive learning rate may be required for the noise parameter.
+
+\begin{figure*}
+\centering
+\begin{tabular}{ccc}
+\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-03.eps} &
+\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-04.eps} &
+\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-05.eps} \\
+\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-03-bound.eps} &
+\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-04-bound.eps} &
+\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-05-bound.eps} \\ 
+(a) learn rate = $1e{-3}$ & (b) learn rate = $1e{-4}$ & (c) learn rate = $1e{-5}$ \\
+\multicolumn{3}{c}{\includegraphics[scale=0.4]{figures/func1-fitc.eps}}
+\end{tabular}
+\caption{Predictive distributions and learned inducing inputs by GPSVI and FITC for the first function. Top row: GPSVI with different learning rates (the rates decreases from left to right). Bottom row: FITC. Magenta dots : training points. Solid blue line: predictive mean. Grey-shaded area and solid black lines: two standard deviations of the predictive distributions. Black (+) crosses: initial locations of inducing inputs. Magenta (+) crosses: learned locations of inducing inputs.  Middle row: the evidence lower bound of gpsvi vs. iteration.}
+\label{fig1}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\begin{tabular}{ccc}
+\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-03.eps} &
+\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-04.eps} &
+\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-05.eps} \\
+\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-03-bound.eps} &
+\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-04-bound.eps} &
+\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-05-bound.eps} \\ 
+(a) learn rate = $1e{-3}$ & (b) learn rate = $1e{-4}$ & (c) learn rate = $1e{-5}$ \\
+\multicolumn{3}{c}{\includegraphics[scale=0.4]{figures/func2-fitc.eps}}
+\end{tabular}
+\caption{Predictive distributions and learned inducing inputs by GPSVI and FITC for the second function. The legends are same as in Figure 1.}
+\label{fig2}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\begin{tabular}{ccc}
+\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-03.eps} &
+\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-04.eps} &
+\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-05.eps} \\
+\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-03-bound.eps} &
+\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-04-bound.eps} &
+\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-05-bound.eps} \\ 
+(a) learn rate = $1e{-3}$ & (b) learn rate = $1e{-4}$ & (c) learn rate = $1e{-5}$ \\
+\multicolumn{3}{c}{\includegraphics[scale=0.4]{figures/func3-fitc.eps}}
+\end{tabular}
+\caption{Predictive distributions and learned inducing inputs by GPSVI and FITC for the third function. The legends are same as in Figure 1.}
+\label{fig3}
+\end{figure*}
+
 \end{document}
