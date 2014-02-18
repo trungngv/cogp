@@ -100,16 +100,24 @@ In the optimal setting when $\u$ is the sufficient statistics of $\f$, it should
 This leads to choosing a variational approximation of the posterior which factorizes as $q(\f, \u | \y) = p(\f | \u) q(\u | \y)$.
 Since the conditional $p(\f | \u)$ is known, variational inference becomes learning an optimal posterior $q(\u | \y)$ only. \\
 
-\noindent Also as a consequence of sufficient statistics, the approximate prediction for test targets $\vfstar$ is
+\noindent Also as a consequence of sufficient statistics, the approximate prediction for test targets $\vfstar$ at test inputs $\X_*$ is
 \begin{align}
 \nonumber
 p(\vfstar | \y, \X_*) &= \int p(\vfstar | \f, \u, \X_*) q(\f, \u | \y) \der \f \der \u \\
 \nonumber
-&= \int p(\vfstar | \u) q(\u| \y) p(\f | \u) \der \f \der \u \\
+&= \int p(\vfstar | \u) q(\u| \y) p(\f | \u) \der \f \der \u \\ \nonumber
+&= \int p(\vfstar | \u) q(\u| \y) \der \u \\
 \label{eq:sorprediction}
-&= \int p(\vfstar | \u) q(\u| \y) \der \u
+&= \Normal(\vfstar; \bs{\mu_*},\vec{s_*})
 \end{align}
-which is the same as the prediction of a SoR model (of course with a different posterior in $q(\u | \y)$). 
+where,
+\begin{align}
+\nonumber
+\bs{\mu_*} &= \K_{*z} \K_{zz}^{-1}\m \\ 
+\nonumber
+\S_* &= \K_{**} - \K_{*z} \left(\K_{zz}^{-1} - \K_{zz}^{-1} \S \K_{zz}^{-1} \right) \K_{*z}^T.
+\end{align}
+ Here $\K_{*z}$ is the covariance matrix between test and inducing inputs, $\K_{zz}$ is the covariance matrix of the inducing inputs.
 
 \subsection{Variational Inference}
 \newcommand{\ug}{\u_g}
@@ -165,15 +173,15 @@ l_{in} &= \int \log p(y_{in} | g_n, h_{in}) p(\g | \ug) p(\h_i | \u_i) \der \g \
 \Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
 \Normal(h_{in} ; \mu_{in}, (\tilde{k}_{inn}) \der g_n \der h_{in} \\
 \nonumber
-&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int (y_{in} - w_i g_n - h_{in}) \beta (y_{in} - w_i g_n - h_{in})
+&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int (y_{in} - w_i g_n - h_{in}) \beta_i (y_{in} - w_i g_n - h_{in})
 \Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
 \Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der g_n \der h_{in} \\
 \nonumber
-&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int \left[(y_{in} - h_{in} - w_i \mu_{gn}) \beta (y_{in} - h_{in} - w_i \mu_{gn}) + w_i^2 \beta \tilde{k}_{gnn} \right] 
+&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int \left[(y_{in} - h_{in} - w_i \mu_{gn}) \beta_i (y_{in} - h_{in} - w_i \mu_{gn}) + w_i^2 \beta_i \tilde{k}_{gnn} \right] 
 \Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der h_{in} \\
 \nonumber
-&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} w_i^2 \beta \tilde{k}_{gnn}
-- \frac{1}{2} \beta \tilde{k}_{inn} - \frac{1}{2} (y_{in} - w_i \mu_{gn} - \mu_{in}) \beta (y_{in} - w_i \mu_{gn} - \mu_{in}) \\
+&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} w_i^2 \beta_i \tilde{k}_{gnn}
+- \frac{1}{2} \beta_i \tilde{k}_{inn} - \frac{1}{2} (y_{in} - w_i \mu_{gn} - \mu_{in}) \beta_i (y_{in} - w_i \mu_{gn} - \mu_{in}) \\
 &= \log \Normal(y_{in}; w_i \mu_{gn} + \mu_{in}, \beta_i^{-1})  - \frac{1}{2} \beta_i (w_i^2 \tilde{k}_{gnn} + \tilde{k}_{inn}),
 \end{align}
 where $\tilde{k}_{gnn} = (\tilde{\K}_g)_{n,n}, \tilde{k}_{inn} = (\tilde{\K}_i)_{n,n}, \mu_{gn} = (\Mu_g)_n, \text{ and } \mu_{in} = (\Mu_i)_n$.
@@ -192,13 +200,14 @@ Hence our derivation here can be seen as the \textit{generalization} of SVI from
 &- \left( \KL[q(\ug) || p(\ug)] + \sum_{i=1}^P \KL[q(\u_i) || p(\u_i)] \right) \define \calL,
 \end{align}
 where 
+%TODO \Lambda_gn depends on the output i so need a better notation
 \begin{align}
 \tilde{\mu}_{in}
 &= w_i k_g(\x_n, \Zg)k_g(\Zg,\Zg)^{-1}\m_g + k_i(\x_n, \Zi)k_i(\Zi,\Zi)^{-1}\m_i \\
 \mat{\Lambda}_{gn}
-&= \beta k_g(\Zg,\Zg)^{-1} k_g(\Zg, \x_n) k_g(\x_n, \Zg) k_g(\Zg,\Zg)^{-1} \\
+&= \beta_i k_g(\Zg,\Zg)^{-1} k_g(\Zg, \x_n) k_g(\x_n, \Zg) k_g(\Zg,\Zg)^{-1} \\
 \mat{\Lambda}_{in}
-&= \beta k_i(\Zi,\Zi)^{-1} k_i(\Zi, \x_n) k_i(\x_n, \Zg) k_i(\Zg,\Zg)^{-1}.
+&= \beta_i k_i(\Zi,\Zi)^{-1} k_i(\Zi, \x_n) k_i(\x_n, \Zg) k_i(\Zg,\Zg)^{-1}.
 \end{align}
 
 \noindent Again, this clearly shows that this model generalizes the standard GP regression. This can be verified by setting $P = 1$, $w_i = 1$ and $h_i(\x) = 0$ to recover the bound in Hensman et al.
@@ -220,11 +229,11 @@ We denote its set of observed inputs and targets as: $\X_i = \X(\oi,:)$ and $\y_
 \begin{align}
 \nonumber
 \calL_g \define&
- \sum_{i=1}^P \left( \log \Normal(\y_i; w_i \A_g(\oi,:) \m_g + \A_i \m_i, \beta_i^{-1} \I)
- - \frac{1}{2} \beta_i \trace w_i^2 \tilde{\K}_g(\oi,\oi)
- - \frac{1}{2} \beta_i \trace w_i^2 \S_g \A_g^T \A_g 
-  \right) \\
-  &- \frac{1}{2} \log |k_g(\Zg,\Zg) \S_g^{-1}| -\frac{1}{2} \trace k_g(\Zg,\Zg)^{-1} (\m_g \m_g^T + \S_g) ,
+ \sum_{i=1}^P \log \Normal(\y_i; w_i \A_g(\oi,:) \m_g + \A_i \m_i, \beta_i^{-1} \I)  \\
+ &- \frac{1}{2} \sum_{i=1}^P \bigg(\beta_i \trace w_i^2 \tilde{\K}_g(\oi,\oi) 
+ + \beta_i \trace w_i^2 \S_g \A_g(\oi,:)^T \A_g(\oi,:) \bigg)
+ \\
+ &- \frac{1}{2} \log |k_g(\Zg,\Zg) \S_g^{-1}| -\frac{1}{2} \trace k_g(\Zg,\Zg)^{-1} (\m_g \m_g^T + \S_g) ,
 \end{align}
 where $\A_g = k_g(\X,\Z_g)k_g(\Z_g,\Z_g)^{-1}$, which gives $\A_g(\oi,:) = k_g(\X_i,\Zg) k_g(\Z_g,\Z_g)^{-1}$, and  
 $\A_i = k_i(\X_i,\Z_i)k_i(\Z_i,\Z_i)^{-1}$. \\
@@ -254,9 +263,9 @@ $\A_i = k_i(\X_i,\Z_i)k_i(\Z_i,\Z_i)^{-1}$. \\
 
 \noindent The derivatives of $\calL_i$ wrt $\m_i$ and $\S_i$ are given by:
 \begin{align}
-\deriv{\calL_g}{\m_i}
+\deriv{\calL_i}{\m_i}
 & = \beta_i \A_i^T (\y_i - w_i \A_g(\oi,:)^T \m_g) - \left[k_i(\Zi,\Zi)^{-1} +  \beta_i \A_i^T \A_i \right] \m_i \\
-\deriv{\calL_g}{\S_g} 
+\deriv{\calL_i}{\S_i} 
 &= \frac{1}{2} \S_i^{-1} - \frac{1}{2} \left[ k_i(\Zi,\Zi)^{-1} + \beta_i \A_i^T \A_i \right].
 \end{align}
 
@@ -276,7 +285,7 @@ p(\fstar | \y, \x_*) = \int \Normal(\fstar; w_i g_* + h_{i*}, 0) p(g_* | \y, \x_
 where $p(g_* | \y, \x_*) = \Normal(g_*; \mu_{g*}, s_{g*})$ and $p(h_{i*} | \y, \x_*) = p(h_{i*}; \mu_{i*}, s_{i*})$ are the predictive distributions of the sparse GPs as given in \ref{eq:sorprediction}.
 Therefore we have:
 \begin{align}
-p(\fstar | \y, \x_*) = \Normal(\fstar; w_i \mu_{g*} + \mu_{i*}, s_{g*} + s_{i*}). 
+p(\fstar | \y, \x_*) = \Normal(\fstar; w_i \mu_{g*} + \mu_{i*}, w_i^2 s_{g*} + s_{i*}). 
 \end{align}
 
 %\begin{linenomath}
