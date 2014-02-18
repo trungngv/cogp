@@ -29,7 +29,7 @@ for i=1:nbatch
 
   %% variance of predictive distribution
   % we can also compute full covariance at a higher cost
-  % diag(Ksm * kmminv * S * Kmmonv *Kms) 
+  % diag(Ksm * kmminv * S * Kmminv *Kms) 
   var_1 =  sum(Kms.*(Kmminv*S*Kmminv*Kms),1)';
   var_2 =  sum(Kms.*(Kmminv*Kms),1)';   
   %var = var_1 + Kss - var_2;
