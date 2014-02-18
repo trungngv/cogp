@@ -1,10 +1,10 @@
-function chkGradELBO()
-%CHKGRADELBO chkGradELBO()
+function chkgrad_svi_elbo()
+%CHKGRADELBO chkgrad_svi_elbo()
 %  Check gradient of the evidence lowerbound wrt covariance hyperparameters
 %  and inducing inputs.
 %
 % See also
-%   sviELBO
+%   svi_elbo
 
 %rng(1110, 'twister');
 N = 1000; M = 50; D = 2;
@@ -24,12 +24,12 @@ delta = abs(delta);
 [valDiff,idx] = max(delta);
 percentageDiff = (valDiff*100/abs(mygrad(idx)));
 if (valDiff > 1e-5 && percentageDiff > 10)
-  fprintf('test sviELBO() failed with valDiff = %.4f\n', valDiff);
+  fprintf('test svi_elbo() failed with valDiff = %.4f\n', valDiff);
   fprintf('percentage (valDiff / gradient) = %.2f\n', percentageDiff);
-  Kmm = feval(cf.covfunc, cf.loghyp, z);  
+  Kmm = feval(cf.covfunc, params.loghyp, z);  
   fprintf('rcond = %.10f\n', rcond(Kmm));
 else
-  disp('test sviELBO() passed');
+  disp('test svi_elbo() passed');
 end
 
 % test for inducing inputs
@@ -39,12 +39,12 @@ delta = abs(delta);
 [valDiff,idx] = max(delta);
 percentageDiff = (valDiff*100/abs(mygrad(idx)));
 if (valDiff > 1e-4 && percentageDiff > 10)
-  fprintf('test sviELBO() failed with valDiff = %.4f\n', valDiff);
+  fprintf('test svi_elbo() failed with valDiff = %.4f\n', valDiff);
   fprintf('percentage (valDiff / gradient) = %.2f\n', percentageDiff);
   Kmm = feval(cf.covfunc, cf.loghyp, z);  
   fprintf('rcond = %.10f\n', rcond(Kmm));
 else
-  disp('test sviELBO() passed');
+  disp('test svi_elbo() passed');
 end
 
 end
@@ -52,25 +52,25 @@ end
 function fval = f(theta,x,y,params,cf)
   params.loghyp = theta(1:end-1)';
   params.beta = theta(end);
-  fval = sviELBO(x,y,params,cf,[],[],[],[]);
+  fval = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
 end
 
 function g = grad(theta,x,y,params,cf)
   params.loghyp = theta(1:end-1)';
   params.beta = theta(end);
-  [~, gloghyp,gbeta] = sviELBO(x,y,params,cf,[],[],[],[]);
+  [~, gloghyp,gbeta] = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
   g = [gloghyp; gbeta]';
 end
 
 function fval = fz(theta,x,y,params,cf)
   z = reshape(theta,numel(params.m),[]);
   params.z = z;
-  fval = sviELBO(x,y,params,cf,[],[],[],[]);
+  fval = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
 end
 
 function g = gradz(theta,x,y,params,cf)
   z = reshape(theta,numel(params.m),[]);
   params.z = z;
-  [~,~,~,gz] = sviELBO(x,y,params,cf,[],[],[],[]);
+  [~,~,~,gz] = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
   g = gz(:)';
 end
