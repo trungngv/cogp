@@ -1,7 +1,7 @@
 clear all; clc; close all;
 rng(1111,'twister');
 
-CHOICE = 1;
+CHOICE = 3;
 switch CHOICE
   case 1
     % The function in SPGP 

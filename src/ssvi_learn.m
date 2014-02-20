@@ -31,7 +31,7 @@ for i=1:P
   %params.task{i} = init_params(x(observed(:,i),:),y(observed(:,i),i),M,nhyper,0,[]);
   params.task{i} = init_params(x(observed(:,i),:),y(observed(:,i),i),M,nhyper_h,0,[]);
   params.task{i}.m = zeros(size(params.task{i}.m));
-  params.task{i}.S = diag(1*ones(numel(params.task{i}.m),1));
+%  params.task{i}.S = diag(1*ones(numel(params.task{i}.m),1));
 end
 elbo = zeros(numel(cf.maxiter),1);
 for i = 1 : cf.maxiter

@@ -51,9 +51,9 @@ theta = params.g.z(:);
 myassert(mygrad,delta,rcond(Kmm),'test ssvi_elbo() for inducing inputs of g passed');
 
 % test for m_g
-theta = params.g.m;
-[mygrad,delta] = gradchek(theta', @elbo_g_m, @delbo_g_m, x,y,params,cf);
-myassert(mygrad,delta,rcond(Kmm),'test ssvi_elbo() for m_g passed');
+% theta = params.g.m;
+% [mygrad,delta] = gradchek(theta', @elbo_g_m, @delbo_g_m, x,y,params,cf);
+% myassert(mygrad,delta,rcond(Kmm),'test ssvi_elbo() for m_g passed');
 
 % test for hyperparamters of h_i 
 for i=1:P

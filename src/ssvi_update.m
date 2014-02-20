@@ -51,7 +51,7 @@ if cf.learn_z
   [~,dloghyp,dz] = ssvi_elbo(x,y,params,cf);
   params.g = stochastic_update(params.g,cf,dloghyp,[],dz);
 else
-  [~,dloghyp,~] = ssvi_elbo(x,y,params,cf);
+  [~,dloghyp] = ssvi_elbo(x,y,params,cf);
   params.g = stochastic_update(params.g,cf,dloghyp,[],[]);
 end
 
