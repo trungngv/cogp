@@ -1,5 +1,5 @@
-function [elbo,dloghyp,dz] = ssvi_elbo(x,y,params,cf)
-%SSVI_ELBO [elbo,dloghyp,dz] = ssvi_elbo(x,y,params,cf)
+function [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf)
+%SSVI_ELBO [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf)
 %   
 % Lowerbound as a function of the hyperparameters (and inducing inputs)
 % for STRUCTURED (multiple-output) gps. Gradients are wrt to the shared
@@ -15,11 +15,8 @@ function [elbo,dloghyp,dz] = ssvi_elbo(x,y,params,cf)
 %   - elbo, dloghyp, dz : objective value and its derivatives
 %
 % Trung Nguyen
-% 17/02/14
+% 21/02/14
 
-% TODO:
-% 1) add weight w_i
-% 2) also output derivatives of independent processes h_i in here 
 z_g = params.g.z;
 m_g = params.g.m;
 S_g = params.g.S;
@@ -27,41 +24,67 @@ P = size(y,2); % # outputs
 loghyp_g = params.g.loghyp;
 
 % contribution from g
-Kmm = feval(cf.covfunc_g, loghyp_g, z_g);
-Lmm = jit_chol(Kmm,3);
-Kmminv = invChol(Lmm);
-Knm = feval(cf.covfunc_g, loghyp_g, x, z_g);
-A = Knm*Kmminv;
+[A,Knm,Kmminv,Lmm] = computeKnmKmminv(cf.covfunc_g, loghyp_g, x, z_g);
 diagKnn = feval(cf.covfunc_g, loghyp_g, x, 'diag');
 lkl = 0.5*(logdetChol(Lmm) - logdet(S_g) + traceABsym(Kmminv,S_g) + m_g'*Kmminv*m_g); % kl part
+ltilde = zeros(P,1);
+ltrace = ltilde;
 elbo = - lkl;
 for i=1:P
   indice = params.idx(:,i);
+  betaval = params.task{i}.beta;
   xi = x(indice,:);
-  y_minus_g = y(indice,i) - A(indice,:)*m_g;
+  w = params.w(i); w2 = w*w;
+  y_minus_g = y(indice,i) - w*A(indice,:)*m_g;
   elbo = elbo + svi_elbo(xi,y_minus_g,params.task{i},cf.covfunc_h,[],[],[],[]);
-  ltilde = 0.5*params.task{i}.beta*sum(diagKnn(indice) - diagProd(A(indice,:),Knm(indice,:)')); % Ktilde part
-  ltrace = 0.5*params.task{i}.beta*traceABsym(S_g,A(indice,:)'*A(indice,:)); % trace(SA'A) part
-  elbo = elbo - ltilde - ltrace;
+  ltilde(i) = 0.5*betaval*w2*sum(diagKnn(indice) - diagProd(A(indice,:),Knm(indice,:)')); % Ktilde part
+  ltrace(i) = 0.5*betaval*w2*traceABsym(S_g,A(indice,:)'*A(indice,:)); % trace(SA'A) part
+  elbo = elbo - ltilde(i) - ltrace(i);
 end
 
-if nargout >= 2
+if nargout >= 2   % derivatives 
   dloghyp = zeros(size(loghyp_g));
+  dw = zeros(P,1);
   dz = zeros(size(z_g));
   for i=1:P
-    % TODO: add weight w_i
-    xi = x(params.idx(:,i),:);
+    indice = params.idx(:,i);
+    xi = x(indice,:);
     Ai = computeKnmKmminv(cf.covfunc_h, params.task{i}.loghyp, xi, params.task{i}.z);
     y_minus_hi = y(params.idx(:,i),i) - Ai*params.task{i}.m;
-    params.g.beta = params.task{i}.beta;
-    if nargout == 3
+    betaval = params.task{i}.beta;
+    params.g.beta = betaval;
+    params.g.w = params.w(i);
+    if nargout == 4
       [~,dloghyp_i,dz_i] = ssvi_elbo_g(xi,y_minus_hi,params.g,cf.covfunc_g,P);
       dz = dz + dz_i;
     else
       [~,dloghyp_i] = ssvi_elbo_g(xi,y_minus_hi,params.g,cf.covfunc_g,P);
     end
     dloghyp = dloghyp + dloghyp_i;
+    w = params.w(i);
+    Am = A(indice,:)*m_g;
+    dw(i) = -(2/w)*ltilde(i) -(2/w)*ltrace(i) + betaval*y_minus_hi'*Am - betaval*w*sum(Am.^2);
   end
 end
+
+% dm,dS (only for gradient checking)
+% if nargout == 5
+%   Lambda = Kmminv;
+%   tmp = zeros(size(params.g.m));
+%   for i=1:P
+%     w = params.w(i); w2 = w*w;
+%     betaval = params.task{i}.beta;
+%     indice = params.idx(:,i);
+%     Lambda = Lambda + betaval*w2*(A(indice,:)')*A(indice,:);
+%     Ai = computeKnmKmminv(cf.covfunc_h, params.task{i}.loghyp, x(indice,:), params.task{i}.z);
+%     y_minus_hi = y(indice,i) - Ai*params.task{i}.m;
+%     tmp = tmp + betaval*w*A(indice,:)'*y_minus_hi;
+%   end
+% 
+%   Sinv = invChol(jit_chol(params.g.S,4));
+%   dm = tmp - Lambda*params.g.m;
+%   dS = 0.5*Sinv - 0.5*Lambda;
+% end
+
 end
 

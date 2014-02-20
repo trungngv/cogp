@@ -30,12 +30,13 @@ P = size(y,2);
 Lambda = Kmminv;
 tmp = zeros(size(params.g.m));
 for i=1:P
+  w = params.w(i); w2 = w*w;
   betaval = params.task{i}.beta;
   indice = params.idx(:,i);
-  Lambda = Lambda + betaval*(A(indice,:)')*A(indice,:);
+  Lambda = Lambda + betaval*w2*(A(indice,:)')*A(indice,:);
   Ai = computeKnmKmminv(cf.covfunc_h, params.task{i}.loghyp, x(indice,:), params.task{i}.z);
   y_minus_hi = y(indice,i) - Ai*params.task{i}.m;
-  tmp = tmp + betaval*A(indice,:)'*y_minus_hi;
+  tmp = tmp + betaval*w*A(indice,:)'*y_minus_hi;
 end
 
 Sinv = invChol(jit_chol(params.g.S,4));
@@ -58,14 +59,15 @@ end
 % Update h_i
 diagKnn = feval(cf.covfunc_g, params.g.loghyp, x, 'diag');
 if iter >= 0
-  A = computeKnmKmminv(cf.covfunc_g, params.g.loghyp, x, params.g.z);
+  [A,Knm] = computeKnmKmminv(cf.covfunc_g, params.g.loghyp, x, params.g.z);
   for i=1:P
     indice = params.idx(:,i);
-    y_discounted = y(indice,i) - A(indice,:)*params.g.m;
-    % DON'T FORGET w_i
-    params.task{i} = svi_update(x(indice,:),y_discounted,params.task{i},cf,cf.covfunc_h,[],[]);
+    w = params.w(i); w2 = w*w;
+    y_minus_g = y(indice,i) - w*A(indice,:)*params.g.m;
+    params.task{i} = svi_update(x(indice,:),y_minus_g,params.task{i},cf,cf.covfunc_h,[],[]);
     % contribution from g
-    dbeta_g = -0.5*sum(diagKnn(indice)) - 0.5*traceABsym(params.g.S,A(indice,:)'*A(indice,:));
+    dbeta_g = -0.5*w2*sum(diagKnn(indice)-diagProd(A(indice,:),Knm(indice,:)'));
+    dbeta_g = dbeta_g - 0.5*w2*traceABsym(params.g.S,A(indice,:)'*A(indice,:));
     params.task{i}.delta_beta = params.task{i}.delta_beta + cf.lrate_beta*dbeta_g;
     params.task{i}.beta = params.task{i}.beta + cf.lrate_beta*dbeta_g;
   end

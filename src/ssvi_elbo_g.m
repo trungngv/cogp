@@ -18,21 +18,17 @@ function [elbo,dloghyp,dz] = ssvi_elbo_g(x,y,params,covfunc,n_outputs)
 z = params.z;
 m = params.m;
 S = params.S;
+w = params.w; w2 = w*w;
 betaval = params.beta;
 loghyp = params.loghyp;
 N = size(x,1);
 M = size(z,1);
-Kmm = feval(covfunc, loghyp, z);
-Lmm = jit_chol(Kmm,3);
-Kmminv = invChol(Lmm);
-Knm = feval(covfunc, loghyp, x, z);
-A = Knm*Kmminv;
-
+[A,Knm,Kmminv,Lmm,Kmm] = computeKnmKmminv(covfunc,loghyp,x,z);
 diagKnn = feval(covfunc, loghyp, x, 'diag');
-yMinusAm = y - A*m;
+yMinusAm = y - w*A*m;
 logN = -0.5*N*log(2*pi/betaval) - 0.5*betaval*sum(yMinusAm.^2); % \sum logN() part
-ltilde = 0.5*betaval*sum(diagKnn - diagProd(A,Knm')); % Ktilde part
-ltrace = 0.5*betaval*traceABsym(S,A'*A); % trace(SA'A) part
+ltilde = 0.5*betaval*w2*sum(diagKnn - diagProd(A,Knm')); % Ktilde part
+ltrace = 0.5*betaval*w2*traceABsym(S,A'*A); % trace(SA'A) part
 lkl = 0.5*(logdetChol(Lmm) - logdet(S) + traceABsym(Kmminv,S) + m'*Kmminv*m - M); % kl-divergence part
 elbo = logN - ltilde - ltrace - lkl/n_outputs;
 
@@ -44,9 +40,9 @@ if nargout >= 2     %covariance derivatives
     dKmm = feval(covfunc, loghyp, z, [], i);
     dKnn = feval(covfunc, loghyp, x, 'diag', i);
     dA = (dKnm - A*dKmm)*Kmminv;
-    dlogN = betaval*(yMinusAm'*dA)*m;
-    dTilde = 0.5*betaval*(sum(dKnn) - sum(diagProd(A,dKnm')) - sum(diagProd(dA,Knm')));
-    dTrace = betaval*traceAB(A*S,dA');
+    dlogN = betaval*w*(yMinusAm'*dA)*m;
+    dTilde = 0.5*betaval*w2*(sum(dKnn) - sum(diagProd(A,dKnm')) - sum(diagProd(dA,Knm')));
+    dTrace = betaval*w2*traceAB(A*S,dA');
     dKL = 0.5*(traceABsym(Kmminv,dKmm) - traceABsym(Kmminv,dKmm*Kmminv*(m*m'+S)));
     dloghyp(i) = dlogN - dTilde - dTrace - dKL/n_outputs;
   end
@@ -56,9 +52,9 @@ if nargout == 3   % inducing inputs derivatives
   dz = zeros(size(z));
   ell2 = exp(2*loghyp(1:end-1));
   ASKmminv = A*S*Kmminv;
-  D1 = yMinusAm*m'*Kmminv + A - ASKmminv;
+  D1 = w*yMinusAm*m'*Kmminv + w2*A - w2*ASKmminv;
   D1 = betaval*D1;
-  D2 = -betaval*Kmminv*m*yMinusAm'*A - 0.5*betaval*(A')*A + betaval*ASKmminv'*A;
+  D2 = -betaval*w*Kmminv*m*yMinusAm'*A - 0.5*betaval*w2*(A')*A + betaval*w2*ASKmminv'*A;
   D2 = D2 - 0.5*Kmminv/n_outputs + 0.5*Kmminv*(m*m'+S)*Kmminv/n_outputs;
   for i=1:size(z,2)
     DKmm = bsxfun(@minus,z(:,i),z(:,i)');

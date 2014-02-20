@@ -33,6 +33,7 @@ for i=1:P
   params.task{i}.m = zeros(size(params.task{i}.m));
 %  params.task{i}.S = diag(1*ones(numel(params.task{i}.m),1));
 end
+params.w = ones(P,1);
 elbo = zeros(numel(cf.maxiter),1);
 for i = 1 : cf.maxiter
   idx = randperm(N, cf.nbatch);

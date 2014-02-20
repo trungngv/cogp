@@ -1,5 +1,5 @@
-function [A,Knm,Kmminv] = computeKnmKmminv(covfunc,loghyp,x,z)
-%COMPUTEKNMKMMINV [A,Knm,Kmminv] = computeKnmKmminv(covfunc,loghyp,x,z)
+function [A,Knm,Kmminv,Lmm,Kmm] = computeKnmKmminv(covfunc,loghyp,x,z)
+%COMPUTEKNMKMMINV [A,Knm,Kmminv,Lmm,Kmm] = computeKnmKmminv(covfunc,loghyp,x,z)
 %   Compute the term A = k(x,z)k(z,z)^{-1} which is commonly encountered.
 %
 Kmm = feval(covfunc, loghyp, z);
