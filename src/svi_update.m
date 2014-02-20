@@ -45,7 +45,7 @@ A = Knm*Kmminv;
 Lambda = betaval*(A'*A) + Kmminv;
 
 % Stochastic natural ascent: VB-E update for m,S
-theta2 = theta2_old + cf.lrate*(-0.5*Lambda - theta2_old); clear Lambda;
+theta2 = theta2_old + cf.lrate*(-0.5*Lambda - theta2_old);
 theta1 = theta1_old + cf.lrate*(betaval*A'*y - theta1_old);
 [VV DD] = eig(theta2);
 invTheta2 = VV*diag(1./diag(DD))*VV';
@@ -56,16 +56,10 @@ params.m = params.S*theta1;
 % Note covSEard returns dK / dloghyper 
 if cf.learn_z
   [logL,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,Lmm,Kmminv,Knm,A);
+  params = stochastic_update(params,cf,dloghyp,dbeta,dz);
 else
   [logL,dloghyp,dbeta] = svi_elbo(x,y,params,covfunc,Lmm,Kmminv,Knm,A);
-end
-params.delta_hyp = cf.momentum * params.delta_hyp + cf.lrate_hyp * dloghyp;
-params.loghyp = params.loghyp + params.delta_hyp;
-params.delta_beta = cf.momentum * params.delta_beta + cf.lrate_beta * dbeta;
-params.beta = params.beta + params.delta_beta;
-if cf.learn_z
-  params.delta_z = cf.momentum_z*params.delta_z + cf.lrate_z * dz;
-  params.z = params.z + params.delta_z;
+  params = stochastic_update(params,cf,dloghyp,dbeta,[]);
 end
 
 return;

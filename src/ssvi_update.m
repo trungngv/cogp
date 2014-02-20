@@ -23,16 +23,10 @@ function params = ssvi_update(x,y,params,cf,iter)
 %   - params : updated parameters
 %
 % Trung V. Nguyen
-% 17/02/14
+% 20/02/14
 P = size(y,2);
-
-% some common entities
-Kmm = feval(cf.covfunc_g, params.g.loghyp, params.g.z);
-Knm = feval(cf.covfunc_g, params.g.loghyp, x, params.g.z);
-diagKnn = feval(cf.covfunc_g, params.g.loghyp, x, 'diag');
-Lmm = jit_chol(Kmm,4); clear Kmm;
-Kmminv = invChol(Lmm);
-A = Knm*Kmminv;
+% Update for g
+[A,~,Kmminv] = computeKnmKmminv(cf.covfunc_g, params.g.loghyp, x, params.g.z);
 Lambda = Kmminv;
 tmp = zeros(size(params.g.m));
 for i=1:P
@@ -44,11 +38,8 @@ for i=1:P
   tmp = tmp + betaval*A(indice,:)'*y_minus_hi;
 end
 
-% Update for g
-m_g = params.g.m;
-S_g = params.g.S;
-Sinv = invChol(jit_chol(S_g,4));
-theta1_old = Sinv*m_g;
+Sinv = invChol(jit_chol(params.g.S,4));
+theta1_old = Sinv*params.g.m;
 theta2_old = -0.5*Sinv;
 theta2 = theta2_old + cf.lrate*(-0.5*Lambda - theta2_old);
 theta1 = theta1_old + cf.lrate*(tmp - theta1_old);
@@ -58,15 +49,14 @@ params.g.S = - 0.5*invTheta2;
 params.g.m = params.g.S*theta1;
 if cf.learn_z
   [~,dloghyp,dz] = ssvi_elbo(x,y,params,cf);
-  params.g.delta_z = cf.momentum_z*params.g.delta_z + cf.lrate_z * dz;
-  params.g.z = params.g.z + params.g.delta_z;
+  params.g = stochastic_update(params.g,cf,dloghyp,[],dz);
 else
   [~,dloghyp,~] = ssvi_elbo(x,y,params,cf);
+  params.g = stochastic_update(params.g,cf,dloghyp,[],[]);
 end
-params.g.delta_hyp = cf.momentum*params.g.delta_hyp + cf.lrate_hyp*dloghyp;
-params.g.loghyp = params.g.loghyp + params.g.delta_hyp;
 
 % Update h_i
+diagKnn = feval(cf.covfunc_g, params.g.loghyp, x, 'diag');
 if iter >= 0
   A = computeKnmKmminv(cf.covfunc_g, params.g.loghyp, x, params.g.z);
   for i=1:P
@@ -74,7 +64,8 @@ if iter >= 0
     y_discounted = y(indice,i) - A(indice,:)*params.g.m;
     % DON'T FORGET w_i
     params.task{i} = svi_update(x(indice,:),y_discounted,params.task{i},cf,cf.covfunc_h,[],[]);
-    dbeta_g = -0.5*sum(diagKnn(indice)) - 0.5*traceABsym(S_g,A(indice,:)'*A(indice,:)); % contribution from g
+    % contribution from g
+    dbeta_g = -0.5*sum(diagKnn(indice)) - 0.5*traceABsym(params.g.S,A(indice,:)'*A(indice,:));
     params.task{i}.delta_beta = params.task{i}.delta_beta + cf.lrate_beta*dbeta_g;
     params.task{i}.beta = params.task{i}.beta + cf.lrate_beta*dbeta_g;
   end

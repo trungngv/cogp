@@ -62,23 +62,6 @@ if nargout >= 2
     end
     dloghyp = dloghyp + dloghyp_i;
   end
-  
-% dm,dS
-%   Sinv = invChol(jit_chol(S_g,4));
-%   A = computeKnmKmminv(cf.covfunc_g,params.g.loghyp,x,params.g.z);
-%   Lambda = Kmminv;
-%   tmp = zeros(size(m_g));
-%   for i=1:P
-%     betaval = params.task{i}.beta;
-%     indice = params.idx(:,i);
-%     Lambda = Lambda + betaval*(A(indice,:)')*A(indice,:);
-%     Ai = computeKnmKmminv(cf.covfunc_h, params.task{i}.loghyp, x(indice,:), params.task{i}.z);
-%     y_minus_hi = y(indice,i) - Ai*params.task{i}.m;
-%     tmp = tmp + betaval*A(indice,:)'*y_minus_hi;
-%   end
-%   dm = tmp - Lambda*m_g;
-%   dS = 0.5*Sinv - 0.5*Lambda;
-
 end
 end
 
