@@ -1,5 +1,5 @@
-function [elbo,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,Lmm,Kmminv,Knm,A)
-%SVI_ELBO [elbo,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,Lmm,Kmminv,Knm,A)
+function [elbo,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,A,Knm,Kmminv,Lmm)
+%SVI_ELBO [elbo,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,A,Knm,Kmminv,Lmm)
 %   
 % Lowerbound as a function of the hyperparameters (and inducing inputs) and
 % their derivatives. Note that the inducing derivatives are for the
@@ -10,8 +10,8 @@ function [elbo,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,Lmm,Kmminv,Knm,A)
 %   - y : outputs (of inputs x)
 %   - params : parameters structure
 %   - covfunc : covariance function
-%   - Lmm, Kmminv, Knm, A : [optional] previously computed values of those
-%   (see also SVIUPDATE).
+%   - Lmm, Kmminv, Knm, A : [optional] previously saved computation
+%   (see also SVI_UPDATE).
 %
 % OUTPUT
 %   - elbo, dloghyp, dbeta, dz : objective value and its derivatives
@@ -25,15 +25,11 @@ betaval = params.beta;
 loghyp = params.loghyp;
 N = size(x,1);
 M = size(z,1);
-Kmm = feval(covfunc, loghyp, z);
-if isempty(Lmm)
-  Lmm = jit_chol(Kmm,3);
-  Kmminv = invChol(Lmm);
-  Knm = feval(covfunc, loghyp, x, z);
-  A = Knm*Kmminv;
+if isempty(A)
+  [A,Knm,Kmminv,Lmm,Kmm] = computeKnmKmminv(covfunc, loghyp, x, z);
+else
+  Kmm = feval(covfunc, loghyp, z);
 end
-
-%TODO optimize code if possible
 diagKnn = feval(covfunc, loghyp, x, 'diag');
 yMinusAm = y - A*m;
 logN = -0.5*N*log(2*pi/betaval) - 0.5*betaval*sum(yMinusAm.^2); % \sum logN() part

@@ -1,4 +1,4 @@
-function [mu,s2,elbo,params] = learn_gpsvi(x,y,xtest,M,cf,z0)
+function [mu,s2,elbo,params] = svi_learn(x,y,xtest,M,cf,z0)
 %LEARN_GPSVI learn_gpsvi(x,y,xtest,M,cf,z0)
 %   Quick wrapper to run GPSVI.
 % 
@@ -17,7 +17,16 @@ params = init_params(x,y,M,nhyper,0,z0);
 elbo = zeros(numel(cf.maxiter),1);
 for i = 1 : cf.maxiter
   idx = randperm(N, cf.nbatch);
-  params = svi_update(x(idx,:),y(idx),params,cf,cf.covfunc,[],[]);
+  xi = x(idx,:); yi = y(idx);
+  [params,A,Knm,Kmminv,Lmm] = svi_update(xi,yi,params,cf,cf.covfunc);
+  if cf.learn_z
+    [~,dloghyp,dbeta,dz] = svi_elbo(xi,yi,params,cf.covfunc,A,Knm,Kmminv,Lmm);
+    params = stochastic_update(params,cf,dloghyp,dbeta,dz);
+  else
+    [~,dloghyp,dbeta] = svi_elbo(xi,yi,params,cf.covfunc,A,Knm,Kmminv,Lmm);
+    params = stochastic_update(params,cf,dloghyp,dbeta,[]);
+  end
+  % compute elbo using updated parameters
   elbo(i) = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
 end
 

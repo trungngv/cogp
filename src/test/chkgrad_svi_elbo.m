@@ -7,7 +7,7 @@ function chkgrad_svi_elbo()
 %   svi_elbo
 
 %rng(1110, 'twister');
-N = 1000; M = 50; D = 2;
+N = 500; M = 20; D = 2;
 x = 10*rand(N,D);
 y = 2*rand(N,1);
 cf.covfunc = 'covSEard';
@@ -17,60 +17,41 @@ L = rand(M,M);
 params.S = L'*L;
 params.beta = 1e-2;
 params.loghyp = [log(rand(D,1)); 1+rand];
-% test for hyperparameters
-theta = [params.loghyp; params.beta];
+Kmm = feval(cf.covfunc, params.loghyp, params.z);  
+rconditional = rcond(Kmm);
+
+theta = [params.loghyp; params.beta; params.z(:)];
 [mygrad, delta] = gradchek(theta', @f, @grad, x,y,params,cf);
-delta = abs(delta);
-[valDiff,idx] = max(delta);
-percentageDiff = (valDiff*100/abs(mygrad(idx)));
-if (valDiff > 1e-5 && percentageDiff > 10)
-  fprintf('test svi_elbo() failed with valDiff = %.4f\n', valDiff);
-  fprintf('percentage (valDiff / gradient) = %.2f\n', percentageDiff);
-  Kmm = feval(cf.covfunc, params.loghyp, z);  
-  fprintf('rcond = %.10f\n', rcond(Kmm));
-else
-  disp('test svi_elbo() passed');
-end
-
-% test for inducing inputs
-theta = params.z(:);
-[mygrad, delta] = gradchek(theta', @fz, @gradz, x,y,params,cf);
-delta = abs(delta);
-[valDiff,idx] = max(delta);
-percentageDiff = (valDiff*100/abs(mygrad(idx)));
-if (valDiff > 1e-4 && percentageDiff > 10)
-  fprintf('test svi_elbo() failed with valDiff = %.4f\n', valDiff);
-  fprintf('percentage (valDiff / gradient) = %.2f\n', percentageDiff);
-  Kmm = feval(cf.covfunc, cf.loghyp, z);  
-  fprintf('rcond = %.10f\n', rcond(Kmm));
-else
-  disp('test svi_elbo() passed');
-end
-
+assert_helper(mygrad,delta,rconditional, 'gradient check for svi_elbo() passed');
 end
 
 function fval = f(theta,x,y,params,cf)
-  params.loghyp = theta(1:end-1)';
-  params.beta = theta(end);
-  fval = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
+nhyp = numel(params.loghyp);
+params.loghyp = theta(1:nhyp)';
+params.beta = theta(nhyp+1);
+params.z = reshape(theta(nhyp+2:end),numel(params.m),[]);
+fval = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
 end
 
 function g = grad(theta,x,y,params,cf)
-  params.loghyp = theta(1:end-1)';
-  params.beta = theta(end);
-  [~, gloghyp,gbeta] = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
-  g = [gloghyp; gbeta]';
+nhyp = numel(params.loghyp);
+params.loghyp = theta(1:nhyp)';
+params.beta = theta(nhyp+1);
+params.z = reshape(theta(nhyp+2:end),numel(params.m),[]);
+[~,dloghyp,dbeta,dz] = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
+g = [dloghyp; dbeta; dz(:)]';
 end
 
-function fval = fz(theta,x,y,params,cf)
-  z = reshape(theta,numel(params.m),[]);
-  params.z = z;
-  fval = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
+function assert_helper(mygrad,delta,rconditional,msg)
+  delta = abs(delta);
+  [valDiff,idx] = max(delta);
+  percentageDiff = (valDiff*100/abs(mygrad(idx)));
+  if (valDiff > 1e-4)
+    fprintf('test ssvi_elbo() failed with valDiff = %.5f\n', valDiff);
+    fprintf('percentage (valDiff / gradient) = %.2f\n', percentageDiff);
+    fprintf('rcond = %.10f\n', rconditional);
+  else
+    disp(msg);
+  end
 end
 
-function g = gradz(theta,x,y,params,cf)
-  z = reshape(theta,numel(params.m),[]);
-  params.z = z;
-  [~,~,~,gz] = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
-  g = gz(:)';
-end
