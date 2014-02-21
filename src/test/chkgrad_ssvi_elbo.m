@@ -118,7 +118,7 @@ diagKnn = feval(cf.covfunc_g, params.g.loghyp, x, 'diag');
 S_g = params.g.S;
 w = params.w(i); w2 = w*w;
 y_minus_g = y(indice,i) - w*A*params.g.m;
-[~,dloghyp,dbeta,dz] = svi_elbo(x(indice,:),y_minus_g,params.task{i},cf.covfunc_h,[],[]);
+[~,dloghyp,dbeta,dz] = svi_elbo(x(indice,:),y_minus_g,params.task{i},cf.covfunc_h);
 dbeta_g = -0.5*w2*sum(diagKnn(indice)-diagProd(A,Knm'));
 dbeta_g = dbeta_g - 0.5*w2*traceABsym(S_g,(A')*A);
 dbeta = dbeta + dbeta_g;

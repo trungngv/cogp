@@ -25,7 +25,7 @@ betaval = params.beta;
 loghyp = params.loghyp;
 N = size(x,1);
 M = size(z,1);
-if isempty(A)
+if nargin == 4 || isempty(A)
   [A,Knm,Kmminv,Lmm,Kmm] = computeKnmKmminv(covfunc, loghyp, x, z);
 else
   Kmm = feval(covfunc, loghyp, z);

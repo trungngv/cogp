@@ -11,8 +11,11 @@ for i=1:P
   h = params.task{i};
   [mu(:,i), var(:,i)] = gpsvi_predict(covfunc_h, h.loghyp, h.m, h.S, h.z, xstar);
 end
-mu_g = repmat(mu_g,1,P);
-var_g = repmat(var_g,1,P);
-mu = mu_g + mu;
-var = var_g + var;
+%mu_g = repmat(mu_g,1,P);
+%var_g = repmat(var_g,1,P);
+for i=1:P
+  w = params.w(i);
+  mu(:,i) = w*mu_g + mu(:,i);
+  var(:,i) = w*w*var_g + var(:,i);
+end
 

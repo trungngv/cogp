@@ -30,7 +30,7 @@ nhyp = numel(params.loghyp);
 params.loghyp = theta(1:nhyp)';
 params.beta = theta(nhyp+1);
 params.z = reshape(theta(nhyp+2:end),numel(params.m),[]);
-fval = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
+fval = svi_elbo(x,y,params,cf.covfunc);
 end
 
 function g = grad(theta,x,y,params,cf)
@@ -38,7 +38,7 @@ nhyp = numel(params.loghyp);
 params.loghyp = theta(1:nhyp)';
 params.beta = theta(nhyp+1);
 params.z = reshape(theta(nhyp+2:end),numel(params.m),[]);
-[~,dloghyp,dbeta,dz] = svi_elbo(x,y,params,cf.covfunc,[],[],[],[]);
+[~,dloghyp,dbeta,dz] = svi_elbo(x,y,params,cf.covfunc);
 g = [dloghyp; dbeta; dz(:)]';
 end
 

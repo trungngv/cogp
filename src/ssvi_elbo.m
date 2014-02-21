@@ -1,5 +1,5 @@
-function [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf)
-%SSVI_ELBO [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf)
+function [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf,A,Knm,Kmminv,Lmm)
+%SSVI_ELBO [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf,A,Knm,Kmminv,Lmm)
 %   
 % Lowerbound as a function of the hyperparameters (and inducing inputs)
 % for STRUCTURED (multiple-output) gps. Gradients are wrt to the shared
@@ -10,9 +10,10 @@ function [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf)
 %   - y : outputs (of inputs x)
 %   - params : parameters structure
 %   - cf : cf.covfunc 
+%   - A,Knm,Kmminv,Lmm: saved computation (covariance function of g)
 %
 % OUTPUT
-%   - elbo, dloghyp, dz : objective value and its derivatives
+%   - elbo, dloghyp, dw, dz : objective value and its derivatives
 %
 % Trung Nguyen
 % 21/02/14
@@ -22,9 +23,10 @@ m_g = params.g.m;
 S_g = params.g.S;
 P = size(y,2); % # outputs
 loghyp_g = params.g.loghyp;
-
 % contribution from g
-[A,Knm,Kmminv,Lmm] = computeKnmKmminv(cf.covfunc_g, loghyp_g, x, z_g);
+if nargin == 4 || isempty(A)
+  [A,Knm,Kmminv,Lmm] = computeKnmKmminv(cf.covfunc_g, loghyp_g, x, z_g);
+end  
 diagKnn = feval(cf.covfunc_g, loghyp_g, x, 'diag');
 lkl = 0.5*(logdetChol(Lmm) - logdet(S_g) + traceABsym(Kmminv,S_g) + m_g'*Kmminv*m_g); % kl part
 ltilde = zeros(P,1);
