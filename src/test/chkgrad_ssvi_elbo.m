@@ -14,9 +14,9 @@ function chkgrad_ssvi_elbo()
 % from g and beta also has contribution from g.
 % TODO: output derivatives wrt h_i directly from ssvi_elbo.
 %
-N = 200; M = 10; D = 2; P = 2;
+N = 100; M = 30; D = 2; P = 2;
 cf.covfunc_g = 'covSEard';
-cf.covfunc_h = 'covSEard';
+cf.covfunc_h = 'covNoise';
 cf.use_h = false;
 nhyper_g = eval(feval(cf.covfunc_g));
 nhyper_h = eval(feval(cf.covfunc_h));

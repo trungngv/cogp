@@ -7,17 +7,21 @@ function chkgrad_svi_elbo()
 %   svi_elbo
 
 %rng(1110, 'twister');
-N = 500; M = 20; D = 2;
-x = 10*rand(N,D);
+N = 100; M = 10; D = 3;
+x = 5*rand(N,D);
 y = 2*rand(N,1);
 cf.covfunc = 'covSEard';
+nhyper = eval(feval(cf.covfunc));
+hypPeriodic = log([0.9;2;2]);
+hypSEard = log([rand(nhyper-1,1); 2]);
+hyp = log(rand(nhyper,1));
 params.z = 10*rand(M,D);
 params.m = rand(M,1);
 L = rand(M,M);
 params.S = L'*L;
 params.beta = 1e-2;
-params.loghyp = [log(rand(D,1)); 1+rand];
-Kmm = feval(cf.covfunc, params.loghyp, params.z);  
+params.loghyp = hypSEard;
+Kmm = feval(cf.covfunc, params.loghyp, params.z);
 rconditional = rcond(Kmm);
 
 theta = [params.loghyp; params.beta; params.z(:)];

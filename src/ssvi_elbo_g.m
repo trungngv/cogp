@@ -50,17 +50,18 @@ end
 
 if nargout == 3   % inducing inputs derivatives
   dz = zeros(size(z));
-  ell2 = exp(2*loghyp(1:end-1));
   ASKmminv = A*S*Kmminv;
   D1 = w*yMinusAm*m'*Kmminv + w2*A - w2*ASKmminv;
   D1 = betaval*D1;
   D2 = -betaval*w*Kmminv*m*yMinusAm'*A - 0.5*betaval*w2*(A')*A + betaval*w2*ASKmminv'*A;
   D2 = D2 - 0.5*Kmminv/n_outputs + 0.5*Kmminv*(m*m'+S)*Kmminv/n_outputs;
   for i=1:size(z,2)
-    DKmm = bsxfun(@minus,z(:,i),z(:,i)');
-    DKmm = -(Kmm.*DKmm)/ell2(i);
-    DKmn = bsxfun(@minus,z(:,i),x(:,i)');
-    DKmn = -(Knm'.*DKmn)/ell2(i);
+    if strcmp(covfunc, 'covNoise')
+      dz(:,i) = zeros(size(z,1),1);
+    else
+      [DKmm,DKmn] = dz_cov(covfunc,loghyp,x,z,i,Kmm,Knm);
+      dz(:,i) = sum(D1'.*DKmn,2) + sum(D2.*DKmm,2) + sum(D2'.*DKmm,2) - diag(D2).*diag(DKmm);
+    end
     dz(:,i) = sum(D1'.*DKmn,2) + sum(D2.*DKmm,2) + sum(D2'.*DKmm,2) - diag(D2).*diag(DKmm);
   end
 end
