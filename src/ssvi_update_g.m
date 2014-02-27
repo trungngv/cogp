@@ -30,7 +30,7 @@ for i=1:P
   tmp = tmp + betaval*w*A(indice,:)'*y_minus_hi;
 end
 
-Sinv = invChol(jit_chol(params.g.S,4));
+Sinv = invChol(jit_chol(params.g.S));
 theta1_old = Sinv*params.g.m;
 theta2_old = -0.5*Sinv;
 theta2 = theta2_old + cf.lrate*(-0.5*Lambda - theta2_old);

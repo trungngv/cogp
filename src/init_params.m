@@ -10,8 +10,9 @@ if isempty(z0)
     z0 = kmeans(z0, x, foptions());
   end
 end  
-idx = randperm(N,M);
-m =  y(idx);  % shouldn't this be the y of idx_z?
+%idx = randperm(N,M);
+%m =  y(idx);  % shouldn't this be the y of idx_z?
+m = zeros(M,1);
 Sinv = 0.1*(1/var(y))*eye(M);
 S = inv(Sinv);
 params.m = m;
@@ -20,7 +21,7 @@ params.z = z0;
 params.z0 = z0;
 loghyp = log(ones(nhyper,1));
 %sigma2n = var(y-mean(y),1)/10;
-beta0 = 1/0.01;
+beta0 = 1/0.05;
 params.beta   = beta0; % should be init using the data
 params.loghyp = loghyp;
 params.delta_hyp = zeros(size(params.loghyp));

@@ -60,6 +60,7 @@ for iter = 1:cf.maxiter
   params.w = params.w + params.delta_w;
 
   % update h_i
+  
   diagKnn = feval(cf.covfunc_g, params.g.loghyp, xbatch, 'diag');
   [A_g,Knm_g] = computeKnmKmminv(cf.covfunc_g, params.g.loghyp, xbatch, params.g.z);
   for i=1:P
