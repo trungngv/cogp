@@ -25,10 +25,9 @@ ymean = mean(ytmp,2);
 nhyper_g = eval(feval(cf.covfunc_g));
 nhyper_h = eval(feval(cf.covfunc_h));
 params.g = init_params(x,ymean,M.g,nhyper_g,0,[]);
-%params.g.m = zeros(size(params.g.m));
+params.g.m = zeros(size(params.g.m));
 params.g.beta = []; params.g.delta_beta = [];
 for i=1:P
-  %params.task{i} = init_params(x(observed(:,i),:),y(observed(:,i),i),M,nhyper_h,0,[]);
   % this allows inducing inputs to appear in even unobserved region
   yi = y(:,i); yi(isnan(yi)) = 0;
   params.task{i} = init_params(x,yi,M.h,nhyper_h,0,[]);
@@ -36,7 +35,8 @@ for i=1:P
   if strcmp(cf.covfunc_h,'covNoise')
     params.task{i}.loghyp = log(0.01); % learning of noise is hard so set it small here
   end
-%  params.task{i}.S = diag(1*ones(numel(params.task{i}.m),1));
+  params.task{i}.beta = 1/0.01;
+  params.task{i}.delta_beta = 0;
 end
 params.w = ones(P,1);
 params.delta_w = zeros(P,1);

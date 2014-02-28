@@ -16,8 +16,7 @@ function chkgrad_ssvi_elbo()
 %
 N = 100; M = 30; D = 2; P = 2;
 cf.covfunc_g = 'covSEard';
-cf.covfunc_h = 'covNoise';
-cf.use_h = false;
+cf.covfunc_h = 'covSEard';
 nhyper_g = eval(feval(cf.covfunc_g));
 nhyper_h = eval(feval(cf.covfunc_h));
 cf.n_outputs = P;

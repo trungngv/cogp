@@ -15,23 +15,27 @@ function [elbo,par] = slfm_learn(x,y,M,par,cf)
 P = numel(par.task); Q = numel(par.g);
 par.w = ones(P,Q);
 par.delta_w = zeros(P,Q);
-par.beta = (1/0.05)*ones(P,1);
+par.beta = (1/0.01)*ones(P,1);
 par.delta_beta = zeros(P,1);
 observed = ~isnan(y);
 nhyper_g = eval(feval(cf.covfunc_g));
+ytmp = y;
+for i=1:P
+  yi = y(observed(:,i),i);
+  ytmp(~observed(:,i),i) = mean(yi);
+end
+ymean = mean(ytmp,2);
 for j=1:Q
-  par.g{j} = init_params(x,mean(y,2),M.g,nhyper_g,0,[]);
-  %params.g.m = zeros(size(params.g.m));
-  par.g{j}.beta = []; par.g{j}.delta_beta = [];
+  par.g{j} = init_params(x,ymean,M.g,nhyper_g,0,[]);
+  par.g{j}.m = zeros(size(par.g{j}.m));
 end
 nhyper_h = eval(feval(cf.covfunc_h));
 for i=1:P
   par.task{i} = init_params(x,y(:,i),M.h,nhyper_h,0,[]);
-  %params.task{i}.m = zeros(size(params.task{i}.m));
+  %par.task{i}.m = zeros(size(par.task{i}.m));
   if strcmp(cf.covfunc_h,'covNoise')
-    par.task{i}.loghyp = log(0.01); % learning of noise is hard so set it small here
+    par.task{i}.loghyp = log(0.05); % learning of noise is hard so set it small here
   end
-%  params.task{i}.S = diag(1*ones(numel(params.task{i}.m),1));
 end
 elbo = zeros(numel(cf.maxiter),1);
 for iter = 1:cf.maxiter
@@ -47,21 +51,14 @@ for iter = 1:cf.maxiter
     [~,dbeta,dw,dloghyp,dz] = slfm_elbo(xbatch,ybatch,par,cf);
   else
     [~,dbeta,dw,dloghyp] = slfm_elbo(xbatch,ybatch,par,cf);
-    dz = [];
+    dz = cell(Q,1);
   end
   for j=1:Q
     par.g{j} = stochastic_update(par.g{j},cf,dloghyp{j},[],dz{j});
   end
   
   % update dw
-  testdw = zeros(P,Q);
-  for i=1:P
-    for j=1:Q
-      testdw(i,j) = dw{j}(i);
-    end
-  end
   dw = reshape(cell2mat(dw),P,Q);
-  assert(all(all(testdw == dw)));
   par.delta_w = cf.momentum_w*par.delta_w + cf.lrate_w*dw;
   par.w = par.w + par.delta_w;
   
