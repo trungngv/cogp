@@ -36,7 +36,7 @@ for j=1:Q
   tmp = zeros(size(par.g{j}.m));
   for i=1:P
     w = par.w(i,j); w2 = w*w;
-    betaval = par.task{i}.beta;
+    betaval = par.beta(i);
     indice = par.idx(:,i);
     Lambda = Lambda + betaval*w2*(Ag{j}(indice,:)')*Ag{j}(indice,:);
     Ai = computeKnmKmminv(cf.covfunc_h, par.task{i}.loghyp, x(indice,:), par.task{i}.z);

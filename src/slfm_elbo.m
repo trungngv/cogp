@@ -29,7 +29,7 @@ for j=1:Q
   elbo = elbo - lkl;
   for i=1:P
     indice = par.idx(:,i);
-    betaval = par.task{i}.beta;
+    betaval = par.beta(i);
     w = par.w(i,j); w2 = w*w;
     ltilde_g(i,j) = 0.5*betaval*w2*sum(diagKnn(indice) - diagProd(Ag{j}(indice,:),Knm(indice,:)')); % Ktilde part
     ltrace_g(i,j) = 0.5*betaval*w2*traceABsym(par.g{j}.S,Ag{j}(indice,:)'*Ag{j}(indice,:)); % trace(S_jA'A) part
@@ -50,7 +50,7 @@ for i=1:P
   [Ah{i},Knm,Kmminv,Lmm] = computeKnmKmminv(cf.covfunc_h, par.task{i}.loghyp, xi, par.task{i}.z);
   diagKnn = feval(cf.covfunc_h, par.task{i}.loghyp, xi, 'diag');
   y0{i} = y(indice,i) - wAm{i} - Ah{i}*par.task{i}.m;
-  betaval = par.task{i}.beta;
+  betaval = par.beta(i);
   logN = -0.5*sum(indice)*log(2*pi/betaval) - 0.5*betaval*sum(y0{i}.^2);
   ltilde_h(i) = 0.5*betaval*sum(diagKnn - diagProd(Ah{i},Knm'));
   ltrace_h(i) = 0.5*betaval*traceABsym(par.task{i}.S,Ah{i}'*Ah{i});
@@ -63,7 +63,7 @@ if nargout >= 2   % derivatives
   dbeta = zeros(P,1);
   for i=1:P
     Ni = sum(par.idx(:,i));
-    betaval = par.task{i}.beta;
+    betaval = par.beta(i);
     dbeta(i) = - 0.5*sum(y0{i}.^2) + (0.5*Ni -ltilde_h(i) - ltrace_h(i)...
       - sum(ltilde_g(i,:)) - sum(ltrace_g(i,:)))/betaval;
   end
@@ -77,7 +77,7 @@ if nargout >= 2   % derivatives
         indice = par.idx(:,i);
         xi = x(indice,:);
         w = par.w(i,j);
-        betaval = par.task{i}.beta;
+        betaval = par.beta(i);
         Amj = Ag{j}(indice,:)*par.g{j}.m;
         % y_i - A_i m_i - \sum_{j' != j} w_ij'A_j(oi) m_j
         %    = y_i - A_i m_i - (wAm{i} - w_ij * Amj)
@@ -106,7 +106,7 @@ if nargout >= 6
     tmp = zeros(size(par.g{j}.m));
     for i=1:P
       w = par.w(i,j); w2 = w*w;
-      betaval = par.task{i}.beta;
+      betaval = par.beta(i);
       indice = par.idx(:,i);
       Lambda = Lambda + betaval*w2*(Ag{j}(indice,:)')*Ag{j}(indice,:);
       ytmp = y0{i} + w*Ag{j}(indice,:)*par.g{j}.m;
