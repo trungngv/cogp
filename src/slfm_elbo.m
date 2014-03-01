@@ -4,6 +4,12 @@ function [elbo,dbeta,dw,dloghyp,dz,dm,dS] = slfm_elbo(x,y,par,cf)
 % Lowerbound as a function of the hyperparameters (and inducing inputs)
 % for STRUCTURED/MULTIPLE-OUTPUT gps.
 %
+% Usage:
+%   elbo = slfm_elbo()
+%   [elbo,dbeta,dw,dloghyp] = slfm_elbo()
+%   [elbo,~,~,~,dz] = slfm_elbo()
+%   [elbo,~,~,~,~,dm,dS] = slfm_elbo()
+%
 % INPUT
 %   - x : inputs (in SVI, this is a mini-batch)
 %   - y : outputs (of inputs x)
@@ -59,7 +65,10 @@ for i=1:P
   elbo = elbo + logN - ltilde_h(i) - ltrace_h(i) - lkl;
 end
 
-if nargout >= 2   % derivatives
+dbeta = []; dw = []; dloghyp = []; dz = [];
+
+% derivatives of dbeta,dw,dloghyp
+if nargout >= 2 && nargout <= 4
   dbeta = zeros(P,1);
   for i=1:P
     Ni = sum(par.idx(:,i));
@@ -67,12 +76,11 @@ if nargout >= 2   % derivatives
     dbeta(i) = - 0.5*sum(y0{i}.^2) + (0.5*Ni -ltilde_h(i) - ltrace_h(i)...
       - sum(ltilde_g(i,:)) - sum(ltrace_g(i,:)))/betaval;
   end
-  if nargout >= 3   % derivatives of weights, hyper, inducing
-    dw = cell(Q,1); dloghyp = cell(Q,1); dz = cell(Q,1);
+  if nargout >= 3   % derivatives of weights, hyper
+    dw = cell(Q,1); dloghyp = cell(Q,1);
     for j=1:Q
       dloghyp{j} = zeros(size(par.g{j}.loghyp));
       dw{j} = zeros(P,1);
-      dz{j} = zeros(size(par.g{j}.z));
       for i=1:P
         indice = par.idx(:,i);
         xi = x(indice,:);
@@ -85,12 +93,7 @@ if nargout >= 2   % derivatives
         ytmp = y0{i} + w*Amj;
         par.g{j}.beta = betaval;
         par.g{j}.w = w;
-        if nargout == 5
-          [~,dloghyp_i,dz_i] = ssvi_elbo_g(xi,ytmp,par.g{j},cf.covfunc_g,P);
-          dz{j} = dz{j} + dz_i;
-        else
-          [~,dloghyp_i] = ssvi_elbo_g(xi,ytmp,par.g{j},cf.covfunc_g,P);
-        end
+        [~,dloghyp_i] = ssvi_elbo_g(xi,ytmp,par.g{j},cf.covfunc_g,P);
         dloghyp{j} = dloghyp{j} + dloghyp_i;
         dw{j}(i) = -(2/w)*ltilde_g(i,j) -(2/w)*ltrace_g(i,j) + betaval*ytmp'*Amj - betaval*w*sum(Amj.^2);
       end
@@ -98,6 +101,25 @@ if nargout >= 2   % derivatives
   end
 end
 
+if nargout == 5   % derivatives of inducing inputs
+  dz = cell(Q,1);
+  for j=1:Q
+    dz{j} = zeros(size(par.g{j}.z));
+    for i=1:P
+      indice = par.idx(:,i);
+      xi = x(indice,:);
+      w = par.w(i,j);
+      betaval = par.beta(i);
+      Amj = Ag{j}(indice,:)*par.g{j}.m;
+      ytmp = y0{i} + w*Amj;
+      par.g{j}.beta = betaval;
+      par.g{j}.w = w;
+      [~,~,dz_i] = ssvi_elbo_g(xi,ytmp,par.g{j},cf.covfunc_g,P);
+      dz{j} = dz{j} + dz_i;
+    end
+  end
+end
+  
 % dm,dS (only for checking gradients)
 if nargout >= 6
   dm = cell(Q,1); dS = cell(Q,1);

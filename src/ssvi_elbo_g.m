@@ -3,6 +3,14 @@ function [elbo,dloghyp,dz] = ssvi_elbo_g(x,y,params,covfunc,n_outputs)
 %   
 % For g, use only 1/P KL, all other thing same.
 %
+% Usage:
+%   elbo = ssvi_elbo_g()
+%   [elbo,dloghyp] = ssvi_elbo_g()
+%   [elbo,~,dz] = ssvi_elbo_g()
+%
+% Note that we return one of dloghyp and dz only as we now want to optimize
+% them separately.
+%
 % INPUT
 %   - x : inputs (in SVI, this is a mini-batch)
 %   - y : outputs (of inputs x)
@@ -32,7 +40,7 @@ ltrace = 0.5*betaval*w2*traceABsym(S,A'*A); % trace(SA'A) part
 lkl = 0.5*(logdetChol(Lmm) - logdet(S) + traceABsym(Kmminv,S) + m'*Kmminv*m - M); % kl-divergence part
 elbo = logN - ltilde - ltrace - lkl/n_outputs;
 
-if nargout >= 2     %covariance derivatives
+if nargout == 2     %covariance derivatives
   dloghyp = zeros(size(params.loghyp));
   for i=1:numel(params.loghyp)
     % covSEard returns dK / dloghyper 
@@ -42,13 +50,14 @@ if nargout >= 2     %covariance derivatives
     dA = (dKnm - A*dKmm)*Kmminv;
     dlogN = betaval*w*(yMinusAm'*dA)*m;
     dTilde = 0.5*betaval*w2*(sum(dKnn) - sum(diagProd(A,dKnm')) - sum(diagProd(dA,Knm')));
-    dTrace = betaval*w2*traceAB(A*S,dA');
+    dTrace = betaval*w2*trAB(A*S,dA');
     dKL = 0.5*(traceABsym(Kmminv,dKmm) - traceABsym(Kmminv,dKmm*Kmminv*(m*m'+S)));
     dloghyp(i) = dlogN - dTilde - dTrace - dKL/n_outputs;
   end
 end
 
 if nargout == 3   % inducing inputs derivatives
+  dloghyp = [];
   dz = zeros(size(z));
   ASKmminv = A*S*Kmminv;
   D1 = w*yMinusAm*m'*Kmminv + w2*A - w2*ASKmminv;

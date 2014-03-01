@@ -8,7 +8,7 @@ y = log(y);
 [y,ymean,ystd] = standardize(y,[],[]);
 
 %M = size(x,1);
-M.g = 200; M.h = 5;
+M.g = 50; M.h = 5;
 % ssvi
 cf.covfunc_g  = 'covSEard';
 cf.covfunc_h  = 'covNoise';

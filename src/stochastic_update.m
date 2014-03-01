@@ -1,16 +1,10 @@
-function params = stochastic_update(params,cf,dloghyp,dbeta,dz)
-%STOCHASTIC_UPDATE params = stochastic_update(params,cf,dloghyp,dbeta,dz)
+function [w,delta_w] = stochastic_update(w,delta_w,grad_w,momentum,lrate)
+%STOCHASTIC_UPDATE [w,delta_w] = stochastic_update(w,delta_w,grad_w,momentum,lrate)
 %   Stochastic update of the parameters.
-if ~isempty(dloghyp)
-  params.delta_hyp = cf.momentum * params.delta_hyp + cf.lrate_hyp * dloghyp;
-  params.loghyp = params.loghyp + params.delta_hyp;
-end
-if ~isempty(dbeta)
-  params.delta_beta = cf.momentum * params.delta_beta + cf.lrate_beta * dbeta;
-  params.beta = params.beta + params.delta_beta;
-end
-if ~isempty(dz)
-  params.delta_z = cf.momentum_z*params.delta_z + cf.lrate_z * dz;
-  params.z = params.z + params.delta_z;
-end
+%
+% delta_w = momentum * delta_w + lrate * grad_w
+% w = w + delta_w
+
+delta_w = momentum * delta_w + lrate * grad_w;
+w = w + delta_w;
 

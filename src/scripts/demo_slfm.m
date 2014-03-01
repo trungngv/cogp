@@ -33,8 +33,8 @@ cf.momentum_w = 0.9;
 cf.lrate_w    = 1e-5;
 cf.learn_z    = true;
 cf.momentum_z = 0.0;
-cf.lrate_z    = 1e-4;
-cf.init_kmeans = false;
+cf.lrate_z    = 5e-4;
+cf.init_kmeans = true;
 cf.maxiter = 500;
 cf.nbatch = 10;
 

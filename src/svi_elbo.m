@@ -2,8 +2,12 @@ function [elbo,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,A,Knm,Kmminv,Lmm)
 %SVI_ELBO [elbo,dloghyp,dbeta,dz] = svi_elbo(x,y,params,covfunc,A,Knm,Kmminv,Lmm)
 %   
 % Lowerbound as a function of the hyperparameters (and inducing inputs) and
-% their derivatives. Note that the inducing derivatives are for the
-% SEard covariance function only.
+% their derivatives.
+%
+% Usage:
+%   elbo = svi_elbo()
+%   [elbo,dloghyp,dbeta] = svi_elbo()
+%   [elbo,~,~,dz] = svi_elbo()
 %
 % INPUT
 %   - x : inputs (in SVI, this is a mini-batch)
@@ -39,7 +43,8 @@ lkl = 0.5*(logdetChol(Lmm) - logdet(S) + traceABsym(Kmminv,S) + m'*Kmminv*m - M)
 elbo = logN - ltilde - ltrace - lkl;
 %logLTrue = l3bound(y,Knm,Lmm,Kmminv,diagKnn - diagProd(A,Knm'),betaval,m,S);
 
-if nargout >= 2     %covariance derivatives
+dbeta = []; dloghyp = [];
+if nargout >= 2 && nargout < 4    %covariance derivatives
   dloghyp = zeros(size(params.loghyp));
   for i=1:numel(params.loghyp)
     % covSEard returns dK / dloghyper 
@@ -49,13 +54,10 @@ if nargout >= 2     %covariance derivatives
     dA = (dKnm - A*dKmm)*Kmminv;
     dlogN = betaval*(yMinusAm'*dA)*m;
     dTilde = 0.5*betaval*(sum(dKnn) - sum(diagProd(A,dKnm')) - sum(diagProd(dA,Knm')));
-    dTrace = betaval*traceAB(A*S,dA');
+    dTrace = betaval*trAB(A*S,dA');
     dKL = 0.5*(traceABsym(Kmminv,dKmm) - traceABsym(Kmminv,dKmm*Kmminv*(m*m'+S)));
     dloghyp(i) = dlogN - dTilde - dTrace - dKL;
   end
-end
-
-if nargout >= 3   % noise derivative
   dbeta = 0.5*N/betaval - 0.5*sum(yMinusAm.^2) -ltilde/betaval - ltrace/betaval;
 end
 

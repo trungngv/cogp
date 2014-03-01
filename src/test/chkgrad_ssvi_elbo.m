@@ -35,6 +35,7 @@ params.task = cell(P,1);
 for i=1:P
   z = 10*rand(M,D);
   params.task{i} = init_params(x,rand(N,1),M,nhyper_h,0,z);
+  params.task{i}.beta = rand;
 end
 params.idx = ~isnan(y);
 params.w = 0.1+rand(P,1);
@@ -74,7 +75,8 @@ P = numel(params.task);
 params.g.loghyp = theta(1:nhyp)';
 params.w = theta(nhyp+1:nhyp+P)';
 params.g.z = reshape(theta(nhyp+P+1:end),numel(params.g.m),[]);
-[~,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf);
+[~,dloghyp,dw] = ssvi_elbo(x,y,params,cf);
+[~,~,~,dz] = ssvi_elbo(x,y,params,cf);
 g = [dloghyp; dw; dz(:)]';
 end
 
@@ -117,7 +119,8 @@ diagKnn = feval(cf.covfunc_g, params.g.loghyp, x, 'diag');
 S_g = params.g.S;
 w = params.w(i); w2 = w*w;
 y_minus_g = y(indice,i) - w*A*params.g.m;
-[~,dloghyp,dbeta,dz] = svi_elbo(x(indice,:),y_minus_g,params.task{i},cf.covfunc_h);
+[~,dloghyp,dbeta] = svi_elbo(x(indice,:),y_minus_g,params.task{i},cf.covfunc_h);
+[~,~,~,dz] = svi_elbo(x(indice,:),y_minus_g,params.task{i},cf.covfunc_h);
 dbeta_g = -0.5*w2*sum(diagKnn(indice)-diagProd(A,Knm'));
 dbeta_g = dbeta_g - 0.5*w2*traceABsym(S_g,(A')*A);
 dbeta = dbeta + dbeta_g;

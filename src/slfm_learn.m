@@ -47,26 +47,27 @@ for iter = 1:cf.maxiter
   par = slfm_update_g(xbatch,ybatch,par,cf);
   
   % hyperparameters of g_j
-  if cf.learn_z
-    [~,dbeta,dw,dloghyp,dz] = slfm_elbo(xbatch,ybatch,par,cf);
-  else
-    [~,dbeta,dw,dloghyp] = slfm_elbo(xbatch,ybatch,par,cf);
-    dz = cell(Q,1);
-  end
+  [~,dbeta,dw,dloghyp] = slfm_elbo(xbatch,ybatch,par,cf);
   for j=1:Q
-    par.g{j} = stochastic_update(par.g{j},cf,dloghyp{j},[],dz{j});
+    [par.g{j}.loghyp,par.g{j}.delta_hyp] = stochastic_update(...
+      par.g{j}.loghyp,par.g{j}.delta_hyp,dloghyp{j},cf.momentum,cf.lrate_hyp);
   end
   
-  % update dw
+  % update w, beta
   dw = reshape(cell2mat(dw),P,Q);
-  par.delta_w = cf.momentum_w*par.delta_w + cf.lrate_w*dw;
-  par.w = par.w + par.delta_w;
-  
-  % update dbeta
-  par.delta_beta = cf.momentum * par.delta_beta + cf.lrate_beta * dbeta;
-  par.beta = par.beta + par.delta_beta;
+  [par.w,par.delta_w] = stochastic_update(par.w,par.delta_w,dw,cf.momentum_w,cf.lrate_w);
+  [par.beta,par.delta_beta] = stochastic_update(par.beta,par.delta_beta,dbeta,cf.momentum,cf.lrate_beta);
 
-  % update h_i
+  % update inducing of g (using new hyperparameters)
+  if cf.learn_z
+    [~,~,~,~,dz] = slfm_elbo(xbatch,ybatch,par,cf);
+    for j=1:Q
+      [par.g{j}.z,par.g{j}.delta_z] = stochastic_update(...
+        par.g{j}.z,par.g{j}.delta_z,dz{j},cf.momentum_z,cf.lrate_z);
+    end
+  end
+
+  % pre-computation to update h_i
   wAm = cell(P,1); % wAm{i} = \sum_j w_ij A_j(oi) m_j
   for j=1:Q
     Aj = computeKnmKmminv(cf.covfunc_g, par.g{j}.loghyp, x, par.g{j}.z);
@@ -80,6 +81,8 @@ for iter = 1:cf.maxiter
       end
     end
   end
+  
+  % update h_i
   for i=1:P
     indice = par.idx(:,i);
     y0 = ybatch(indice,i) - wAm{i};
@@ -87,13 +90,15 @@ for iter = 1:cf.maxiter
     % variational parameters of h_i
     par.task{i} = svi_update(xbatch(indice,:),y0,par.task{i},cf,cf.covfunc_h);
     % hyperparameters of h_i
+    [~,dloghyp,~] = svi_elbo(xbatch(indice,:),y0,par.task{i},cf.covfunc_h);
+    [par.task{i}.loghyp,par.task{i}.delta_hyp] = stochastic_update(...
+      par.task{i}.loghyp,par.task{i}.delta_hyp,dloghyp,cf.momentum,cf.lrate_hyp);
+    % inducing of h_i (using new hyperparameters)
     if cf.learn_z
-      [~,dloghyp,~,dz] = svi_elbo(xbatch(indice,:),y0,par.task{i},cf.covfunc_h);
-    else
-      [~,dloghyp,~] = svi_elbo(xbatch(indice,:),y0,par.task{i},cf.covfunc_h);
-      dz = [];
+      [~,~,~,dz] = svi_elbo(xbatch(indice,:),y0,par.task{i},cf.covfunc_h);
+    [par.task{i}.z,par.task{i}.delta_z] = stochastic_update(...
+      par.task{i}.z,par.task{i}.delta_z,dz,cf.momentum_z,cf.lrate_z);
     end
-    par.task{i} = stochastic_update(par.task{i},cf,dloghyp,[],dz);
   end
   
   % elbo for checking convergence

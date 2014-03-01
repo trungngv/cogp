@@ -105,7 +105,8 @@ end
 for i=1:P
   par.beta(i) = theta(noffset+i);
 end
-[~,dbeta,dw,dloghyp,dz] = slfm_elbo(x,y,par,cf);
+[~,dbeta,dw,dloghyp] = slfm_elbo(x,y,par,cf);
+[~,~,~,~,dz] = slfm_elbo(x,y,par,cf);
 g = [];
 for j=1:Q
   g = [g; dloghyp{j}; dw{j}; dz{j}(:)];
@@ -137,7 +138,7 @@ for j=1:Q
   par.g{j}.S = reshape(theta(noffset+M+1:noffset+M+M*M),M,M);
   noffset = noffset+M+M*M;
 end
-[fval,~,~,~,~,dm,dS] = slfm_elbo(x,y,par,cf);
+[~,~,~,~,~,dm,dS] = slfm_elbo(x,y,par,cf);
 g = [];
 for j=1:Q
   g = [g; dm{j}; dS{j}(:)];
@@ -168,7 +169,8 @@ for j=1:numel(par.g)
 end  
 y0 = y(indice,i) - wAm;
 par.task{i}.beta = par.beta(i);
-[~,dloghyp,~,dz] = svi_elbo(x(indice,:),y0,par.task{i},cf.covfunc_h);
+[~,dloghyp] = svi_elbo(x(indice,:),y0,par.task{i},cf.covfunc_h);
+[~,~,~,dz] = svi_elbo(x(indice,:),y0,par.task{i},cf.covfunc_h);
 g = [dloghyp; dz(:)]';
 end
 

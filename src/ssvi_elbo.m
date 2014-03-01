@@ -5,6 +5,11 @@ function [elbo,dloghyp,dw,dz] = ssvi_elbo(x,y,params,cf,A,Knm,Kmminv,Lmm)
 % for STRUCTURED (multiple-output) gps. Gradients are wrt to the shared
 % function g(x).
 %
+% Usage:
+%   elbo = ssvi_elbo()
+%   [elbo,dloghyp,dw] = ssvi_elbo()
+%   [elbo,~,~,dz] = ssvi_elbo()
+%
 % INPUT
 %   - x : inputs (in SVI, this is a mini-batch)
 %   - y : outputs (of inputs x)
@@ -44,9 +49,27 @@ for i=1:P
   elbo = elbo - ltilde(i) - ltrace(i);
 end
 
-if nargout >= 2   % derivatives 
+dloghyp = []; dw = [];
+if nargout >= 2 && nargout < 4  % derivatives 
   dloghyp = zeros(size(loghyp_g));
   dw = zeros(P,1);
+  for i=1:P
+    indice = params.idx(:,i);
+    xi = x(indice,:);
+    Ai = computeKnmKmminv(cf.covfunc_h, params.task{i}.loghyp, xi, params.task{i}.z);
+    y_minus_hi = y(params.idx(:,i),i) - Ai*params.task{i}.m;
+    betaval = params.task{i}.beta;
+    params.g.beta = betaval;
+    params.g.w = params.w(i);
+    [~,dloghyp_i] = ssvi_elbo_g(xi,y_minus_hi,params.g,cf.covfunc_g,P);
+    dloghyp = dloghyp + dloghyp_i;
+    w = params.w(i);
+    Am = A(indice,:)*m_g;
+    dw(i) = -(2/w)*ltilde(i) -(2/w)*ltrace(i) + betaval*y_minus_hi'*Am - betaval*w*sum(Am.^2);
+  end
+end
+
+if nargout == 4
   dz = zeros(size(z_g));
   for i=1:P
     indice = params.idx(:,i);
@@ -56,19 +79,10 @@ if nargout >= 2   % derivatives
     betaval = params.task{i}.beta;
     params.g.beta = betaval;
     params.g.w = params.w(i);
-    if nargout == 4
-      [~,dloghyp_i,dz_i] = ssvi_elbo_g(xi,y_minus_hi,params.g,cf.covfunc_g,P);
-      dz = dz + dz_i;
-    else
-      [~,dloghyp_i] = ssvi_elbo_g(xi,y_minus_hi,params.g,cf.covfunc_g,P);
-    end
-    dloghyp = dloghyp + dloghyp_i;
-    w = params.w(i);
-    Am = A(indice,:)*m_g;
-    dw(i) = -(2/w)*ltilde(i) -(2/w)*ltrace(i) + betaval*y_minus_hi'*Am - betaval*w*sum(Am.^2);
+    [~,~,dz_i] = ssvi_elbo_g(xi,y_minus_hi,params.g,cf.covfunc_g,P);
+    dz = dz + dz_i;
   end
 end
-
 % dm,dS (only for gradient checking)
 % if nargout == 5
 %   Lambda = Kmminv;

@@ -32,7 +32,7 @@ hyp_init(1:dim+2,1) = log(ones(dim+2,1));
 
 % optimize hyperparameters and pseudo-inputs
 w_init = [reshape(z0,M*dim,1);hyp_init];
-[w,f] = minimize(w_init,'spgp_lik',-500,y0,x,M);
+[w,f] = minimize(w_init,'spgp_lik',-1000,y0,x,M);
 % [w,f] = lbfgs(w_init,'spgp_lik',200,10,y0,x,M); % an alternative
 z = reshape(w(1:M*dim,1),M,dim);
 hyp = w(M*dim+1:end,1);
