@@ -1,14 +1,14 @@
 clear all; clc; %close all;
 rng(1110,'twister');
 
-[x,y,xtest,ytest] = read_juraCu();
+[x,y,xtest,ytest] = read_juraCd();
 % pre-process y
 y0 = y;
 y = log(y);
 [y,ymean,ystd] = standardize(y,[],[]);
 
 %M = size(x,1);
-M.g = 50; M.h = 5;
+M.g = 20; M.h = 20;
 % ssvi
 cf.covfunc_g  = 'covSEard';
 cf.covfunc_h  = 'covNoise';
@@ -18,12 +18,12 @@ cf.lrate_hyp  = 1e-5;
 cf.lrate_beta = 1e-4;
 cf.momentum_w = 0.9;
 cf.lrate_w    = 1e-4;
-cf.learn_z    = true;
+cf.learn_z    = false;
 cf.momentum_z = 0.0;
 cf.lrate_z    = 1e-4;
-cf.init_kmeans = false;
+cf.init_kmeans = true;
 cf.maxiter = 500;
-cf.nbatch = 10;
+cf.nbatch = 5;
 
 Q = 2;
 par.task = cell(size(y,2),1);
@@ -59,7 +59,9 @@ disp(par.w)
 figure; hold on;
 scatter(x(:,1),x(:,2))
 scatter(par.g{1}.z(:,1),par.g{1}.z(:,2),'xr')
-scatter(par.g{1}.z0(:,1),par.g{1}.z0(:,2),'sm')
+scatter(par.g{1}.z0(:,1),par.g{1}.z0(:,2),'sr')
+scatter(par.g{2}.z(:,1),par.g{2}.z(:,2),'xm')
+scatter(par.g{2}.z0(:,1),par.g{2}.z0(:,2),'sm')
 title('inducing of g')
 
 % for i=1:size(ytest,2)

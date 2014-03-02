@@ -15,7 +15,7 @@ function [elbo,par] = slfm_learn(x,y,M,par,cf)
 P = numel(par.task); Q = numel(par.g);
 par.w = ones(P,Q);
 par.delta_w = zeros(P,Q);
-par.beta = (1/0.01)*ones(P,1);
+par.beta = (1/0.05)*ones(P,1);
 par.delta_beta = zeros(P,1);
 observed = ~isnan(y);
 nhyper_g = eval(feval(cf.covfunc_g));
@@ -35,6 +35,9 @@ for i=1:P
   %par.task{i}.m = zeros(size(par.task{i}.m));
   if strcmp(cf.covfunc_h,'covNoise')
     par.task{i}.loghyp = log(0.05); % learning of noise is hard so set it small here
+  end
+  if strcmp(cf.covfunc_h,'covSEard')
+    par.task{i}.loghyp(end) = log(0.1); % h_i should be small
   end
 end
 elbo = zeros(numel(cf.maxiter),1);
