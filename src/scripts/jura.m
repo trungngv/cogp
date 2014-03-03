@@ -39,6 +39,7 @@ disp('mae = ')
 disp(mean(abs(mu - ytest)));
 %%
 % gpsvi
+rng(1110,'twister');
 covfunc   = 'covSEard';
 cf.covfunc = covfunc;
 cf.lrate     = 1e-2;
@@ -46,44 +47,50 @@ cf.lrate_hyp = 1e-5;
 cf.lrate_beta = 1e-4;
 cf.lrate_z   = 1e-4;
 cf.momentum  = 0.9;
-cf.momentum_z = 0.0;
-cf.learn_z   = false;
-cf.init_kmeans = false;
+cf.momentum_z = 0.9;
+cf.learn_z   = true;
+cf.init_kmeans = true;
 cf.maxiter = 1000;
-cf.nbatch = 50;
+cf.nbatch = 100;
 
-runs = 10;
-maes = zeros(numel(Ms),runs);
-for i=1:numel(Ms)
-  M = Ms(i);
-  for j=1:runs
-    z0 = x(randperm(size(x,1),M),:);
-    [mu,s2,elbo,params] = svi_learn(x,y,xtest,M,cf,z0);
-    mu = exp(mu*ystd + ymean);
-    maes(i,j) = mean(abs(ytest - mu));
-    disp('elbo = ')
-    disp(elbo(end))
-  end
-end
+M = 100;
+%z0 = x(randperm(size(x,1),M),:);
+[mu,s2,elbo,params] = svi_learn(x,y,xtest,M,cf,[]);
+mu = exp(mu*ystd + ymean);
+disp('mae = ')
+disp(mean(abs(ytest - mu)));
 
-mae_mean = mean(maes,2);
-mae_std = 2*std(maes,0,2);
-plot(Ms,mae_mean,'x-','MarkerSize',15);
-errorbar(Ms,mae_mean,mae_std);
-xlabel('number of inducing points');
-ylabel('mae');
-title('MAE by svigp (averaged over 10 runs)');
-saveas(gcf, 'jura-svigp-fixedz.eps','epsc');
-save('jura-svigp-fixedz.mat','maes');
+% batch 
+% runs = 10;
+% maes = zeros(numel(Ms),runs);
+% for i=1:numel(Ms)
+%   M = Ms(i);
+%   for j=1:runs
+%     z0 = x(randperm(size(x,1),M),:);
+%     [mu,s2,elbo,params] = svi_learn(x,y,xtest,M,cf,z0);
+%     mu = exp(mu*ystd + ymean);
+%     maes(i,j) = mean(abs(ytest - mu));
+%     disp('elbo = ')
+%     disp(elbo(end))
+%   end
+% end
 
-%plot_all(x,y,xtest,mu,s2,params.z0,params.z,['GPSVI ' func ' iter = 100']);
-%axis(theaxis);
-%saveas(gcf, ['results/figures/toy-iter' num2str(cf.maxiter) '-nbatch' num2str(cf.nbatch) '-run2.eps'],'epsc');
+% mae_mean = mean(maes,2);
+% mae_std = 2*std(maes,0,2);
+% plot(Ms,mae_mean,'x-','MarkerSize',15);
+% errorbar(Ms,mae_mean,mae_std);
+% xlabel('number of inducing points');
+% ylabel('mae');
+% title('svigp fixed z, mae vs. inducing inputs');
+% saveas(gcf, 'jura-svigp-batch100.eps','epsc');
+%%save('jura-svigp.mat','maes');
 
 % figure;
 % plot(1:numel(elbo),elbo);
 % ylabel('elbo')
 % xlabel('iteration')
-% title(['elbo vs. iteration, lrate = ' num2str(cf.lrate_z)])
+% title(['elbo vs. iteration'])
+% disp('elbo = ')
+% disp(elbo(end))
 %saveas(gcf, ['results/figures/' func '-svi-lrate' num2str(cf.lrate_z) '-bound.eps'],'epsc');
 
