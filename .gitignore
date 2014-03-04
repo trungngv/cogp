@@ -1,6 +1,9 @@
 # Not include libs for now
 libs/cgp
 libs/mtgp
+# Dataset not used for now
+data/jura
+
 # Binary files
 *.pdf
 
