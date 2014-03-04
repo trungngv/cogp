@@ -2,7 +2,7 @@ function params = init_params(x,y,M,nhyper,init_kmeans,z0)
 %INIT_PARAMS params = init_params(x,y,M)
 %   Init parameters of a single augmented sparse gp.
 %
-y(isnan(y)) = 0; %mean(y(~isnan(y))) or 0? for missing data
+y(isnan(y)) = mean(y(~isnan(y))); %mean(y(~isnan(y))) or 0? for missing data
 [N D] = size(x);
 idx_z = randperm(N,M);
 if isempty(z0)

@@ -12,7 +12,7 @@ if size(xstar,1) > 2000
 else
   nbatch = 1;
 end
-bsize = size(xstar,1)/nbatch;
+bsize = ceil(size(xstar,1)/nbatch);
 mu = [];
 var= [];
 for i=1:nbatch

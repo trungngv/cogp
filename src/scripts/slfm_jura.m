@@ -1,14 +1,13 @@
 clear all; clc; %close all;
 rng(1110,'twister');
 
-[x,y,xtest,ytest] = read_juraCd();
 % pre-process y
 y0 = y;
 y = log(y);
 [y,ymean,ystd] = standardize(y,[],[]);
 
 %M = size(x,1);
-M.g = 20; M.h = 20;
+M.g = 100; M.h = 20;
 % ssvi
 cf.covfunc_g  = 'covSEard';
 cf.covfunc_h  = 'covNoise';
@@ -23,7 +22,7 @@ cf.momentum_z = 0.0;
 cf.lrate_z    = 1e-4;
 cf.init_kmeans = true;
 cf.maxiter = 500;
-cf.nbatch = 5;
+cf.nbatch = 100;
 
 Q = 2;
 par.task = cell(size(y,2),1);
@@ -56,13 +55,13 @@ disp(elbo(end))
 disp('learned w = ')
 disp(par.w)
 
-figure; hold on;
-scatter(x(:,1),x(:,2))
-scatter(par.g{1}.z(:,1),par.g{1}.z(:,2),'xr')
-scatter(par.g{1}.z0(:,1),par.g{1}.z0(:,2),'sr')
-scatter(par.g{2}.z(:,1),par.g{2}.z(:,2),'xm')
-scatter(par.g{2}.z0(:,1),par.g{2}.z0(:,2),'sm')
-title('inducing of g')
+% figure; hold on;
+% scatter(x(:,1),x(:,2))
+% scatter(par.g{1}.z(:,1),par.g{1}.z(:,2),'xr')
+% scatter(par.g{1}.z0(:,1),par.g{1}.z0(:,2),'sr')
+% scatter(par.g{2}.z(:,1),par.g{2}.z(:,2),'xm')
+% scatter(par.g{2}.z0(:,1),par.g{2}.z0(:,2),'sm')
+% title('inducing of g')
 
 % for i=1:size(ytest,2)
 % figure; hold on;

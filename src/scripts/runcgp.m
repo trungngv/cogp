@@ -2,17 +2,20 @@ rand('twister', 1e6);
 randn('state', 1e6);
 
 %% select data set and convert to cgp format
-dataset = 'ms';
+dataset = 'juraCu';
 log_transform = false;
 switch dataset
-  case 'jura'
-    [x,y,xtest,ytest] = load_data('data/jura','juraCd');
+  case 'juraCd'
+  case 'juraCu'
+    [x,y,xtest,ytest] = load_data('data/jura',dataset);
     features = 1:2;
   case 'concrete'
     [x,y,xtest,ytest] = load_data('data/concrete','concrete3');
     features = 3:5;
   case 'ms'
     [x,y,xtest,ytest] = load_data('data/ms','ms');
+    [x,xmean,xstd] = standardize(x,[],[]);
+    xtest = standardize(xtest,xmean,xstd);
     features = 1:size(x,2);
 end
 
@@ -22,7 +25,7 @@ XTestTemp = cell(1,numOutputs); yTestTemp = cell(1,numOutputs);
 for i=1:numOutputs
   XTemp{i} = x(:,features);
   yTemp{i} = y(:,i);
-  if strcmp(dataset, 'jura') && i > 1
+  if (strcmp(dataset, 'juraCd') || strcmp(dataset, 'juraCu')) && i > 1
     XTemp{i} = [XTemp{i}; xtest(:,features)];
     yTemp{i} = [yTemp{i}; ytest(:,i)];
   end
@@ -41,12 +44,15 @@ for k =1:size(yTemp, 2),
 end
 
 % cgp otpions
-nlf = 1;
-options = multigpOptions('ftc'); % ftc = full training condition
+nlf = 2;
+%ftc = exact; fitc,pitc,fic = approximation
+options = multigpOptions('pitc'); % ftc = full training condition
+options.initialInducingPositionMethod = 'espaced';
 options.kernType = 'gg';
 options.optimiser = 'scg';
 options.nlf = nlf;
-options.beta = ones(1, size(yTemp, 2));
+%options.beta = ones(1, size(yTemp, 2));
+options.beta = 1;
 options.bias =  [zeros(1, options.nlf) biasVal];
 options.scale = [zeros(1, options.nlf) scaleVal];
 

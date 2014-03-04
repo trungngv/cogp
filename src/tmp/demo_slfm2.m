@@ -20,11 +20,10 @@ y2miss = y2;
 y2miss(ind2) = nan;
 y = [y1miss, y2miss];
 %y = y1;
-M.g = 100; M.h = 20;
+M.g = 10; M.h = 20;
 
 % ssvi
 cf.covfunc_g  = 'covSEard';
-cf.covfunc_h  = 'covNoise';
 cf.lrate      = 1e-2;
 cf.momentum   = 0.9;
 cf.lrate_hyp  = 1e-5;
@@ -38,18 +37,18 @@ cf.init_kmeans = true;
 cf.maxiter = 500;
 cf.nbatch = 50;
 
-Q = 2;
+Q = 1;
 par.task = cell(size(y,2),1);
 par.g = cell(Q,1);
-[elbo,par] = slfm_learn(x,y,M,par,cf);
-[mu,var,mu_g,var_g] = slfm_predict(cf.covfunc_g,cf.covfunc_h,par,xtest);
+[elbo,par] = slfm2_learn(x,y,M,par,cf);
+[mu,var,mu_g,var_g] = slfm2_predict(cf.covfunc_g,par,xtest);
 
-% plot_all(x,y1,xtest,mu(:,1),var(:,1),[],par.task{1}.z,'y1');
-% axis([-11 11 -4 4]);
-% plot_all(x,y2,xtest,mu(:,2),var(:,2),[],par.task{2}.z,'y2');
-% axis([-11 11 -4 4]);
-% plot_all(x,y1,xtest,mu_g(:,1),var_g(:,1),par.g{1}.z0,par.g{1}.z,'y1 by g');
-% axis([-11 11 -4 4]);
+plot_all(x,y1,xtest,mu(:,1),var(:,1),[],[],'y1');
+axis([-11 11 -4 4]);
+plot_all(x,y2,xtest,mu(:,2),var(:,2),[],[],'y2');
+axis([-11 11 -4 4]);
+plot_all(x,y1,xtest,mu_g(:,1),var_g(:,1),par.g{1}.z0,par.g{1}.z,'y1 by g');
+axis([-11 11 -4 4]);
 
 figure;
 plot(1:numel(elbo),elbo);
@@ -67,17 +66,4 @@ disp(par.w)
 % mu(:,2) = mu(:,2)*ystd(2) + ymean(2);
 % disp('mae')
 % fprintf('%.4f   %.4f\n', mean(abs(mu(:,1)-ytest(:,1))), mean(abs(mu(:,2)-ytest(:,2))));
-
-%% independent gpsvi
-% cf.covfunc = 'covSEard';
-% cf.lrate_z = 1e-3;
-% x1 = x(~ind1);
-% [mu,s2,elbo,params] = svi_learn(x1,y1(~ind1),xtest,M,cf,[]);
-% plot_all(x,y1,xtest,mu,s2,params.z0,params.z,'independent y1');
-% axis([-11 11 -4 4]);
-% 
-% x2 = x(~ind2);
-% [mu,s2,elbo,params] = svi_learn(x2,y2(~ind2),xtest,M,cf,[]);
-% plot_all(x,y2,xtest,mu,s2,params.z0,params.z,'independent y2');
-% axis([-11 11 -4 4]);
 

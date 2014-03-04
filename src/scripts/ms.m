@@ -12,7 +12,7 @@ LM = LinearModel.fit(x,y(:,1));
 ypred = LM.predict(xtest);
 
 % gp model
-GM = standard_gp([],x,y(:,1),xtest,[],true);
+GM = standard_gp([],x,y(:,1),xtest,[],false);
 disp('lengthscales')
 disp(exp(GM.hyp.cov));
 
@@ -28,7 +28,6 @@ LM = LinearModel.fit(x,y(:,2));
 disp('prediction for Pulse2')
 ypred = LM.predict(xtest);
 
-gp
 GM = standard_gp([],x,y(:,2),xtest,[],false);
 disp('lengthscales')
 disp(exp(GM.hyp.cov));

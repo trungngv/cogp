@@ -17,22 +17,25 @@ par = init_params(x,y,M,nhyper,0,z0);
 par.beta = 1/0.05;
 par.delta_beta = 0;
 elbo = zeros(numel(cf.maxiter),1);
-for i = 1 : cf.maxiter
+for iter = 1 : cf.maxiter
   idx = randperm(N, cf.nbatch);
   xi = x(idx,:); yi = y(idx);
   [par,A,Knm,Kmminv,Lmm] = svi_update(xi,yi,par,cf,cf.covfunc);
-  [~,dloghyp,dbeta] = svi_elbo(xi,yi,par,cf.covfunc,A,Knm,Kmminv,Lmm);
-  [par.loghyp,par.delta_hyp] = stochastic_update(par.loghyp,par.delta_hyp,...
-    dloghyp, cf.momentum, cf.lrate_hyp);
-  [par.beta,par.delta_beta] = stochastic_update(par.beta,par.delta_beta,...
-    dbeta, cf.momentum, cf.lrate_beta);
-  if cf.learn_z
-    [~,~,~,dz] = svi_elbo(xi,yi,par,cf.covfunc);
-    [par.z,par.delta_z] = stochastic_update(par.z, par.delta_z, dz, ...
-      cf.momentum_z, cf.lrate_z);
+  if iter > N/cf.nbatch   % fix covariance hyperparameter in the first eposch
+    [~,dloghyp,dbeta] = svi_elbo(xi,yi,par,cf.covfunc,A,Knm,Kmminv,Lmm);
+    [par.loghyp,par.delta_hyp] = stochastic_update(par.loghyp,par.delta_hyp,...
+      dloghyp, cf.momentum, cf.lrate_hyp);
+    [par.beta,par.delta_beta] = stochastic_update(par.beta,par.delta_beta,...
+      dbeta, cf.momentum, cf.lrate_beta);
+    if cf.learn_z
+      [~,~,~,dz] = svi_elbo(xi,yi,par,cf.covfunc);
+      [par.z,par.delta_z] = stochastic_update(par.z, par.delta_z, dz, ...
+        cf.momentum_z, cf.lrate_z);
+    end
   end
   % compute elbo using updated parameters
-  elbo(i) = svi_elbo(x,y,par,cf.covfunc,[],[],[],[]);
+  elbo(iter) = svi_elbo(x,y,par,cf.covfunc,[],[],[],[]);
+  fprintf('Iteration\t%d:\t%.4f\n',iter,elbo(iter));
 end
 
 if ~isempty(xtest)
