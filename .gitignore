@@ -3,7 +3,7 @@ libs/cgp
 libs/mtgp
 # Dataset not used for now
 data/jura
-
+data/hpc
 # Binary files
 *.pdf
 
