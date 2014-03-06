@@ -7,23 +7,64 @@ In the final experiments, we evaluate the model on large-scale learning with mul
 In this toy problem we use two related outputs generated from the same latent function $sin(x)$ but are corrupted by independent noises: $y_1(x) = sin(x) + \epsilon$ and $y_2(x) = -sin(x) + \epsilon$, $\epsilon \sim \Normal(0,0.01)$.
 Each output has missing values in one region of the input space.
 % Say that this is from a single gpsvi
-The predictive distributions of the model compared to that of independent gps are shown in \ref{fig5}.
+The predictive distributions of the model compared to that of independent GPs with stochastic variational inference are shown in figure \ref{fig:toy}.
+Furthermore, the inference algorithm correctly learns the correlation between the two functions giving weights $w_{11} = 1.07$ and $w_{21} = -1.06$.
 
 \begin{figure*}
 \centering
-\begin{tabular}{cc}
-\includegraphics[scale=0.5]{figures/ssvi2-y1.eps} &
-\includegraphics[scale=0.5]{figures/ssvi2-svi1.eps} \\
-\includegraphics[scale=0.5]{figures/ssvi2-y2.eps} &
-\includegraphics[scale=0.5]{figures/ssvi2-svi2.eps} \\
+\begin{tabular}{cccc}
+\includegraphics[scale=0.25]{figures/toy-slfm-y1.eps} &
+\includegraphics[scale=0.25]{figures/toy-svigp-y1.eps} &
+\includegraphics[scale=0.25]{figures/toy-slfm-y2.eps} &
+\includegraphics[scale=0.25]{figures/toy-svigp-y2.eps}
 \end{tabular}
-\label{fig5}
-\caption{Predictive distributions of the multioutput gps (left column) and independent gps (right column) for the second toy experiment. The predictive distribution by $g(x)$ for $y_1(x)$ is shown in the bottom figure.}
+\caption{Predictive distributions of the multioutput GPs (first and third figure) and independent GPs using stochastic variational inference (second and last figure) for the  toy problem. Solid black line: predictive mean; grey bar: two standard deviations; magenta dots: real observations; blue dots: missing data. The black crosses show the locations of the inducing inputs.}
+\label{fig:toy}
 \end{figure*}
 
 \subsection{EVALUATION OF THE PREDICTIVE ACCURACY}
 \subsubsection{Foregin Exchange Rate Prediction}
+In this experiment we predict the foreign exchange rate.
+The smse are shown in Table \ref{tab:fx}.
+
+\begin{table}[h]
+\caption{Performance comparison by SMSE on the fx dataset.}
+\label{tab:fx}
+\begin{center}
+\begin{tabular}{c|c}
+method & smse \\ \hline
+SLFM (Q=2) & 0.2232 \\
+SLFM (Q=1) & 0.48 \\
+CGP & 0.2795 \\
+ICM & 0.3927
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{figure*}
+\centering
+\begin{tabular}{ccc}
+\includegraphics[scale=0.3]{figures/fxAUD.eps} &
+\includegraphics[scale=0.3]{figures/fxCAD.eps} &
+\includegraphics[scale=0.3]{figures/fxJPY.eps}
+\end{tabular}
+\caption{Real observations and predictive distributions for AUD (left), CAD (middle), and JPY (right). The color coding scheme is the same as in figure \ref{fig:toy}.}
+\label{fig:fx}
+\end{figure*}
+
 \subsubsection{Weather Data Prediction}
+
+\begin{figure*}
+\centering
+\begin{tabular}{cc}
+\includegraphics[scale=0.3]{figures/weatherCambermet.eps} &
+\includegraphics[scale=0.3]{figures/weatherCambermet.eps} \\
+\includegraphics[scale=0.3]{figures/weatherChimet.eps} &
+\includegraphics[scale=0.3]{figures/weatherChimet.eps}
+\end{tabular}
+\caption{Predictive distributions of the multioutput GPs (left column) and full independent GPs (right column) for the air temperature problem.}
+\label{fig:toy}
+\end{figure*}
 
 \subsection{LARGE-SCALE EXPERIMENTS}
 \subsubsection{Robort Arms}

@@ -41,93 +41,64 @@ q(\g, \h, \u, \v | \y)
  &= p(\g|\u) p(\h|\v) q(\u,\v)  \\
  &= p(\g|\u) p(\h|\v) \prod_{j=1}^Q q(\u_j) \prod_{i=1}^P  q(\v_i)
 \end{align}
-Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are given, we need only to find the optimum $q(\u_j)$ and $q(\v_i)$.
-Let $q(\u_j) = \Normal(\u_j; \mgj, \Sgj)$ and $q(\v_i) = \Normal(\v_i; \mhi, \Shi)$. \\
+Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are given, we need only  find the optimum $q(\u_j) = \Normal(\u_j; \mgj, \Sgj)$ and $q(\v_i) = q(\v_i) = \Normal(\v_i; \mhi, \Shi)$.
 
 \noindent
-To find the optimum $q(\u, \v)$ we optimize the evidence lower bound (ELBO) of the log marginal,
+In variational inference, this is done by optimizing the evidence lower bound (ELBO) of the log marginal:
 \begin{align}
+%\nonumber
+%\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
+%\nonumber
+%=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v 
+%+ \int q(\u, \v) \log \frac{p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
 \nonumber
-\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
-\nonumber
-=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v 
-+ \int q(\u, \v) \log \frac{p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
+&\log p(\y) \ge \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v \\
+&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\u_i) || p(\u_i)],
 \label{eq:elbo}
-=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v 
-- \left(\sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] + \sum_{i=1}^P \KL[q(\u_i) || p(\u_i)] \right),
 \end{align}
-where the last equality occurs because both of $q(\u, \v)$ and $p(\u, \v)$ fully factorize.
-Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distributions, the KL divergences are analytically tractable and require $\calO(M^3)$ computation, where $M$ is the largest number of inducing inputs (recall that $g_j(\x)$ and $h_i(\x)$ use separate set of inducing inputs). \\
-
-\noindent To compute the ELBO we first focus on the term:
-\newcommand{\llangle}{\left\langle}
-\newcommand{\rrangle}{\right\rangle}
+which is derived using Jensen's inequality and the fact that both of $q(\u, \v)$ and $p(\u, \v)$ fully factorize.
+Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distributions, the KL divergences are analytically tractable and require $\calO(M^3)$ computation. To compute the expected likelihood term in the ELBO we first see that
 \begin{align}
 \nonumber
-\log p(\y | \u, \v)
- &= \log \Eb{p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \\
- \nonumber
-&\ge \Eb{\log p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \quad &\text{(Jensen's inequality)} \\
-&= \sum_{i=1}^P \sum_{n=1}^N \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_{in} | \v_i)}, \quad 
- &\text{(factorized likelihood)}
+\log \text{ } &p(\y | \u, \v)
+% &= \log \Eb{p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \\
+% \nonumber
+\ge \Eb{\log p(\y | \g, \h)}_{p(\g,\h | \u, \v)}  \\
+&= \sum_{i=1}^P \sum_{n=1}^N \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_{in} | \v_i)} 
 \end{align}
 where $\g_n = \{g_{jn} = (\g_j)_n\}_{j=1}^Q$.
-Each individual term $l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ can be computed using the identity in eq. \ref{eq:identity} given in the appendix to give:
-\begin{align}
-\nonumber
-l_{in} &= \int \log p(y_{in} | \g_n, h_{in}) \prod_{j=1}^Q p(g_{jn} | \u_j) p(h_{in} | \u_i) \der \g_n \der h_{in} \\
-&= \log \Normal(y_{in}; \sum_{j=1}^Q w_{ij} \mu_{jn}+ \mu^h_{in}, \beta_i^{-1})
-- \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{nn} 
-- \frac{1}{2} \beta_i \tilde{k}^h_{inn},
-\end{align}
-where $\tilde{k}_{nn} = (\tilde{\K})_{nn}, \tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}, \mu_{jn} = (\Mu_j)_n, \text{ and } \mu^h_{in} = (\Mu^h_i)_n$.
-
-% previous detailed derivation
-%\begin{align}
-%\nonumber
-%l_{in} &= \int \log p(y_{in} | g_n, h_{in}) p(\g | \ug) p(\h_i | \u_i) \der \g \der \h_i \\
-%\nonumber
-%&= \int \log \Normal(y_{in} ; w_i g_n + h_{in}, \beta_i^{-1}) 
-%\Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
-%\Normal(h_{in} ; \mu_{in}, (\tilde{k}_{inn}) \der g_n \der h_{in} \\
-%\nonumber
-%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int (y_{in} - w_i g_n - h_{in}) \beta_i (y_{in} - w_i g_n - h_{in})
-%\Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
-%\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der g_n \der h_{in} \\
-%\nonumber
-%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int \left[(y_{in} - h_{in} - w_i \mu_{gn}) \beta_i (y_{in} - h_{in} - w_i \mu_{gn}) + w_i^2 \beta_i \tilde{k}_{gnn} \right] 
-%\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der h_{in} \\
-%\nonumber
-%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} w_i^2 \beta_i \tilde{k}_{gnn}
-%- \frac{1}{2} \beta_i \tilde{k}_{inn} - \frac{1}{2} (y_{in} - w_i \mu_{gn} - \mu_{in}) \beta_i (y_{in} - w_i \mu_{gn} - \mu_{in}) \\
-%&= \log \Normal(y_{in}; w_i \mu_{gn} + \mu_{in}, \beta_i^{-1})  - \frac{1}{2} \beta_i (w_i^2 \tilde{k}_{gnn} + \tilde{k}_{inn}),
-%\end{align}
-
-\noindent Substituting $l_{in}$ into equation \ref{eq:elbo} and carrying out the integral using the identity in eq. \ref{eq:identity} we get:
-\begin{align}
-\nonumber
-\log p(\y)
-\ge& \sum_{i=1}^P \sum_{n=1}^N
-\bigg( \log \Normal(y_{in}; \tilde{\mu}_{in}, \beta_i^{-1})
-          - \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2        \tilde{k}_{nn} - \frac{1}{2} \beta_i \tilde{k}^h_{inn}
- \\ \nonumber
-         &\quad \quad \quad \quad - \frac{1}{2} \beta_i \trace  \sum_{j=1}^Q w_{ij}^2 \S_j \mat{\Lambda}_{jn} - \beta_i \frac{1}{2} \trace \S^h_i \mat{\Lambda}_{in} 
-\bigg) \\
-&- \left(\sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] + \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)] \right) \define \calL,
-\end{align}
-where 
-%TODO \Lambda_gn depends on the output i so need a better notation
-\newcommand{\Zg}{\Z_g}
+The inequality is due to Jensen's inequality and the equality is due to the fact that the likelihood fully factorizes.
+Each individual term $l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ is computed using the identity in eq. \ref{eq:identity} and  given in eq \ref{eq:lin} (both are in the Appendix).
+\newcommand{\Ahi}{\A^h_i}
 \newcommand{\Zi}{\Z_i}
+ Substituting $l_{in}$ into equation \ref{eq:elbo} and carrying out the integral using the identity in eq. \ref{eq:identity} again we get:
+\begin{align}
+\nonumber
+&\log p(\y)
+\ge \sum_{i,n}
+\bigg( \log  \Normal(y_{in}; \tilde{\mu}_{in}, \beta_i^{-1})
+          - \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{nn} \\ \nonumber
+         &- \frac{1}{2} \beta_i \tilde{k}^h_{inn}
+         - \frac{1}{2} \beta_i \trace  \sum_{j=1}^Q w_{ij}^2 \S_j \mat{\Lambda}_{jn} - \beta_i \frac{1}{2} \trace \S^h_i \mat{\Lambda}_{in} 
+\bigg) \\
+&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)]  \define \calL,
+\end{align}
+where, with the help of the auxiliary matrices $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$ and  
+$\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$, 
 \begin{align}
 \tilde{\mu}_{in}
-&= \sum_{j=1}^Q w_{ij} k(\x_n, \Zj)k(\Zj,\Zj)^{-1}\m_j + k(\x_n, \Zhi)k(\Zhi,\Zhi)^{-1}\mhi \\
+%&= \sum_{j=1}^Q w_{ij} k(\x_n, \Zj)k(\Zj,\Zj)^{-1}\m_j + k(\x_n, \Zhi)k(\Zhi,\Zhi)^{-1}\mhi \\
+&= \sum_{j=1}^Q w_{ij} \A_j(n,:) \m_j + \Ahi(n,:) \mhi \\
 \mat{\Lambda}_{jn}
-&= k(\Zj,\Zj)^{-1} k(\Zj, \x_n) k(\x_n, \Zj) k(\Zj,\Zj)^{-1} \\
+%&= k(\Zj,\Zj)^{-1} k(\Zj, \x_n) k(\x_n, \Zj) k(\Zj,\Zj)^{-1} \\
+&= \A_j(n,:)^T \A_j(n,:)  \\
 \mat{\Lambda}_{in}
-&= k(\Zhi,\Zhi)^{-1} k(\Zhi, \x_n) k(\x_n, \Zhi) k(\Zhi,\Zhi)^{-1}.
+%&= k(\Zhi,\Zhi)^{-1} k(\Zhi, \x_n) k(\x_n, \Zhi) k(\Zhi,\Zhi)^{-1}
+&= \Ahi(n,:)^T \Ahi(n,:) 
 \end{align}
+where $\tilde{k}_{nn} = (\tilde{\K})_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$,  $\mu^h_{in} = (\Mu^h_i)_n$, and $\A_j(n,:)$ selects the $n$-th row vector of $\A_j$.
 
+% More on this elbo term
 \noindent Notice that this ELBO clearly generalizes the standard GP regression. In particular, setting $P = Q = 1$, $w_i = 1$ and $h_i(\x) = 0$ we recover the bound in Hensman et al \cite{hensmangaussian}.
 Due to the decomposition of this bound, we can use stochastic gradient descent to learn the variational parameters.
 
@@ -143,57 +114,61 @@ Recall that in the model, different outputs can be observed at different inputs 
 Let $\oi$ be the indice of the observed inputs of the output dimension $i$.
 We denote its set of observed inputs and targets as: $\X_i = \X(\oi,:)$ and $\y_i = y_{i}(\oi)$.
 
-\noindent As a function of the parameters of $q(\u_j)$, the lowerbound $\calL$ is:
-\newcommand{\Ahi}{\A^h_i}
-\begin{align}
-\nonumber
-\calL^g_j \define&
- \sum_{i=1}^P \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)  \\
- \nonumber
- &- \frac{1}{2} \sum_{i=1}^P \bigg(\beta_i \trace w_{ij}^2 \tilde{\K}_j(\oi,\oi) 
- + \beta_i \trace w_{ij}^2 \S_j \A_j(\oi,:)^T \A_j(\oi,:) \bigg)
- \\
- &- \frac{1}{2} \log |k(\Zj,\Zj) \S_j^{-1}| -\frac{1}{2} \trace k(\Zj,\Zj)^{-1} (\m_j \m_j^T + \S_j) ,
-\end{align}
-where $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$, which gives $\A_j(\oi,:) = k(\X_i,\Zj) k(\Zj,\Zj)^{-1}$, and  
-$\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$. \\
+%\noindent As a function of the parameters of $q(\u_j)$, the lowerbound $\calL$ is:
+%\begin{align}
+%\nonumber
+%\calL^g_j \define&
+% \sum_{i=1}^P \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)  \\
+% \nonumber
+% &- \frac{1}{2} \sum_{i=1}^P \bigg(\beta_i \trace w_{ij}^2 \tilde{\K}_j(\oi,\oi) 
+% + \beta_i \trace w_{ij}^2 \S_j \A_j(\oi,:)^T \A_j(\oi,:) \bigg)
+% \\
+% &- \frac{1}{2} \log |k(\Zj,\Zj) \S_j^{-1}| -\frac{1}{2} \trace k(\Zj,\Zj)^{-1} (\m_j \m_j^T + \S_j) ,
+%\end{align}
+%where $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$, which gives $\A_j(\oi,:) = k(\X_i,\Zj) k(\Zj,\Zj)^{-1}$, and  
+%$\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$. \\
 
 %------------------------------------------
 % derivatives of q(u_j)
 \newcommand{\Lgj}{\calL^g_j}
 \newcommand{\ynoj}{\y_i^{\backslash j}}
-\noindent The derivatives of $\Lgj$ wrt $\m_j$ and $\S_j$ are given by:
+\newcommand{\Kjzz}{\mat{K}_{jzz}}
+\noindent The derivatives of $\calL$ wrt $\m_j$ and $\S_j$ are given by:
 \begin{align}
-\deriv{\Lgj}{\m_j}
-& = \sum_{i=1}^P \beta_i w_{ij} \A_j(\oi,:)^T \ynoj - \bigg[k_g(\Zg,\Zg)^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg] \m_j \\
-\deriv{\Lgj}{\S_j} 
-&= \frac{1}{2} \S_j^{-1} - \frac{1}{2} \bigg[ k(\Zj,\Zj)^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg],
+\nonumber
+\deriv{\calL}{\m_j} 
+=& \sum_{i=1}^P \beta_i w_{ij} \A_j(\oi,:)^T \ynoj \\
+&- \bigg[\Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg] \m_j \\
+\deriv{\calL}{\S_j} 
+=& \frac{1}{2} \S_j^{-1} - \frac{1}{2} \bigg[ \Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg],
 \end{align}
-where $\y_i^{\backslash j} = \y_i - \Ahi \mhi - \sum_{j' \neq j} w_{ij'} \A_{j'}(\oi,:) \m_{j'}$.
+where $\Kjzz = k(\Zj,\Zj)$ and $\y_i^{\backslash j} = \y_i - \Ahi(\oi,:) \mhi - \sum_{j' \neq j} w_{ij'} \A_{j'}(\oi,:) \m_{j'}$.
 
 %-------------------------------------------
 %  derivatives of q(v_i)
+%\noindent As a function of the parameters of $q(\v_i)$, the lower bound $\calL$ is:
+%\begin{align}
+%\nonumber
+%\Lhi \define&
+% \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)
+% - \frac{1}{2} \beta_i \trace \tilde{\K}^h_i(\oi,\oi)
+% - \frac{1}{2} \beta_i \trace \Shi (\Ahi)^T \Ahi
+% \\
+%  &- \frac{1}{2} \log |k(\Zhi,\Zhi) (\Shi)^{-1}| -\frac{1}{2} \trace k(\Zhi,\Zhi)^{-1} (\mhi (\mhi)^T + \Shi) ,
+%\end{align}
 \newcommand{\Lhi}{\calL^h_i}
-\noindent As a function of the parameters of $q(\v_i)$, the lower bound $\calL$ is:
-\begin{align}
-\nonumber
-\Lhi \define&
- \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)
- - \frac{1}{2} \beta_i \trace \tilde{\K}^h_i(\oi,\oi)
- - \frac{1}{2} \beta_i \trace \Shi (\Ahi)^T \Ahi
- \\
-  &- \frac{1}{2} \log |k(\Zhi,\Zhi) (\Shi)^{-1}| -\frac{1}{2} \trace k(\Zhi,\Zhi)^{-1} (\mhi (\mhi)^T + \Shi) ,
-\end{align}
-
-\noindent The derivatives of $\Lhi$ wrt $\mhi$ and $\Shi$ are given by:
+\newcommand{\Kizz}{\mat{K}_{izz}}
+\noindent The derivatives of $\calL$ wrt $\mhi$ and $\Shi$ are given by:
 \newcommand{\ynoh}{\y_i^{\backslash h}}
 \begin{align}
-\deriv{\Lhi}{\mhi}
-& = \beta_i \A_i^T \ynoh - \left[k(\Zhi,\Zhi)^{-1} +  \beta_i \A_i^T \A_i \right] \m_i \\
-\deriv{\Lhi}{\Shi} 
-&= \frac{1}{2} \S_i^{-1} - \frac{1}{2} \left[ k(\Zhi,\Zhi)^{-1} + \beta_i \A_i^T \A_i \right] ,
+\nonumber
+\deriv{\calL}{\mhi}
+= & \beta_i (\Ahi(\oi,:))^T \ynoh \\ 
+& - \bigg[\Kizz^{-1} +  \beta_i (\Ahi(\oi,:))^T \Ahi(\oi,:) \bigg] \m_i \\
+\deriv{\calL}{\Shi} 
+&= \frac{1}{2} \S_i^{-1} - \frac{1}{2} \bigg[ \Kizz^{-1} + \beta_i \Ahi(\oi,:))^T \Ahi(\oi,:) \bigg] ,
 \end{align}
-where $\ynoh = \y_i - \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j$.
+where $\ynoh = \y_i - \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j$ and $\Kizz = k(\Zhi, \Zhi)$.
 
 % comment on computation
 \noindent It can be seen that the derivatives of the parameters of $q(\v_i)$ only involve the observations of the output dimension $i$.

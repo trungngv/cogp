@@ -1,3 +1,37 @@
+\subsection{Expectation of an individual likelihood term}
+The expectation of an individual likelihood term with respect to the posterior distribution is given by:
+\begin{align}
+\nonumber
+l_{in} =& \int \log p(y_{in} | \g_n, h_{in}) \prod_{j=1}^Q p(g_{jn} | \u_j) p(h_{in} | \u_i) \der \g_n \der h_{in} \\
+\nonumber
+=& \log \Normal(y_{in}; \sum_{j=1}^Q w_{ij} \mu_{jn}+ \mu^h_{in}, \beta_i^{-1}) \\
+&- \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{nn} 
+- \frac{1}{2} \beta_i \tilde{k}^h_{inn},
+\label{eq:lin}
+\end{align}
+where $\tilde{k}_{nn} = (\tilde{\K})_{nn}, \tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}, \mu_{jn} = (\Mu_j)_n, \text{ and } \mu^h_{in} = (\Mu^h_i)_n$.
+
+% previous detailed derivation
+%\begin{align}
+%\nonumber
+%l_{in} &= \int \log p(y_{in} | g_n, h_{in}) p(\g | \ug) p(\h_i | \u_i) \der \g \der \h_i \\
+%\nonumber
+%&= \int \log \Normal(y_{in} ; w_i g_n + h_{in}, \beta_i^{-1}) 
+%\Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
+%\Normal(h_{in} ; \mu_{in}, (\tilde{k}_{inn}) \der g_n \der h_{in} \\
+%\nonumber
+%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int (y_{in} - w_i g_n - h_{in}) \beta_i (y_{in} - w_i g_n - h_{in})
+%\Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
+%\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der g_n \der h_{in} \\
+%\nonumber
+%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int \left[(y_{in} - h_{in} - w_i \mu_{gn}) \beta_i (y_{in} - h_{in} - w_i \mu_{gn}) + w_i^2 \beta_i \tilde{k}_{gnn} \right] 
+%\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der h_{in} \\
+%\nonumber
+%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} w_i^2 \beta_i \tilde{k}_{gnn}
+%- \frac{1}{2} \beta_i \tilde{k}_{inn} - \frac{1}{2} (y_{in} - w_i \mu_{gn} - \mu_{in}) \beta_i (y_{in} - w_i \mu_{gn} - \mu_{in}) \\
+%&= \log \Normal(y_{in}; w_i \mu_{gn} + \mu_{in}, \beta_i^{-1})  - \frac{1}{2} \beta_i (w_i^2 \tilde{k}_{gnn} + \tilde{k}_{inn}),
+%\end{align}
+
 \subsection{Appendix 1: Derivatives}
 Here we derive the gradients of the lower bound wrt the  hyperparameters.
 As a template, consider the lower bound in Hensman et al (as a function of the hyperparameters):
