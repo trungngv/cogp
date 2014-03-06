@@ -48,6 +48,6 @@ To avoid notational clutter, we omit the subscripts $j,h,i$ from the kernels $k_
 \textbf{Likelihood}
 The likelihood as usual follows the standard iid Gaussian likelihood,
 \begin{align}
-p(\y | \g, \h ) = \prod_{i=1}^P p( \y_i ; \g, \h_i) = \prod_{i=1}^P \Normal( \y_i ; \sum_{j=1}^Q w_{ij} \g_j + \h_i, \beta_i^{-1} \I).
+p(\y | \g, \h ) = \prod_{i=1}^P \Normal( \y_i ; \sum_{j=1}^Q w_{ij} \g_j + \h_i, \beta_i^{-1} \I),
 \end{align}
-
+where each term in the product is the likelihood of an output, $p( \y_i ; \g, \h_i)$.
