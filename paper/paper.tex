@@ -1,6 +1,8 @@
-\documentclass{article} % For LaTeX2e
-\usepackage[a4paper,margin=1.5in]{geometry}
-\usepackage[mathlines]{lineno}
+% Sample LaTeX file for creating a paper in the Morgan Kaufmannn two
+% column, 8 1/2 by 11 inch proceedings format.
+
+\documentclass[]{article}
+\usepackage{proceed2e}
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{amsmath}
@@ -12,525 +14,67 @@
 
 \include{macros}
 \include{local_macros}
-\def\linenumberfont{\normalfont\small\sffamily}
 
-\title{Multiple Output Gaussian Processes Regression}
+\title{Stochastic Multiple Output Gaussian Processes}
 
-\newcommand{\fix}{\marginpar{FIX}}
-\newcommand{\new}{\marginpar{NEW}}
+\author{} % LEAVE BLANK FOR ORIGINAL SUBMISSION.
+          % UAI  reviewing is double-blind.
 
-%\nipsfinalcopy % Uncomment for camera-ready version
+% The author names and affiliations should appear only in the accepted paper.
+%
+%\author{ {\bf Harry Q.~Bovik\thanks{Footnote for author to give an
+%alternate address.}} \\
+%Computer Science Dept. \\
+%Cranberry University\\
+%Pittsburgh, PA 15213 \\
+%\And
+%{\bf Coauthor}  \\
+%Affiliation          \\
+%Address \\
+%\And
+%{\bf Coauthor}   \\
+%Affiliation \\
+%Address    \\
+%(if needed)\\
+%}
 
 \begin{document}
+
 \maketitle
-\linenumbers
 
-\section{Model Description}
-We describe a multiple-output regression model.
-Suppose that we have inputs $\X = \{\x_n\}_{n=1}^N$ and outputs $\y = \{\y_n\}_{n=1}^N$, with $\x_n \in \calR^D$ and $\y_n \in \calR^P$, i.e. the output is $P$-dimensional.
-For ease of exposition, we assume that there are no missing values in any output dimension.
-The most dominant approach in GP-based multiple output regression is to compose the different outputs as some \textit{linear} mixing (combination) of some basic processes (random functions).
-Our model is also underpinned by this composition approach.
+\begin{abstract}
+The Abstract paragraph 
+\end{abstract}
 
-\noindent Consider the semiparametric latent factor models (SLFM) \cite{teh-et-al-aistats-05}.
-It assumes $Q$ basic independent processes, $g_j(\x) \sim \GP(0, k(\x,\x';\vectheta_j))$, where $\vectheta_j$ is the hyperparameters of the covariance function of $g_j(\x)$.
-Each (latent) output is a weighted combination of these basic processes, i.e.
-\begin{align}
-f_i(\x) = \sum_{j=1}^Q w_{ij} g_j(\x), \quad i = 1 \hdots P,
-\end{align}
-In \cite{seeger2005semiparametric}, an extra degree of freedom is given by allowing each output $i$ to have its own process $h_i(\x) \sim \GP(0, k(\x,\x'; \vectheta^h_i)$ leading to
-\begin{align}
-f_i(\x) = \sum_{j=1}^Q w_{ij} g_j(\x) + h_i(\x), 
-\end{align}
-We emphasize that, although $k$ denotes covariance functions in general, each independent process can have its own covariance function.
+\section{INTRODUCTION}
+\input{intro}
 
-\noindent 
-\textbf{Augmented sparse GPs}
-Toward scalable modeling, we replace standard GPs with sparse GPs augmented with \textit{different} set of inducing inputs.
-This adds much flexibility to the model as each of the shared process $g_j(\x)$ can model a different pattern in the data with its own covariance function and inducing inputs. The roles of $g_j(\x)$ and $h_i(\x)$ can be quite different, so it is necessary that each has its own inducing inputs.
-Furthermore, $g_j(\x)$ can be seen as a \textit{global} function operating on the entire input space (of all output dimensions), while each $h_i(\x)$ operates only on the inputs of the $i$-th output, which can be a subspace of the input.
+\subsubsection{Citations in Text}
 
-%However, to really address the issue of scalability, this model is built upon sparse GPs from the ground up.
+Citations within the text should include the author's last name and
+year, e.g., (Cheesman, 1985). Reference style should follow the style
+that you are used to using, as long as the citation style is
+consistent.
 
-\subsection{Prior and Likelihood}
-In this section we specify the prior and likelihood of this model. 
-\newcommand{\Zj}{\Z_j}
-\newcommand{\Zhi}{\Z^h_i}
-Let the set of inducing inputs for $g_j(\x)$ and $h_i(\x)$ be $\Z_j$ and $\Z^h_i$, and the corresponding inducing points $\u_j$ and $\v_i$, respectively.
-We denote the collective variables: $\g = \{\g_j\}$, $\h = \{\h_i \}$, $\u = \{\u_j\}$, $\v = \{\v_i\}$, $\Z = \{\Zj\}$, and $\Z^h = \{\Zhi \}$ where $\g_j = \{g_j(\x_n)\}$, $\h_i = \{h_i(\x_n)\}$. 
-The subscripts are $i = 1 \hdots P$, $j = 1 \hdots Q$, and $n = 1 \hdots N$.
+\section{MODEL DESCRIPTION}
+\input{model}
 
-\noindent
-\textbf{Prior}
-The prior of the augmented model is given by:
-\begin{align}
-p(\g | \u) &= \prod_{j=1}^Q p(\g_j | \u_j) = \prod_{j=1}^Q \Normal(\g_j; \BigMu_j, \tilde{\K}_j )\\
-p(\u) &= \prod_{j=1}^Q p(\u_j) = \prod_{j=1}^Q \Normal(\u_j; \vec{0}, k(\Zj, \Zj)) \\
-p(\h | \v) &= \prod_{i=1}^P p(\h_i | \v_i) = \prod_{i=1}^P \Normal(\h_i; \BigMu^h_i, \tilde{\K}^h_i)\\
-p(\v) &= \prod_{i=1}^P p(\v_i) = \prod_{i=1}^P \Normal(\v_i; \vec{0}, k(\Zhi, \Zhi)),
-\end{align}
-where $\BigMu_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}\u$ and $\tilde{\K}_j = k_j(\X,\X) - k(\X,\Zj)k(\Zj,\Zj)^{-1}k(\Zj,\X)$ and $\BigMu^h_i, \tilde{\K}^h_i$ are similarly defined.
-To avoid notational clutter, we omit the subscripts $j,h,i$ from the kernels $k_j(\cdot,\cdot)$ and $k^h_i(\cdot,\cdot)$ when it is clear from the parameters inside the parentheses which covariance function is in action. 
+\subsection{THIS SHOULD BE CAP}
 
-\noindent
-\textbf{Likelihood}
-The likelihood as usual follows the standard iid Gaussian likelihood,
-\begin{align}
-p(\y | \g, \h ) = \prod_{i=1}^P p( \y_i ; \g, \h_i) = \prod_{i=1}^P \Normal( \y_i ; \sum_{j=1}^Q w_{ij} \g_j + \h_i, \beta_i^{-1} \I).
-\end{align}
+\section{INFERENCE}
+\input{inference}
 
-\subsection{Variational Inference in Sparse GPs Revisited}
-In this section we review inference in sparse GPs (as presented in Titsias).
-The posterior in an augmented model is $p(\f, \u | \y) = p(\f | \u, \y) p(\u | \y)$.
-The key property of such augmented GPs  is the notation of \textit{sufficient statistics}: given the inducing points $\u$, the latent values $\f$ are independent with any other set of latent values (e.g. the test set).
-In the optimal setting when $\u$ is the sufficient statistics of $\f$, it should hold that $p(\f | \u, \y) = p(\f | \u)$ as $\y$ is only the noisy version of $\f$.
-This leads to choosing a variational approximation of the posterior which factorizes as $q(\f, \u | \y) = p(\f | \u) q(\u | \y)$.
-Since the conditional $p(\f | \u)$ is known, variational inference becomes learning an optimal posterior $q(\u | \y)$ only. \\
+\section{EXPERIMENTS}
+\input{experiments}
 
-\noindent Also as a consequence of sufficient statistics, the approximate prediction for test targets $\vfstar$ at test inputs $\X_*$ is
-\begin{align}
-\nonumber
-p(\vfstar | \y, \X_*) &= \int p(\vfstar | \f, \u, \X_*) q(\f, \u | \y) \der \f \der \u \\
-\nonumber
-&= \int p(\vfstar | \u) q(\u| \y) p(\f | \u) \der \f \der \u \\ \nonumber
-&= \int p(\vfstar | \u) q(\u| \y) \der \u \\
-\label{eq:sorprediction}
-&= \Normal(\vfstar; \bs{\mu_*},\vec{s_*})
-\end{align}
-where,
-\begin{align}
-\nonumber
-\bs{\mu_*} &= \K_{*z} \K_{zz}^{-1}\m \\ 
-\nonumber
-\S_* &= \K_{**} - \K_{*z} \left(\K_{zz}^{-1} - \K_{zz}^{-1} \S \K_{zz}^{-1} \right) \K_{*z}^T.
-\end{align}
- Here $\K_{*z}$ is the covariance matrix between test and inducing inputs, $\K_{zz}$ is the covariance matrix of the inducing inputs.
+\section{DISCUSSION}
+\input{discussion}
+\newpage
+\section{APPENDIX}
+Perhaps this should go to a supplementary material.
+\input{appendix}
 
-\subsection{Variational Inference}
-\newcommand{\ug}{\u_g}
-\newcommand{\uh}{\u^h}
-\newcommand{\mgj}{\m_j}
-\newcommand{\mhi}{\m^h_i}
-\newcommand{\Sgj}{\S_j}
-\newcommand{\Shi}{\S^h_i}
-Our goal of inference is to find the posterior $p(\g, \h, \u, \v | \y)$. 
-Following the previous discussion, we assume a variational distribution which factorizes as:
-\begin{align}
-\nonumber
-q(\g, \h, \u, \v | \y)
-\nonumber
- &= p(\g|\u) p(\h|\v) q(\u,\v)  \\
- &= p(\g|\u) p(\h|\v) \prod_{j=1}^Q q(\u_j) \prod_{i=1}^P  q(\v_i)
-\end{align}
-Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are given, we need only to find the optimum $q(\u_j)$ and $q(\v_i)$.
-Let $q(\u_j) = \Normal(\u_j; \mgj, \Sgj)$ and $q(\v_i) = \Normal(\v_i; \mhi, \Shi)$. \\
-
-\noindent
-To find the optimum $q(\u, \v)$ we optimize the evidence lower bound (ELBO) of the log marginal,
-\begin{align}
-\nonumber
-\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
-\nonumber
-=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v 
-+ \int q(\u, \v) \log \frac{p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
-\label{eq:elbo}
-=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v 
-- \left(\sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] + \sum_{i=1}^P \KL[q(\u_i) || p(\u_i)] \right),
-\end{align}
-where the last equality occurs because both of $q(\u, \v)$ and $p(\u, \v)$ fully factorize.
-Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distributions, the KL divergences are analytically tractable and require $\calO(M^3)$ computation, where $M$ is the largest number of inducing inputs (recall that $g_j(\x)$ and $h_i(\x)$ use separate set of inducing inputs). \\
-
-\noindent To compute the ELBO we first focus on the term:
-\newcommand{\llangle}{\left\langle}
-\newcommand{\rrangle}{\right\rangle}
-\begin{align}
-\nonumber
-\log p(\y | \u, \v)
- &= \log \Eb{p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \\
- \nonumber
-&\ge \Eb{\log p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \quad &\text{(Jensen's inequality)} \\
-&= \sum_{i=1}^P \sum_{n=1}^N \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_{in} | \v_i)}, \quad 
- &\text{(factorized likelihood)}
-\end{align}
-where $\g_n = \{g_{jn} = (\g_j)_n\}_{j=1}^Q$.
-Each individual term $l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ can be computed using the identity in eq. \ref{eq:identity} given in the appendix to give:
-\begin{align}
-\nonumber
-l_{in} &= \int \log p(y_{in} | \g_n, h_{in}) \prod_{j=1}^Q p(g_{jn} | \u_j) p(h_{in} | \u_i) \der \g_n \der h_{in} \\
-&= \log \Normal(y_{in}; \sum_{j=1}^Q w_{ij} \mu_{jn}+ \mu^h_{in}, \beta_i^{-1})
-- \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{nn} 
-- \frac{1}{2} \beta_i \tilde{k}^h_{inn},
-\end{align}
-where $\tilde{k}_{nn} = (\tilde{\K})_{nn}, \tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}, \mu_{jn} = (\Mu_j)_n, \text{ and } \mu^h_{in} = (\Mu^h_i)_n$.
-
-% previous detailed derivation
-%\begin{align}
-%\nonumber
-%l_{in} &= \int \log p(y_{in} | g_n, h_{in}) p(\g | \ug) p(\h_i | \u_i) \der \g \der \h_i \\
-%\nonumber
-%&= \int \log \Normal(y_{in} ; w_i g_n + h_{in}, \beta_i^{-1}) 
-%\Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
-%\Normal(h_{in} ; \mu_{in}, (\tilde{k}_{inn}) \der g_n \der h_{in} \\
-%\nonumber
-%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int (y_{in} - w_i g_n - h_{in}) \beta_i (y_{in} - w_i g_n - h_{in})
-%\Normal(g_n ; \mu_{gn}, \tilde{k}_{gnn})
-%\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der g_n \der h_{in} \\
-%\nonumber
-%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} \int \left[(y_{in} - h_{in} - w_i \mu_{gn}) \beta_i (y_{in} - h_{in} - w_i \mu_{gn}) + w_i^2 \beta_i \tilde{k}_{gnn} \right] 
-%\Normal(h_{in} ; \mu_{in}, \tilde{k}_{inn}) \der h_{in} \\
-%\nonumber
-%&= -\frac{1}{2} \log 2 \pi \beta_i^{-1} - \frac{1}{2} w_i^2 \beta_i \tilde{k}_{gnn}
-%- \frac{1}{2} \beta_i \tilde{k}_{inn} - \frac{1}{2} (y_{in} - w_i \mu_{gn} - \mu_{in}) \beta_i (y_{in} - w_i \mu_{gn} - \mu_{in}) \\
-%&= \log \Normal(y_{in}; w_i \mu_{gn} + \mu_{in}, \beta_i^{-1})  - \frac{1}{2} \beta_i (w_i^2 \tilde{k}_{gnn} + \tilde{k}_{inn}),
-%\end{align}
-
-\noindent Substituting $l_{in}$ into equation \ref{eq:elbo} and carrying out the integral using the identity in eq. \ref{eq:identity} we get:
-\begin{align}
-\nonumber
-\log p(\y)
-\ge& \sum_{i=1}^P \sum_{n=1}^N
-\bigg( \log \Normal(y_{in}; \tilde{\mu}_{in}, \beta_i^{-1})
-          - \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2        \tilde{k}_{nn} - \frac{1}{2} \beta_i \tilde{k}^h_{inn}
- \\ \nonumber
-         &\quad \quad \quad \quad - \frac{1}{2} \beta_i \trace  \sum_{j=1}^Q w_{ij}^2 \S_j \mat{\Lambda}_{jn} - \beta_i \frac{1}{2} \trace \S^h_i \mat{\Lambda}_{in} 
-\bigg) \\
-&- \left(\sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] + \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)] \right) \define \calL,
-\end{align}
-where 
-%TODO \Lambda_gn depends on the output i so need a better notation
-\newcommand{\Zg}{\Z_g}
-\newcommand{\Zi}{\Z_i}
-\begin{align}
-\tilde{\mu}_{in}
-&= \sum_{j=1}^Q w_{ij} k(\x_n, \Zj)k(\Zj,\Zj)^{-1}\m_j + k(\x_n, \Zhi)k(\Zhi,\Zhi)^{-1}\mhi \\
-\mat{\Lambda}_{jn}
-&= k(\Zj,\Zj)^{-1} k(\Zj, \x_n) k(\x_n, \Zj) k(\Zj,\Zj)^{-1} \\
-\mat{\Lambda}_{in}
-&= k(\Zhi,\Zhi)^{-1} k(\Zhi, \x_n) k(\x_n, \Zhi) k(\Zhi,\Zhi)^{-1}.
-\end{align}
-
-\noindent Notice that this ELBO clearly generalizes the standard GP regression. In particular, setting $P = Q = 1$, $w_i = 1$ and $h_i(\x) = 0$ we recover the bound in Hensman et al \cite{hensmangaussian}.
-Due to the decomposition of this bound, we can use stochastic gradient descent to learn the variational parameters.
-
-\subsubsection{Variational Parameters Derivatives}
-\newcommand{\oi}{\vec{o}_i}
-% some notation
-Before diving into the details, we first define the indexing operator of a matrix: $\B(\vec{r},\vec{c})$ extracts the submatrix in rows $\vec{r}$ and columns $\vec{c}$ of $\B$.
-To index all columns we use $\B(\vec{r},:)$ and similarly for all rows $\B(:,\vec{c})$.
-Readers familiar with this operator will recognize that this is the MATLAB indexing operator.
-
-The optimal posteriors are found by setting the gradients of the lowerbound $\calL$ wrt to the parameters of $q(\u_j)$ and $q(\v_i)$.
-Recall that in the model, different outputs can be observed at different inputs (i.e. the case of missing values).
-Let $\oi$ be the indice of the observed inputs of the output dimension $i$.
-We denote its set of observed inputs and targets as: $\X_i = \X(\oi,:)$ and $\y_i = y_{i}(\oi)$.
-
-\noindent As a function of the parameters of $q(\u_j)$, the lowerbound $\calL$ is:
-\newcommand{\Ahi}{\A^h_i}
-\begin{align}
-\nonumber
-\calL^g_j \define&
- \sum_{i=1}^P \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)  \\
- \nonumber
- &- \frac{1}{2} \sum_{i=1}^P \bigg(\beta_i \trace w_{ij}^2 \tilde{\K}_j(\oi,\oi) 
- + \beta_i \trace w_{ij}^2 \S_j \A_j(\oi,:)^T \A_j(\oi,:) \bigg)
- \\
- &- \frac{1}{2} \log |k(\Zj,\Zj) \S_j^{-1}| -\frac{1}{2} \trace k(\Zj,\Zj)^{-1} (\m_j \m_j^T + \S_j) ,
-\end{align}
-where $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$, which gives $\A_j(\oi,:) = k(\X_i,\Zj) k(\Zj,\Zj)^{-1}$, and  
-$\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$. \\
-
-%------------------------------------------
-% derivatives of q(u_j)
-\newcommand{\Lgj}{\calL^g_j}
-\newcommand{\ynoj}{\y_i^{\backslash j}}
-\noindent The derivatives of $\Lgj$ wrt $\m_j$ and $\S_j$ are given by:
-\begin{align}
-\deriv{\Lgj}{\m_j}
-& = \sum_{i=1}^P \beta_i w_{ij} \A_j(\oi,:)^T \ynoj - \bigg[k_g(\Zg,\Zg)^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg] \m_j \\
-\deriv{\Lgj}{\S_j} 
-&= \frac{1}{2} \S_j^{-1} - \frac{1}{2} \bigg[ k(\Zj,\Zj)^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg],
-\end{align}
-where $\y_i^{\backslash j} = \y_i - \Ahi \mhi - \sum_{j' \neq j} w_{ij'} \A_{j'}(\oi,:) \m_{j'}$.
-
-%-------------------------------------------
-%  derivatives of q(v_i)
-\newcommand{\Lhi}{\calL^h_i}
-\noindent As a function of the parameters of $q(\v_i)$, the lower bound $\calL$ is:
-\begin{align}
-\nonumber
-\Lhi \define&
- \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)
- - \frac{1}{2} \beta_i \trace \tilde{\K}^h_i(\oi,\oi)
- - \frac{1}{2} \beta_i \trace \Shi (\Ahi)^T \Ahi
- \\
-  &- \frac{1}{2} \log |k(\Zhi,\Zhi) (\Shi)^{-1}| -\frac{1}{2} \trace k(\Zhi,\Zhi)^{-1} (\mhi (\mhi)^T + \Shi) ,
-\end{align}
-
-\noindent The derivatives of $\Lhi$ wrt $\mhi$ and $\Shi$ are given by:
-\newcommand{\ynoh}{\y_i^{\backslash h}}
-\begin{align}
-\deriv{\Lhi}{\mhi}
-& = \beta_i \A_i^T \ynoh - \left[k(\Zhi,\Zhi)^{-1} +  \beta_i \A_i^T \A_i \right] \m_i \\
-\deriv{\Lhi}{\Shi} 
-&= \frac{1}{2} \S_i^{-1} - \frac{1}{2} \left[ k(\Zhi,\Zhi)^{-1} + \beta_i \A_i^T \A_i \right] ,
-\end{align}
-where $\ynoh = \y_i - \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j$.
-
-% comment on computation
-\noindent It can be seen that the derivatives of the parameters of $q(\v_i)$ only involve the observations of the output dimension $i$.
-The derivatives of the parameters of $q(\u_j)$ involve the observations across all output dimensions but decompose as a sum of contributions from individual outputs.
-Therefore, computation of the derivatives (and hence the update equations) can be distributed or parallelized easily.
-This attractive property allows the model to scale to a very large number of inputs and outputs.
-
-% Comment on other hyperparameters
-
-%\subsubsection{Update Equations}
-% and comment on the intuition of the update equations: e.g. y(x) - g(x) for h(x) 
-\subsection{Prediction}
-The predictive distribution of the $i$-th output for a test input $\x_*$ is 
-\begin{align}
-p(\fstar | \y, \x_*) = \int \Normal(\fstar; \sum_{j=1}^Q w_j g_{j*} + h_{i*}, 0) p(\g_* | \y, \x_*) p(h_{i*} | \y, \x_*) \der \g_* \der h_{i*},
-\end{align}
-where $p(\g_* | \y, \x_*) = \prod_{j=1}^Q \Normal(g_{j*}; \mu_{j*}, s_{j*})$ and $p(h_{i*} | \y, \x_*) = p(h_{i*}; \mu^h_{i*}, s^h_{i*})$ are the predictive distributions of the sparse GPs as given in eq. \ref{eq:sorprediction}.
-Therefore we have:
-\begin{align}
-p(\fstar | \y, \x_*) = \Normal(\fstar; \sum_{j=1}^Q w_{ij} \mu_{j*} + \mu_{i*}, w_{ij}^2 s_{j*} + s_{i*}). 
-\end{align}
-
-%\begin{linenomath}
-%\begin{align}
-%\sum_{i,h} \lambda_i \lambda_h cov [f(\x, \x')]
-%&= \sum_{i,h}   \sum_{j,j'} \lambda_i g(\x_i - \vs_j) k(\vs_j, \vs_{j'}) \lambda_h g(\x_h - \vs_j') \\
-%\end{align}
-%\end{linenomath}
-
-\section{Toy Experiments}
-The first toy experiment uses two identical outputs which are noisy version of the same version plus some noise: $y_1(x) = sin(x) + \epsilon$ and $y_2(x) = sin(x) + \epsilon$, $\epsilon \sim \Normal(0,0.01)$.
-In this case the shared function $g(x)$ is $sin(x)$ and the independent processes $h_1(x)$ and $h_2(x)$ are just white noises.
-Each output has missing values in one region of the input space.
-The predictive distributions of the multiple-gp model compared to that of independent gps are shown in \ref{fig4}.
-
-\noindent The second toy experiment uses similar setting as the first one, except that now $y_1(x) = sin(x) + \epsilon$ and $y_2(x) = -sin(x) + \epsilon$. 
-In this case the shared function is still $g(x) = sin(x)$, but the weights should be opposite i.e. $w_1 = 1$ and $w_2 = 1$.
-The learning procedure was indeed able to recovered this relation and learned that $w_1 = 1.2$ and $w_2 = -1.3$.
-The predictive distributions are shown in \ref{fig5}.
-
-\begin{figure*}
-\centering
-\begin{tabular}{cc}
-\includegraphics[scale=0.5]{figures/ssvi-y1.eps} &
-\includegraphics[scale=0.5]{figures/ssvi-svi1.eps} \\
-\includegraphics[scale=0.5]{figures/ssvi-y2.eps} &
-\includegraphics[scale=0.5]{figures/ssvi-svi2.eps} \\
-\multicolumn{2}{c}{\includegraphics[scale=0.5]{figures/ssvi-y1byg.eps} }
-\end{tabular}
-\label{fig4}
-\caption{Predictive distributions of the multipe-output gps (left column) and independent gps (right column) for the first toy example. The predictive distribution by $g(x)$ for $y_1(x)$ is shown in the bottom figure.}
-\end{figure*}
-
-\begin{figure*}
-\centering
-\begin{tabular}{cc}
-\includegraphics[scale=0.5]{figures/ssvi2-y1.eps} &
-\includegraphics[scale=0.5]{figures/ssvi2-svi1.eps} \\
-\includegraphics[scale=0.5]{figures/ssvi2-y2.eps} &
-\includegraphics[scale=0.5]{figures/ssvi2-svi2.eps} \\
-\multicolumn{2}{c}{\includegraphics[scale=0.5]{figures/ssvi-y1byg.eps} }
-\end{tabular}
-\label{fig5}
-\caption{Predictive distributions of the multipe-output gps (left column) and independent gps (right column) for the second toy experiment. The predictive distribution by $g(x)$ for $y_1(x)$ is shown in the bottom figure.}
-\end{figure*}
-
-\section{Appendix 1: Derivatives}
-Here we derive the gradients of the lower bound wrt the  hyperparameters.
-As a template, consider the lower bound in Hensman et al (as a function of the hyperparameters):
-\begin{align}
-\nonumber
-\calL
-=& \log \Normal(\y; \K_{NM} \K_{MM}^{-1} \m, \beta^{-1}\I)
- - \frac{1}{2} \beta \trace \tilde{\K}
- - \frac{1}{2} \beta \trace (\S\K_{MM}^{-1} \K_{MN} \K_{NM} \K_{MM}^{-1}) \\  \nonumber
-&- \frac{1}{2} \left( \log |\K_{MM}| + \trace(\K_{MM}^{-1}(\m \m^T + \S)) \right) \\ \nonumber
-=& \underbrace{\log \Normal(\y; \A \m, \beta^{-1}\I)}_{\calL_1}
- - \underbrace{\frac{1}{2} \beta \trace (\K_{NN} - \A\K_{MN})}_{\calL_2}
- - \underbrace{\frac{1}{2} \beta \trace (\S\A^T\A)}_{\calL_3} \\  
-&- \underbrace{\frac{1}{2} \left( \log |\K_{MM}| + \trace(\K_{MM}^{-1}(\m \m^T + \S)) \right)}_{\calL_4},
-\end{align}
-where $\A = \K_{NM} \K_{MM}^{-1}$.
-Notice that we have re-written the sum of individual terms in matrix form which will make the derivation and also computation easier.
-
-\subsection{Derivative of the Noise Hyperparameter}
-The derivative of the noise hyperparameter $\beta$ is easily computed as:
-\begin{align}
-\deriv{\calL}{\beta} = \frac{N}{2\beta} - \frac{1}{2} (\y - \A\m)^T (\y - \A\m) - \frac{\calL_2}{\beta} - \frac{\calL_3}{\beta}.
-\end{align}
-\subsection{Derivatives of the Covariance Hyperparameters}  
-To simplify the math, we utilize the matrix $\A$ defined above.
-Firstly, the derivative of $\A$ wrt a covariance hyperparameter $t$ is given by:
-\begin{align}
-\deriv{\A}{t} = \left(\deriv{\K_{NM}}{t} - \A \deriv{\K_{MM}}{t}\right)\K_{MM}^{-1}.
-\end{align}
-The derivatives of $\calL_1, \calL_2, \calL_3 \text{ and } \calL_4$ are thus given by:
-\begin{align}
-\deriv{\calL_1}{t} &= \beta (\y - \A\m)^T \deriv{\A}{t} \m \\
-\deriv{\calL_2}{t} &= \frac{1}{2}\beta \trace \left(\deriv{\K_{NN}}{t} - \A \deriv{\K_{MN}}{t} - \deriv{\A}{t} \K_{MN}\right) \\
-\deriv{\calL_3}{t} &= \beta \trace \left(\A \S \deriv{\A^T}{t} \right) \\
-\deriv{\calL_4}{t} &= \frac{1}{2}  \trace \left(\K_{MM}^{-1} \deriv{ \K_{MM}}{t}\right) - \frac{1}{2} \trace \left(\K_{MM}^{-1} \deriv{\K_{MM}}{t} \K_{MM}^{-1} (\m \m^T + \S) \right) 
-\end{align}
-The derivatives are then computed by taking the derivatives of the covariance matrices $\K_{NN} (\text{the diagonal only}), \K_{NM} \text{ and }  \K_{MM}$, hence the covariance function, wrt the hyperparameters. 
-
-\subsection{Derivatives of the Inducing Inputs}
-To compute the derivatives of $\calL$ wrt the inducing inputs, first notice that $\Z = \{\z_m\}_{m=1}^M$ are also parameters of the covariance matrices $\K_{NM}$ and $\K_{MM}$.
-Hence the derivative wrt a single dimension of an inducing input, i.e. $z_{mj}$, is the same as that of $\deriv{ \calL}{t}$.
-
-%Since $MD$ parameters are needed for the inducing inputs, it appears that the derivatives of all inducing inputs would require $\calO(MD \times M^3)$ in computation.
-%However, this complexity can actually be reduced to $\calO(DM^3)$ using the following lemma. \\
-%
-%\noindent \textbf{Lemma} Let $A, B$ be two matrices of size $N \times M$ and $M \times N$, respectively. Furthermore, $B$ has the property that only one of its rows or columns is non-zero. The complexity of $\trace(AB)$ is only $\calO(N)$. \\
-%
-%\noindent \textbf{Proof} Let $m <= M$ be the non-zero row of $B$. We have
-%\begin{align}
-%\trace (AB) = \sum_{i=1}^N \sum_{j=1}^M A_{ij} B_{ji} = \sum_{i=1}^N A_{im} B_{mi},
-%\end{align}
-%which clearly takes $\calO(N)$. It is easy to see that the lemma also holds when $B$ is symmetric and only one of its row and the corresponding column is non-zero. \\
-%
-%\noindent To exploit the property in the Lemma, we re-write $\frac{d \calL_1}{dt}, \frac{d \calL_2}{dt}, \frac{d \calL_3}{dt}, \frac{d \calL_4}{dt}$ by expanding $\frac{d\A}{dt}$ (here $t = z_{mj}$):
-
-\noindent We re-write $\deriv{\calL_1}{t}, \deriv{\calL_2}{t}, \deriv{ \calL_3}{t}, \deriv{\calL_4}{t}$ by expanding $\deriv{\A}{t}$ (here $t = z_{mj}$):
-\begin{align}
-\nonumber
-% dL1
-\deriv{\calL_1}{t}
- &= \beta \trace (\y - \A\m)^T \left(\deriv{\K_{NM}}{t} -  \A \deriv{ \K_{MM}}{t}\right)\K_{MM}^{-1} \m \\
-&= \beta \trace \K_{MM}^{-1} \m (\y - \A\m)^T \deriv{\K_{NM}}{t} 
--\beta \trace \K_{MM}^{-1} \m (\y - \A\m)^T \A \deriv{\K_{MM}}{t} \\
-%dL2
-\deriv{\calL_2}{t}
-&= - \beta \trace \A^T \deriv{\K_{NM}}{t}
- + \frac{1}{2} \beta \trace \A^T \A \deriv{\K_{MM}}{t}  \\
-% dL3
-\deriv{\calL_3}{t}
-&= \beta \trace \K_{MM}^{-1} \S \A^T \deriv{\K_{NM}}{t}
- - \beta \trace \K_{MM}^{-1} \S \A^T \A \deriv{\K_{MM}}{t}\\
-% dL4
-\deriv{\calL_4}{t}
- &= \frac{1}{2}  \trace \K_{MM}^{-1} \deriv{\K_{MM}}{t}
-  - \frac{1}{2} \trace \K_{MM}^{-1} (\m \m^T + \S) \K_{MM}^{-1} \deriv{\K_{MM}}{t} 
-\end{align}
-From the above equations we get,
-\begin{align}
-\deriv{\calL}{t} = \trace \D_1 \deriv{\K_{NM}}{t} + \trace \D_2 \deriv{ \K_{MM}}{t},
-\end{align}
-where 
-\begin{align}
-\D_1 =& \beta \K_{MM}^{-1} \m (\y - \A\m)^T
- + \beta \A^T
- - \beta \K_{MM}^{-1} \S \A^T \\ \nonumber
-\D_2 =& -\beta \trace \K_{MM}^{-1} \m (\y - \A\m)^T \A
- - \frac{1}{2} \beta \A^T \A
-  + \beta \K_{MM}^{-1} \S \A^T \A	 \\ 
-  &-\frac{1}{2} \K_{MM}^{-1} + \frac{1}{2} \K_{MM}^{-1} (\m \m^T + \S) \K_{MM}^{-1}
-\end{align}
-Notice that $\D_1$ and $\D_2$ can be pre-computed with a cost of $\calO(M^3)$ (or $\calO(N_bM^2)$ if the minibatch size $N_b > M$).
-The computational cost of taking derivatives of $MD$ inducing parameters is thus $\calO(M^3 + MDM) = \calO(M^3)$ as the cost of the two $\trace$ operators is $\calO(M)$ due to the fact that only $\calO(M)$ elements of $\deriv{\K_{MM}}{t}$ or $\deriv{\K_{NM}}{t}$ are non-zero.
-This fact can be further exploited to perform vectorized operation, for e.g. in Matlab, such that the iteration over all inducing inputs can be avoided.
-
-\section{Appendix 2: Gaussian Identity}
-Let $\y$, $\g = \{\g_j\}_{j=1}^q$, and $\h$ be random variables with multivariate Gaussian distributions: 
-$p(\y | \g, \h) = \Normal(\y; \sum_{j=1}^Q \W_j \g_j + \W \h, \beta^{-1} \I)$, $p(\g_j) = \Normal(\g_j; \m_j, \S_j)$, and $p(\h) = \Normal(\h; \m, \S)$.
-The following identity is important in deriving the evidence lower bound:
-\begin{align}
-\nonumber
-\int \log p(\y | \g, \h) \prod_{j=1}^q p(\g_j) p(\h) \der \g \der \h
-=& \log \Normal(\y; \sum_{j=1}^q \W_j \m_j + \W \m, \beta^{-1} \I) - \frac{1}{2} \beta \trace \W^T \W \S \\
-\label{eq:identity}
-&- \frac{1}{2} \beta \trace \sum_{j=1}^q \W_j^T \W_j \S_j.
-\end{align}
-The identity can be proved by using this fact: 
-\begin{align}
-\nonumber
-\int (\W\x - \Mu)^T \BigSigma^{-1} &(\W \x - \Mu) \Normal(\x; \m, \S) \der \x \\
-\nonumber
-&= (\Mu - \W\m)^T \BigSigma^{-1} (\Mu - \W\m) + \trace \W^T \BigSigma^{-1} \W \S.
-\end{align}
-
-\section{Appendix: Analysis on Learning of the Inducing Inputs}
-In this section we present some analysis on learning of the inducing inputs under the stochastic variational inference procedure on some toy problems.
-We use three real-valued truth functions of scalar inputs: the first one was used in Snelson et al, the second one is a function $f(x) = \sin(x) + \cos(x)$, and the third one is a sample function generated from a GP with squared exponential with ARD covariance function with a lengthscale of 2 and signal variance of 1.
-
-\noindent \paragraph{Experimental Settings} We use gpsvi to optimize for \textit{all} of the parameters in the model, i.e. the variational parameters of the posterior, the covariance hyperparameters, the noise hyperparameter, and the inducing inputs.
-For the hyperparameters, we use a momentum of $0.9$ and a fixed learn rate of $1e-5$. 
-For the variational parameters, we use a learn rate of $0.01$ (no momentum was used).
-We vary the learn rate of the inducing inputs from $1e{-2}$ to $1e{-6}$.
-Using momentum for the inducing inputs does not seem to have much effects.
-The maximum number of iterations is 500, the batch size 5, and the number of inducing values 10.
-
-% effect of learn rate on inducing inputs
-\noindent \paragraph{Effects of the Learn Rates }
-In Figure \ref{fig1}, \ref{fig2}, and \ref{fig3}, we show the lower bounds, predictive distributions, and the learned inducing inputs using stochastic variational inference with varying learn rates for the inducing inputs.
-We also show the results with FITC for comparison.
-It can be seen from the figures that, as typical in stochastic optimization, the behavior of GPSVI is very sensitive to the learn rate.
-In particular, when the rate is slow e.g. $1e{-5}$, almost no progress was made in learning the inducing inputs.
-However, when the rate increases to e.g. $1e{-3}$, the inducing inputs are spread out more evenly in the input space compared to the initial locations.
-Although not shown the in figures, when the learn rate is too large, e.g. $1e{-02}$, the inducing inputs may spread to regions far outside of the training intervals.
-An example of this phenomenon can be observed in the top left figure in Figure \ref{fig1}.
-The learn rates also affect the evidence lower bound which seems to wiggle more compared to not learning the inducing inputs.
-The predictive distributions are sensible particularly because the toy functions exhibit sparsity and are easy to learn.  \\
-
-\noindent The results of this qualitative analysis do not seem to suggest that learning of the inducing inputs does not work in GPSVI.
-Its effectiveness perhaps rests upon empirical performance on real datasets.
-
-\noindent \paragraph{The Noise Parameter} It seems harder to set the initial value and the learning rate of the noise parameter compared to standard GP. 
-While a large range of values of noise can be used in standard gp or fitc (e.g. 0.5), a very small value of noise $1e{-02}$, which is the true noise, is required for gpsvi to work well.
-It appears that an adaptive learning rate may be required for the noise parameter.
-
-\begin{figure*}
-\centering
-\begin{tabular}{ccc}
-\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-03.eps} &
-\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-04.eps} &
-\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-05.eps} \\
-\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-03-bound.eps} &
-\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-04-bound.eps} &
-\includegraphics[scale=0.3]{figures/func1-svi-lrate1e-05-bound.eps} \\ 
-(a) learn rate = $1e{-3}$ & (b) learn rate = $1e{-4}$ & (c) learn rate = $1e{-5}$ \\
-\multicolumn{3}{c}{\includegraphics[scale=0.4]{figures/func1-fitc.eps}}
-\end{tabular}
-\caption{Predictive distributions and learned inducing inputs by GPSVI and FITC for the first function. Top row: GPSVI with different learning rates (the rates decreases from left to right). Bottom row: FITC. Magenta dots : training points. Solid blue line: predictive mean. Grey-shaded area and solid black lines: two standard deviations of the predictive distributions. Black (+) crosses: initial locations of inducing inputs. Magenta (+) crosses: learned locations of inducing inputs.  Middle row: the evidence lower bound of gpsvi vs. iteration.}
-\label{fig1}
-\end{figure*}
-
-\begin{figure*}
-\centering
-\begin{tabular}{ccc}
-\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-03.eps} &
-\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-04.eps} &
-\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-05.eps} \\
-\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-03-bound.eps} &
-\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-04-bound.eps} &
-\includegraphics[scale=0.3]{figures/func2-svi-lrate1e-05-bound.eps} \\ 
-(a) learn rate = $1e{-3}$ & (b) learn rate = $1e{-4}$ & (c) learn rate = $1e{-5}$ \\
-\multicolumn{3}{c}{\includegraphics[scale=0.4]{figures/func2-fitc.eps}}
-\end{tabular}
-\caption{Predictive distributions and learned inducing inputs by GPSVI and FITC for the second function. The legends are same as in Figure 1.}
-\label{fig2}
-\end{figure*}
-
-\begin{figure*}
-\centering
-\begin{tabular}{ccc}
-\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-03.eps} &
-\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-04.eps} &
-\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-05.eps} \\
-\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-03-bound.eps} &
-\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-04-bound.eps} &
-\includegraphics[scale=0.3]{figures/func3-svi-lrate1e-05-bound.eps} \\ 
-(a) learn rate = $1e{-3}$ & (b) learn rate = $1e{-4}$ & (c) learn rate = $1e{-5}$ \\
-\multicolumn{3}{c}{\includegraphics[scale=0.4]{figures/func3-fitc.eps}}
-\end{tabular}
-\caption{Predictive distributions and learned inducing inputs by GPSVI and FITC for the third function. The legends are same as in Figure 1.}
-\label{fig3}
-\end{figure*}
+%\subsubsection*{Acknowledgements}
 
 \bibliographystyle{abbrv}
 \bibliography{references}
