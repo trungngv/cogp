@@ -1,0 +1,114 @@
+% Sample LaTeX file for creating a paper in the Morgan Kaufmannn two
+% column, 8 1/2 by 11 inch proceedings format.
+
+\documentclass[]{article}
+\usepackage{proceed2e}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{latexsym,amsbsy,amssymb,color,xspace, booktabs}
+
+\include{macros}
+\include{local_macros}
+
+\title{Stochastic Multiple Output Gaussian Processes}
+
+\author{} % LEAVE BLANK FOR ORIGINAL SUBMISSION.
+          % UAI  reviewing is double-blind.
+
+% The author names and affiliations should appear only in the accepted paper.
+%
+%\author{ {\bf Harry Q.~Bovik\thanks{Footnote for author to give an
+%alternate address.}} \\
+%Computer Science Dept. \\
+%Cranberry University\\
+%Pittsburgh, PA 15213 \\
+%\And
+%{\bf Coauthor}  \\
+%Affiliation          \\
+%Address \\
+%\And
+%{\bf Coauthor}   \\
+%Affiliation \\
+%Address    \\
+%(if needed)\\
+%}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The Abstract paragraph 
+\end{abstract}
+
+\section{INTRODUCTION}
+\input{intro}
+
+\subsubsection{Citations in Text}
+
+Citations within the text should include the author's last name and
+year, e.g., (Cheesman, 1985). Reference style should follow the style
+that you are used to using, as long as the citation style is
+consistent.
+
+\section{MODEL DESCRIPTION}
+\input{model}
+
+\subsection{THIS SHOULD BE CAP}
+
+\section{INFERENCE}
+\input{inference}
+
+\section{EXPERIMENTS}
+\input{experiments}
+
+\section{DISCUSSION}
+\input{discussion}
+
+\subsubsection{Figures}
+
+All artwork must be centered, neat, clean, and legible. Figure number
+and caption always appear below the figure.  Leave 2 line spaces
+between the figure and the caption. The figure caption is initial caps
+and each figure numbered consecutively.
+
+Make sure that the figure caption does not get separated from the
+figure. Leave extra white space at the bottom of the page rather than
+splitting the figure and figure caption.
+\begin{figure}[h]
+\vspace{1in}
+\caption{Sample Figure Caption}
+\end{figure}
+
+\subsubsection{Tables}
+
+\begin{table}[h]
+\caption{Sample Table Title}
+\label{sample-table}
+\begin{center}
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\bf PART}  &\multicolumn{1}{c}{\bf DESCRIPTION} \\
+\hline \\
+Dendrite         &Input terminal \\
+Axon             &Output terminal \\
+Soma             &Cell body (contains cell nucleus) \\
+\end{tabular}
+\end{center}
+\end{table}
+
+\newpage
+\section{APPENDIX}
+Perhaps this should go to a supplementary material.
+\input{appendix}
+
+%\subsubsection*{Acknowledgements}
+
+\bibliographystyle{abbrv}
+\bibliography{references}
+
+\end{document}
