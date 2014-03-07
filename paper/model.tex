@@ -4,13 +4,13 @@ For ease of exposition, we assume that there are no missing values in any output
 The most dominant approach in GP-based multiple output regression is to compose the different outputs as some \textit{linear} mixing (combination) of some basic processes (random functions).
 Our model is also underpinned by this composition approach.
 
-\noindent Consider the semiparametric latent factor models (SLFM) \cite{teh-et-al-aistats-05}.
+\noindent Consider the semiparametric latent factor models (SLFM) \citet{teh-et-al-aistats-05}.
 It assumes $Q$ basic independent processes, $g_j(\x) \sim \GP(0, k(\x,\x';\vectheta_j))$, where $\vectheta_j$ is the hyperparameters of the covariance function of $g_j(\x)$.
 Each (latent) output is a weighted combination of these basic processes, i.e.
 \begin{align}
 f_i(\x) = \sum_{j=1}^Q w_{ij} g_j(\x), \quad i = 1 \hdots P,
 \end{align}
-In \cite{seeger2005semiparametric}, an extra degree of freedom is given by allowing each output $i$ to have its own process $h_i(\x) \sim \GP(0, k(\x,\x'; \vectheta^h_i)$ leading to
+In \citet{seeger2005semiparametric}, an extra degree of freedom is given by allowing each output $i$ to have its own process $h_i(\x) \sim \GP(0, k(\x,\x'; \vectheta^h_i)$ leading to
 \begin{align}
 f_i(\x) = \sum_{j=1}^Q w_{ij} g_j(\x) + h_i(\x), 
 \end{align}

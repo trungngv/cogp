@@ -1,7 +1,7 @@
 \subsection{Variational Inference in Sparse GPs Revisited}
 In this section we review inference in sparse GPs (as presented in Titsias).
 The posterior in an augmented model is $p(\f, \u | \y) = p(\f | \u, \y) p(\u | \y)$.
-The key property of such augmented GPs  is the notation of \textit{sufficient statistics}: given the inducing points $\u$, the latent values $\f$ are independent with any other set of latent values (e.g. the test set).
+The key property of such augmented GPs  is the notion of \textit{sufficient statistics}: given the inducing points $\u$, the latent values $\f$ are independent with any other set of latent values (e.g. the test set).
 In the optimal setting when $\u$ is the sufficient statistics of $\f$, it should hold that $p(\f | \u, \y) = p(\f | \u)$ as $\y$ is only the noisy version of $\f$.
 This leads to choosing a variational approximation of the posterior which factorizes as $q(\f, \u | \y) = p(\f | \u) q(\u | \y)$.
 Since the conditional $p(\f | \u)$ is known, variational inference becomes learning an optimal posterior $q(\u | \y)$ only. \\
@@ -53,7 +53,7 @@ In variational inference, this is done by optimizing the evidence lower bound (E
 %+ \int q(\u, \v) \log \frac{p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
 \nonumber
 &\log p(\y) \ge \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v \\
-&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\u_i) || p(\u_i)],
+&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)],
 \label{eq:elbo}
 \end{align}
 which is derived using Jensen's inequality and the fact that both of $q(\u, \v)$ and $p(\u, \v)$ fully factorize.
@@ -83,7 +83,7 @@ Each individual term $l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n
 \bigg) \\
 &- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)]  \define \calL,
 \end{align}
-where, with the help of the auxiliary matrices $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$ and  
+where, with the help of auxiliary matrices $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$ and  
 $\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$, 
 \begin{align}
 \tilde{\mu}_{in}
@@ -99,7 +99,7 @@ $\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$,
 where $\tilde{k}_{nn} = (\tilde{\K})_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$,  $\mu^h_{in} = (\Mu^h_i)_n$, and $\A_j(n,:)$ selects the $n$-th row vector of $\A_j$.
 
 % More on this elbo term
-\noindent Notice that this ELBO clearly generalizes the standard GP regression. In particular, setting $P = Q = 1$, $w_i = 1$ and $h_i(\x) = 0$ we recover the bound in Hensman et al \cite{hensmangaussian}.
+\noindent Notice that this ELBO clearly generalizes the standard GP regression. In particular, setting $P = Q = 1$, $w_i = 1$ and $h_i(\x) = 0$ we recover the bound in Hensman et al \citet{hensmangaussian}.
 Due to the decomposition of this bound, we can use stochastic gradient descent to learn the variational parameters.
 
 \subsubsection{Variational Parameters Derivatives}
