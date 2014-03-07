@@ -1,0 +1,25 @@
+PACIFIC Exchange Rate Service
+
+Data generated from http://fx.sauder.ubc.ca/data.html
+
+Input: day (in increasing order)
+Output: exchange rate vs USD of top 10 currencies and 3 precious metals
+
+Each year has about 250 day so we can have up to 2500 inputs, 13 outputs.
+
+Setting in Alvarez et al:
+- fxdata2007.csv: exchange rates in the year 2007 as retrieved from website
+- fx2007-processed.csv: 
+cut -d ',' -f 4,5,6,7,8,9,10,11,12,13,14,15,16 fxdata2007.csv > fx2007-processed.csv
+Because of missing data, used vim to repalce ,, with ,-1, => output value of -1 is missing data
+Then replace , (at the beginning of a line) with -1,
+
+- Outputs are standardized to have zero mean & unit variance
+- R_s = 1 (smoothing kernels) and R_o = 3 (whitenoise processes)
+- Best SMSE reported 0.2795 for CGP, 0.3927 for MTGP (R=2)
+
+missing data for the CAD, JPY, AUD outputs and make prediction for these
+- days 50-100 from CAD
+- days 100-150 from JPY
+- days 150-200 from AUD
+
