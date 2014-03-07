@@ -8,16 +8,16 @@ function plot_all(x,y,xtest,mu,var,z0,z,titlestr)
 %   - z0, z : initial and learned inducing
 %   - stitle : title string
 figure; hold on
-plot(xtest,mu,'b') % mean predictions in blue
-plotMeanAndStd(xtest,mu,2*sqrt(var),[7 7 7]/7.5);
+plotMeanAndStd(xtest,mu,2*sqrt(var),[7 7 7]/9);
 if ~isempty(z0)
-  plot(z0, -0.1 + min(y)*ones(size(z0,1), 1), 'k+', 'MarkerSize', 12);
+  plot(z0, -0.5 + min(y)*ones(size(z0,1), 1), 'k+', 'MarkerSize', 12);
 end
 if ~isempty(z)
-  plot(z, -0.2 + min(y)*ones(size(z,1), 1), 'm+', 'MarkerSize', 12);
+  plot(z, -0.5 + min(y)*ones(size(z,1), 1), 'm+', 'MarkerSize', 12);
 end  
-plot(x,y,'.m') % data points in magenta
-ylabel('Predictive distribution');
-title(titlestr);
+plot(x,y,'.m','MarkerSize',14) % data points in magenta
+%ylabel('Predictive distribution');
+title(titlestr,'FontSize',20);
+set(gca, 'FontSize', 20);
 
 return;

@@ -13,10 +13,14 @@ function [mu,s2,elbo,par] = svi_learn(x,y,xtest,M,cf,z0)
 %   - params : learned parameters
 [N D] = size(x);
 nhyper = eval(feval(cf.covfunc));
-par = init_params(x,y,M,nhyper,0,z0);
-par.beta = 1/0.05;
+if isempty(z0)
+  par = init_params(x,y,M,nhyper,initz(x,M,cf.initz));
+else
+  par = init_params(x,y,M,nhyper,z0);
+end
+par.beta = cf.beta;
 par.delta_beta = 0;
-elbo = zeros(numel(cf.maxiter),1);
+elbo = zeros(cf.maxiter,1);
 for iter = 1 : cf.maxiter
   idx = randperm(N, cf.nbatch);
   xi = x(idx,:); yi = y(idx);
@@ -33,9 +37,19 @@ for iter = 1 : cf.maxiter
         cf.momentum_z, cf.lrate_z);
     end
   end
-  % compute elbo using updated parameters
-  elbo(iter) = svi_elbo(x,y,par,cf.covfunc,[],[],[],[]);
-  fprintf('Iteration\t%d:\t%.4f\n',iter,elbo(iter));
+  % compute global elbo using updated parameters
+  if ~isempty(cf.monitor_elbo) && mod(iter,cf.monitor_elbo) == 0
+    nn = ceil(N/2000);
+    for i=1:nn-1
+      indice = ((i-1)*2000+1):(i*2000);
+      elbo(iter) = elbo(iter) + svi_elbo(x(indice,:),y(indice),par,cf.covfunc,[],[],[],[]);
+    end
+    indice = ((nn-1)*2000+1):N;
+    elbo(iter) = elbo(iter) + svi_elbo(x(indice,:),y(indice),par,cf.covfunc,[],[],[],[]);
+    fprintf('Iteration\t%d:\t%.4f\n',iter,elbo(iter));
+  else
+    disp(['finished iter ' num2str(iter)]);
+  end
 end
 
 if ~isempty(xtest)
