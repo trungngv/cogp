@@ -76,24 +76,32 @@ cf.beta = 1/0.01;
 cf.initz = 'random';
 cf.monitor_elbo = 50;
 
-M = 200;
-runs = 1;
-maes = zeros(runs,size(y,2));
-smses = maes;
-for n=1:runs
-  for i=1:size(y,2)
-    [mu,s2,elbo,params] = svi_learn(x,y(:,i),xtest,M,cf,[]);
-    mu = mu*ystd(i)+ymean(i);
-    disp('mae    smse')
-    fprintf('%.4f   %.4f\n', fmae(ytest(:,i),mu), frmse(ytest(:,i),mu));
-    maes(n,i) = fmae(ytest(:,i),mu);
-    smses(n,i) = mysmse(ytest(:,i),mu,ymean(i));
+Ms = [1000, 800, 600, 400, 200];
+runs = 5;
+for idx=1:numel(Ms)
+  maes = zeros(runs,size(y,2));
+  smses = maes;
+  nlpds = maes;
+  M = Ms(idx);
+  for n=1:runs
+    for i=1:size(y,2)
+      [mu,s2,elbo,params] = svi_learn(x,y(:,i),xtest,M,cf,[]);
+      mu = mu*ystd(i)+ymean(i);
+      fvar = s2*(ystd(i)^2);
+      disp('mae    smse')
+      fprintf('%.4f   %.4f\n', fmae(ytest(:,i),mu), frmse(ytest(:,i),mu));
+      maes(n,i) = fmae(ytest(:,i),mu);
+      smses(n,i) = mysmse(ytest(:,i),mu,ymean(i));
+      nlpds(n,i) = mynlpd(ytest(:,i),mu,fvar);
+    end  
   end  
-end  
+  disp('average mae, smses, nlpd')
+  disp(mean(maes))
+  disp(mean(smses))
+  disp(mean(nlpds))
+  save(['sarcos-svi-M' num2str(M)],'maes','smses','nlpds')
+end
 
-disp('average mae and smses')
-disp(mean(maes))
-disp(mean(smses))
 
 %% independent model - soD
 % rng(1110,'twister');
