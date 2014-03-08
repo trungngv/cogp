@@ -2,37 +2,20 @@ rand('twister', 1e6);
 randn('state', 1e6);
 
 %% select data set and convert to cgp format
-dataset = 'juraCu';
-log_transform = false;
-switch dataset
-  case 'juraCd'
-  case 'juraCu'
-    [x,y,xtest,ytest] = load_data('data/jura',dataset);
-    features = 1:2;
-  case 'concrete'
-    [x,y,xtest,ytest] = load_data('data/concrete','concrete3');
-    features = 3:5;
-  case 'ms'
-    [x,y,xtest,ytest] = load_data('data/ms','ms');
-    [x,xmean,xstd] = standardize(x,[],[]);
-    xtest = standardize(xtest,xmean,xstd);
-    features = 1:size(x,2);
-end
+[x,y,xtest,ytest,y0] = read_weather();
+[~,ymean,~] = standardize(y,[],[]);
+test_ind{1} = x >= 10.2 & x <= 10.8;
+test_ind{2} = x >= 13.5 & x <= 14.2;
 
 numOutputs = size(y,2);
 XTemp = cell(1,numOutputs); yTemp = cell(1,numOutputs);
 XTestTemp = cell(1,numOutputs); yTestTemp = cell(1,numOutputs);
 for i=1:numOutputs
-  XTemp{i} = x(:,features);
-  yTemp{i} = y(:,i);
-  if (strcmp(dataset, 'juraCd') || strcmp(dataset, 'juraCu')) && i > 1
-    XTemp{i} = [XTemp{i}; xtest(:,features)];
-    yTemp{i} = [yTemp{i}; ytest(:,i)];
-  end
-  if log_transform
-    yTemp{i} = log(yTemp{i});
-  end
-  XTestTemp{i} = xtest(:,features);
+  % missing data here
+  indi = ~isnan(y(:,i));
+  XTemp{i} = x(indi,:);
+  yTemp{i} = y(indi,i);
+  XTestTemp{i} = xtest;
   yTestTemp{i} = ytest(:,i);
 end
 
@@ -46,7 +29,7 @@ end
 % cgp otpions
 nlf = 2;
 %ftc = exact; fitc,pitc,fic = approximation
-options = multigpOptions('pitc'); % ftc = full training condition
+options = multigpOptions('ftc'); % ftc = full training condition
 options.initialInducingPositionMethod = 'espaced';
 options.kernType = 'gg';
 options.optimiser = 'scg';
@@ -86,35 +69,43 @@ for i = 1:size(yTemp, 2)
 end
 
 %% repeat
-iters = 1;
+runs = 5;
 display = 1;
-max_iters = 50;
-mae_all = zeros(iters,numOutputs);
+max_iters = 100;
+outputs = [2,3];
+mae_all = zeros(runs,2);
 smse_all = mae_all;
-funcval_all = zeros(iters,1);
-model_all = cell(iters,1);
-for iter=1:iters
+nlpd_all = mae_all;
+for iter=1:runs
   model = multigpCreate(q, d, X, y, options);
-  model_all{iter} = model;
   %multigpDisplay(model);
   %pause
-
+  tstart = tic;
   [model, ~, funcval] = multigpOptimise(model, display, max_iters);
-  funcval_all(iter) = funcval;
-
+  toc(tstart)
+  
   % Prediction
-  mu = multigpPosteriorMeanVar(model, XTest);
-  for i = 1:length(yTestTemp)
-    if log_transform
-      maerror = mean(abs((yTestTemp{i} - exp(mu{model.nlf + i}))));
-      smserror = mean((yTestTemp{i} - exp(mu{model.nlf + i})).^2)/(var(yTestTemp{i}) + mean(yTestTemp{i})^2);
-    else
-      maerror = mean(abs((yTestTemp{i} - mu{model.nlf + i})));
-      smserror = mean((yTestTemp{i} - mu{model.nlf + i}).^2)/(var(yTestTemp{i}) + mean(yTestTemp{i})^2);
-    end  
-    mae_all(iter,i) = maerror;
-    smse_all(iter,i) = smserror;
+  [mu vaar] = multigpPosteriorMeanVar(model, XTest);
+  for i = 1:2
+    t = outputs(i);
+    tmp = ~isnan(ytest(:,t)) & test_ind{i};
+    yytest = ytest(tmp,t);
+    yypred = mu{model.nlf + t}(tmp);
+    yvar = vaar{model.nlf + t}(tmp);
+    mae_all(iter,i) = mean(abs((yytest - yypred)));
+    smse_all(iter,i) = mysmse(yytest,yypred,ymean(t));
+    nlpd_all(iter,i) = mynlpd(yytest,yypred,yvar);
+    save('weather-cgp');
   end
+  disp('smse = ')
+  disp(smse_all(iter,:))
 end
-disp('mae = ')
-disp(mean(mae_all,1))
+disp('avg smse = ')
+disp(mean(smse_all,1))
+
+% use this to make the plots
+% plot_all(x,y0(:,2),x,mu{model.nlf+2},2*sqrt(var{model.nlf+2}),[],[],'cgp')
+% axis([10 15 10 28])
+% plot_all(x,y0(:,3),x,mu{model.nlf+3},2*sqrt(var{model.nlf+2}),[],[],'cgp')
+% axis([10 15 10 28])
+
