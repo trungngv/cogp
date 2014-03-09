@@ -1,4 +1,4 @@
-function [mu var] = gpsvi_predict(covfunc, loghyper, m, S, z, xstar)
+function [mu vaar] = gpsvi_predict(covfunc, loghyper, m, S, z, xstar)
 % Makes predictions with gpsvi
 % z are the inducing point lcoations
 % xstar are the test-pints
@@ -14,7 +14,7 @@ else
 end
 bsize = ceil(size(xstar,1)/nbatch);
 mu = [];
-var= [];
+vaar= [];
 for i=1:nbatch
   pos = (i-1)*bsize + 1;
   if i < nbatch
@@ -31,8 +31,8 @@ for i=1:nbatch
   % diag(Ksm * kmminv * S * Kmmonv *Kms) 
   var_1 =  sum(Kms.*(Kmminv*S*Kmminv*Kms),1)';
   var_2 =  sum(Kms.*(Kmminv*Kms),1)';   
-  var = [var; var_1 + Kss - var_2];
+  vaar = [vaar; var_1 + Kss - var_2];
 end
-
+vaar = max(vaarr,1e-10); % remove numerical noise i.e. negative variance
 return;
 
