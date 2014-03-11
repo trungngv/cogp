@@ -38,7 +38,9 @@ theta1 = theta1_old + cf.lrate*(betaval*A'*y - theta1_old);
 [VV DD] = eig(theta2);
 invTheta2 = VV*diag(1./diag(DD))*VV';
 params.S = - 0.5*invTheta2;
-params.m = params.S*theta1;
-
+% a bit of hack to allow h_i to be input-dependent noise
+if ~strcmp(covfunc,'covNoise')
+  params.m = params.S*theta1;
+end
 return;
 

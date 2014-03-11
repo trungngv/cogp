@@ -33,6 +33,6 @@ for i=1:nbatch
   var_2 =  sum(Kms.*(Kmminv*Kms),1)';   
   vaar = [vaar; var_1 + Kss - var_2];
 end
-vaar = max(vaarr,1e-10); % remove numerical noise i.e. negative variance
+vaar = max(vaar,1e-10); % remove numerical noise i.e. negative variance
 return;
 

@@ -14,9 +14,9 @@ function [mu,s2,elbo,par] = svi_learn(x,y,xtest,M,cf,z0)
 [N D] = size(x);
 nhyper = eval(feval(cf.covfunc));
 if isempty(z0)
-  par = init_params(x,y,M,nhyper,initz(x,M,cf.initz));
+  par = init_params([],x,y,M,nhyper,initz(x,M,cf.initz));
 else
-  par = init_params(x,y,M,nhyper,z0);
+  par = init_params([],x,y,M,nhyper,z0);
 end
 par.beta = cf.beta;
 par.delta_beta = 0;
