@@ -48,9 +48,11 @@ Our investigation of the dataset found that 4 other currencies (GBP, NZD, KRW, M
 This was effectively used by the model to extrapolate the values of the AUD.
 
 %todo: result for independent gps
-We also report in Table \ref{tab:fx} the predictive accuracy of our model compared to that of CGP variants and independent GPs. 
-Our model outperforms both variants of the convolved GPs in terms of standardized mean-squared error (SMSE).
-It has lower test likelihood, as measured by the negative log predictive density (NLPD), which is mainly due to the less conservative predictive variance of the full CGP for the CAD currency.
+We also report in Table \ref{tab:fx} the predictive accuracy of our model compared to the convolved GPs model with exact inference \citet{alvarez-lawrence-nips-08} (CGP) and with approximation via the variational inducing kernels \citet{alvarez2010efficient}) (CGPVAR) in addition to using independent GPs (IGP, one for each output).
+Our model outperforms both of the CGP variants in terms of standardized mean-squared error (SMSE).
+It has lower test likelihood, as measured by the negative log predictive density (NLPD), which is mainly due to the less conservative predictive variance of the exact CGP for the CAD currency.
+The results are averaged across the 3 outputs over 5 repetitions.
+% no std because there are 3 outputs but variance is small
 Note that the SMSE of CGPVAR is taken from \citet{alvarez2010efficient} while the NLPD was not provided.
 Training took only 10 minutes for our model compared to 1.4 hours of the full CGP model.
 
@@ -61,8 +63,9 @@ Training took only 10 minutes for our model compared to 1.4 hours of the full CG
 \begin{tabular}{c|c|c}
 METHOD & SMSE & NLPD \\ \hline
 COGP  & \textbf{0.2125} & -0.8394 \\
-CGPVAR & 0.2795 & NA \\
 CGP & 0.2427 & \textbf{-2.9474} \\
+IGP & 0.5996 & 0.4082 \\
+CGPVAR & 0.2795 & NA 
 %ICM & 0.3927 &
 \end{tabular}
 \end{center}
@@ -80,15 +83,35 @@ CGP & 0.2427 & \textbf{-2.9474} \\
 \end{figure*}
 
 \subsection{AIR TEMPERATURE PREDICTION}
-Two latent functions, inverse lengthscale 136 capturing global trend of increasing temperature from day 10 - 15 and inverse lengthscale of 0.5 to model the fluctuation within a day.
-Training for full cgp model with 2 latent functions took 3 hours compared to ... in our model.
+Next, we consider the task of predicting air temperature at 4 different locations in the south coast of England. 
+The data is gathered from a network of weather sensors (named Bramblemet, Sotonmet, Cambermet, and Chimet), each of which measures several environmental variables \citet{osborne2008towards}\footnote{Data is available at seperate web pages, see e.g. http://www.bramblemet.co.uk}.
+%The sensors are close geographically so we can expect correlation in air temperature.
+We selected the sensor signal for air temperature during the period from July 10 to July 15, 2013.
+The sensors record measurements every 5 minutes, resulting in a maximum of 4320 observations.
+However, there are missing data for Bramblemet (100 points), Chimet (15 points), and Sotonmet (1002 points), possibly due to network outages or hardware failures.
+We further simulated failure of the sensors by removing the observations from the time periods [10.2 - 10.8] for Cambermet and [13.5 - 14.2] for Chimet.
+The removed data comprises 375 data points, which is used for testing, and the remaining data consisting of 15,788 points is used for training.
+Similar to the previous experiment, the objective is to evaluate the ability of the model to use the signals from the functioning sensors to extrapolate the missing signals.
+
+For pre-processing we normalized the outputs to have zero mean and unit variance.
+The inducing inputs $(M = 200)$ are randomly selected from the training set and fixed throughout training.
+The number of latent processes is $Q = 2$ for both our model and the CGP model.
+
+The real data and the predictive distributions by 3 models (COGP, CGP with exact inference, and independent GPs) are shown in Figure \ref{fig:weather}.
+It is clear that the independent GPs model is clueless in the test regions and thus simply uses the average temperature as its prediction.
+For Cambermet, both COGP and CGP can capture the rising in temperature from the morning till the afternoon and the fall afterward.
+For Chimet, both models perform poorly but CGP more so as it falsely predicts  wild fluctuations that are non-existent in the data. 
+Note that the two latent processes learned by our model indeed correspond to different patterns in the data: one process has the inverse lengthscale of 136 which captures the global increase in temperature during the training period while the other has the inverse lengthscale of 0.5 to model the local variations within a single day.
+The comparative performance of the models are summarized in Table \ref{tab:air}, which further supports the qualitative analysis that our model outperforms CGP.
+All results are averaged of the 2 outputs over 5 repetitions.
+Training of our model took on average 5 minutes compared to 3 hours of CGP with exact inference.
 
 \begin{table}[h]
-\caption{Performance comparison by SMSE and NLPD on the air temperature dataset.}
-\label{tab:fx}
+\caption{Performance comparison on the air temperature dataset.}
+\label{tab:air}
 \begin{center}
 \begin{tabular}{c|c|c}
-method & smse & nlpd \\ \hline
+METHOD & SMSE & NLPD \\ \hline
 COGP & \textbf{0.1077} & \textbf{2.1712} \\
 CGP & 0.1125 & 2.2219 \\
 IGP & 0.8944 & 12.5319
