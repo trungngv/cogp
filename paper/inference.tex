@@ -68,10 +68,10 @@ Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distrib
 \end{align}
 where $\g_n = \{g_{jn} = (\g_j)_n\}_{j=1}^Q$.
 The inequality is due to Jensen's inequality and the equality is due to the fact that the likelihood fully factorizes.
-Each individual term $l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ is computed using the identity in eq. \ref{eq:identity} and  given in eq \ref{eq:lin} (both are in the Appendix).
 \newcommand{\Ahi}{\A^h_i}
 \newcommand{\Zi}{\Z_i}
- Substituting $l_{in}$ into equation \ref{eq:elbo} and carrying out the integral using the identity in eq. \ref{eq:identity} again we get:
+The ELBO can be computed by first solving for the individual expectations 
+$l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ (see the supplementary material for detailed derivation), which are then substituted into equation \ref{eq:elbo} to give:
 \begin{align}
 \nonumber
 &\log p(\y)

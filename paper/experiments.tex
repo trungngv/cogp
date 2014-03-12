@@ -88,7 +88,7 @@ The data is gathered from a network of weather sensors (named Bramblemet, Sotonm
 %The sensors are close geographically so we can expect correlation in air temperature.
 We selected the sensor signal for air temperature during the period from July 10 to July 15, 2013.
 The sensors record measurements every 5 minutes, resulting in a maximum of 4320 observations.
-However, there are missing data for Bramblemet (100 points), Chimet (15 points), and Sotonmet (1002 points), possibly due to network outages or hardware failures.
+There are missing data for Bramblemet (100 points), Chimet (15 points), and Sotonmet (1002 points), possibly due to network outages or hardware failures.
 We further simulated failure of the sensors by removing the observations from the time periods [10.2 - 10.8] for Cambermet and [13.5 - 14.2] for Chimet.
 The removed data comprises 375 data points, which is used for testing, and the remaining data consisting of 15,788 points is used for training.
 Similar to the previous experiment, the objective is to evaluate the ability of the model to use the signals from the functioning sensors to extrapolate the missing signals.
@@ -134,4 +134,13 @@ IGP & 0.8944 & 12.5319
 \label{fig:weather}
 \end{figure*}
 
-\subsection{ROBOT ARMS}
+\subsection{INVERSE DYNAMICS OF ROBOT ARM}
+Our last experiment is with a large scale dataset relating to an inverse dynamics model of a 7-degree-of-freedom anthropomorphic robot arm\footnote{Data is available at http://www.gaussianprocess.org/gpml/data/}.
+The data consists of 48,933 mapping from a 21-dimensional input space (7 joints positions, 7 joint velocities, 7 joint accelerations) to the corresponding 7 joint torques.
+The problem is strongly nonlinear due to complex superpositions of sine and cosine functions in robot dynamics \citet{vijayakumar2000locally}.
+Furthermore, exploratory analysis using standard GP with automatic relevance determination suggests that all of the 21 dimensions are relevant.
+We consider here the task of joint learning for the $4$th and $7$th outputs.
+Note that previous work (see e.g. \citet{rasmussen-williams-book},  \citet{vijayakumar2000locally}) on this dataset has only dealt with learning  a single output.
+We used the same training/testing split as in \citet{rasmussen-williams-book}, resulting in a training set of 88,968 observations and a test set of 
+8,898 observations.
+
