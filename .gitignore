@@ -1,12 +1,14 @@
 # Not include libs for now
 libs/cgp
 libs/mtgp
+# figures not in the paper
+results/figures
 # Dataset not used for now
 data/jura
 data/hpc
 # Binary files
 *.pdf
-
+*.mat
 # Windows default autosave extension
 *.asv
 

@@ -1,3 +1,5 @@
+figures/*.pdf
+*.pdf
 *.acn
 *.acr
 *.alg

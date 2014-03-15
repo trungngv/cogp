@@ -51,22 +51,25 @@ This was effectively used by the model to extrapolate the values of the AUD.
 We also report in Table \ref{tab:fx} the predictive accuracy of our model compared to the convolved GPs model with exact inference \citet{alvarez-lawrence-nips-08} (CGP) and with approximation via the variational inducing kernels \citet{alvarez2010efficient}) (CGPVAR) in addition to using independent GPs (IGP, one for each output).
 Our model outperforms both of the CGP variants in terms of standardized mean-squared error (SMSE).
 It has lower test likelihood, as measured by the negative log predictive density (NLPD), which is mainly due to the less conservative predictive variance of the exact CGP for the CAD currency.
-The results are averaged across the 3 outputs over 5 repetitions.
+%The results are averaged across the 3 outputs over 5 repetitions.
 % no std because there are 3 outputs but variance is small
 Note that the SMSE of CGPVAR is taken from \citet{alvarez2010efficient} while the NLPD was not provided.
 Training took only 10 minutes for our model compared to 1.4 hours of the full CGP model.
 
-\begin{table}[h]
-\caption{Performance comparison on the foreign exchange rate dataset.}
+\setlength{\tabcolsep}{4pt}
+\begin{table}[t]
+\caption{Performance comparison on the foreign exchange rate dataset. Results are averaged of the 3 outputs over 5 repetitions.}
 \label{tab:fx}
 \begin{center}
-\begin{tabular}{c|c|c}
-METHOD & SMSE & NLPD \\ \hline
+\begin{tabular}{ccc}
+\toprule
+\textbf{METHOD} & \textbf{SMSE} & \textbf{NLPD} \\ \hline
 COGP  & \textbf{0.2125} & -0.8394 \\
 CGP & 0.2427 & \textbf{-2.9474} \\
 IGP & 0.5996 & 0.4082 \\
-CGPVAR & 0.2795 & NA 
+CGPVAR & 0.2795 & NA \\
 %ICM & 0.3927 &
+\bottomrule
 \end{tabular}
 \end{center}
 \end{table}
@@ -103,18 +106,22 @@ For Cambermet, both COGP and CGP can capture the rising in temperature from the 
 For Chimet, both models perform poorly but CGP more so as it falsely predicts  wild fluctuations that are non-existent in the data. 
 Note that the two latent processes learned by our model indeed correspond to different patterns in the data: one process has the inverse lengthscale of 136 which captures the global increase in temperature during the training period while the other has the inverse lengthscale of 0.5 to model the local variations within a single day.
 The comparative performance of the models are summarized in Table \ref{tab:air}, which further supports the qualitative analysis that our model outperforms CGP.
-All results are averaged of the 2 outputs over 5 repetitions.
+%All results are averaged of the 2 outputs over 5 repetitions.
 Training of our model took on average 5 minutes compared to 3 hours of CGP with exact inference.
 
-\begin{table}[h]
-\caption{Performance comparison on the air temperature dataset.}
+\setlength{\tabcolsep}{4pt}
+\begin{table}[t]
+\caption{Performance comparison on the air temperature dataset. Results are averaged of 2 outputs over 5 repetitions. }
 \label{tab:air}
 \begin{center}
-\begin{tabular}{c|c|c}
-METHOD & SMSE & NLPD \\ \hline
+\begin{tabular}{ccc}
+\toprule
+\textbf{METHOD} & \textbf{SMSE} & \textbf{NLPD} \\
+\hline
 COGP & \textbf{0.1077} & \textbf{2.1712} \\
 CGP & 0.1125 & 2.2219 \\
-IGP & 0.8944 & 12.5319
+IGP & 0.8944 & 12.5319 \\
+\bottomrule
 \end{tabular}
 \end{center}
 \end{table}
@@ -122,11 +129,11 @@ IGP & 0.8944 & 12.5319
 \begin{figure*}
 \centering
 \begin{tabular}{ccc}
-\includegraphics[scale=0.3]{figures/slfm-weatherCambermet.eps} &
+\includegraphics[scale=0.3]{figures/cogp-weatherCambermet.eps} &
 \includegraphics[scale=0.3]{figures/cgp-weatherCambermet.eps} &
 \includegraphics[scale=0.3]{figures/weatherCambermet.eps}
 \\
-\includegraphics[scale=0.3]{figures/slfm-weatherChimet.eps} &
+\includegraphics[scale=0.3]{figures/cogp-weatherChimet.eps} &
 \includegraphics[scale=0.3]{figures/cgp-weatherChimet.eps} &
 \includegraphics[scale=0.3]{figures/weatherChimet.eps}
 \end{tabular}
@@ -141,6 +148,41 @@ The problem is strongly nonlinear due to complex superpositions of sine and cosi
 Furthermore, exploratory analysis using standard GP with automatic relevance determination suggests that all of the 21 dimensions are relevant.
 We consider here the task of joint learning for the $4$th and $7$th outputs.
 Note that previous work (see e.g. \citet{rasmussen-williams-book},  \citet{vijayakumar2000locally}) on this dataset has only dealt with learning  a single output.
-We used the same training/testing split as in \citet{rasmussen-williams-book}, resulting in a training set of 88,968 observations and a test set of 
-8,898 observations.
+We used the same training/testing split as in \citet{rasmussen-williams-book}, resulting in a training set of 88,968 observations and a test set of 8,898 observations.
 
+Since none of the existing multioutput models are applicable to this problem, we compare with two baselines which learn each output independently.
+The first is the subset of data approach where a subset of 1000 data points (for each output) is randomly sampled for training. 
+We call this method SOD1000.
+The second baseline is the sparse GP with stochastic variational inference \citet{hensmangaussian} using 500 inducing inputs, which we refer to as SVIGP.
+The outputs are normalized and the squared exponential with ARD covariance function is used for all methods.
+In case of COGP, this mean the shared process (we used $Q = 1$) and each of the independent processes have this same covariance function.
+
+The predictive performance of the methods are given in Table \ref{tab:robotarm}.
+The results are averaged of the 2 outputs over 5 repetitions.
+Both COGP and SVIGP using 500 inducing inputs significantly outperform SOD in terms of the mean absolute error (MAE) but have lower predictive likelihood.
+
+\begin{table}[t]
+\caption{Performance comparison on the robot arm dataset. In the two bottom lines, standard GP is applied to output 1 and the remaining method is applied to output 2. Results are averaged over 5 repetitions.}
+\label{tab:robotarm}
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{\textbf{OUTPUT 1}} & \multicolumn{2}{c}{\textbf{OUTPUT 2}} \\ \cmidrule(r){2-5}
+\textbf{METHOD} & \textbf{SMSE} & \textbf{NLPD} & \textbf{SMSE} & \textbf{NLPD}\\ 
+ \midrule
+COGP, learn z & \textbf{0.2631} & \textbf{3.0600} & 0.0127 & \textbf{0.8302} \\
+COGP, fix z & 0.2821& 3.2281 & 0.0131 & 0.8685 \\
+GP, SVIGP & 0.3119 & 3.2198 & \textbf{0.0101} & 1.1914 \\
+GP, SOD & 0.3119 & 3.2198 & 0.0104 & 1.9407 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Impact of Optimizing the Inducing Inputs}
+% table for smses, nlpds, training tiem
+\begin{figure}
+\includegraphics[scale=0.4]{figures/sarcosTime.eps}
+\caption{The cost of optimizing versus fixing the inducing inputs.}
+\label{fig:time}
+\end{figure}
