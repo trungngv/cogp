@@ -1,1 +1,34 @@
-Introduction goes here
+% paper on multioutput so this should appear first in the introduction
+%Gaussian processes (GPs) \citep{rasmussen-williams-book} are perhaps the prior of choice in nonparametric Bayesian regression not only in the standard setting but also in multioutput learning \citep{} .
+% it is beauty but also a beast
+%Unfortunately, given a dataset of size $N$, exact inference for GP regression requires $\calO(N^3)$ for computation and $\calO(N^2)$ for memory, which can only be applied to problems in non-realistic settings.
+% cite titsias
+%Consequently, various approximate methods \citep{lawrence2002fast,seeger2003bayesian,seeger2003fast, smola2001sparse,snelson2006sparse,williams2001using} have been proposed to overcome this limitation.
+%Taking insights from the seminal work of \citep{quinonero2005unifying}, most of these approximations can be formulated around the \emph{inducing points}.
+%These come from the same latent function that generates the data and can be viewed as representing its sufficient statistics \citet{titsias2009variational}.
+%Using these approaches, the complexity reduces to $\bigO(NB^2)$ in computation and $\bigO(NB)$ in memory where $B \ll N$ is the number of inducing points.
+%Recent development in stochastic variational inference for GPs \citep[GPSVI,][]{hensmangaussian} has led to further reduction of these costs to $\bigO(B^3)$ and $\bigO(B^2)$ respectively.
+
+% While the important advance by GPSVI has made possible the application of GPs to datasets of millions of data points, the assumption that the statistics of the data is sufficiently captured by a, typically small, set of inducing variables might be too strong and limiting.
+%This is addressed in \citep{nguyen2014fast} by using local sets of inducing points, as opposed to a global set, such that each local inducing sets sufficiently support a different local region of the input space.
+%Yet another approach to this challenge is multi-task / multi-output learning, which is the focus of this paper.
+%Specifically we pose the question: \emph{under the sparsity constraint of individual outputs}, can multiple output learning be effective?
+%We believe this to be an interesting and  important research problem toward scalable multioutput GP models.
+%Here we emphasize the word \emph{sparsity}, as it has been evident from the vast literature on GP approximations that  sparsity is the impeccable assumption to deal with large scale datasets.
+%When learning things together, the hope is that information from different tasks can be used collaboratively to compensate for the sparsity enforcement to the individual outputs.
+
+% can we do joint learning of multiple output under the sparsity assumption (meantioned above) for 
+
+% why is is this important?
+% active research in multioutput learning GP-based, but on very small scale (show table)
+% because existing multiple output does not approach the problem from this perspective (and only applicable to small scale)
+% when we consider large scale, it is impeccable that the assumption of sparsity for each output must still hold.
+
+% our solution: the modeling assumption and philosophy solution
+%In this paper we propose a ...
+
+% contribution from inference for large scale
+
+
+% Experiments and summary of results
+ 

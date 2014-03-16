@@ -1,53 +1,49 @@
-We describe a multiple-output regression model.
-Suppose that we have inputs $\X = \{\x_n\}_{n=1}^N$ and outputs $\y = \{\y_n\}_{n=1}^N$, with $\x_n \in \calR^D$ and $\y_n \in \calR^P$, i.e. the output is $P$-dimensional.
-For ease of exposition, we assume that there are no missing values in any output dimension.
-The most dominant approach in GP-based multiple output regression is to compose the different outputs as some \textit{linear} mixing (combination) of some basic processes (random functions).
-Our model is also underpinned by this composition approach.
+Before diving into details of the specification, we discuss the philosophy and motivation behind our collaborative multioutput model.
+To learn the outputs jointly, we need a mechanism through which information can be transferred among the outputs.
+This is achieved in the model by allowing the outputs to share multiple sets of inducing variables.
+For exposition, consider a set of inducing points for a moment.
+Because they serve as the sufficient statistics of the individual outputs, a pattern common to the outputs can be encapsulated by these points when learning is done jointly. 
+Different patterns in the data can be captured by having  multiple set of inducing variables.
+It should be evident that these variables play a double pivotal role in the model: they represent the sufficient statistics that is crucial for sparse approximation and they collaborate sharing of information across the outputs.
 
-\noindent Consider the semiparametric latent factor models (SLFM) \citet{teh-et-al-aistats-05}.
-It assumes $Q$ basic independent processes, $g_j(\x) \sim \GP(0, k(\x,\x';\vectheta_j))$, where $\vectheta_j$ is the hyperparameters of the covariance function of $g_j(\x)$.
-Each (latent) output is a weighted combination of these basic processes, i.e.
-\begin{align}
-f_i(\x) = \sum_{j=1}^Q w_{ij} g_j(\x), \quad i = 1 \hdots P,
-\end{align}
-In \citet{seeger2005semiparametric}, an extra degree of freedom is given by allowing each output $i$ to have its own process $h_i(\x) \sim \GP(0, k(\x,\x'; \vectheta^h_i)$ leading to
-\begin{align}
-f_i(\x) = \sum_{j=1}^Q w_{ij} g_j(\x) + h_i(\x), 
-\end{align}
-We emphasize that, although $k$ denotes covariance functions in general, each independent process can have its own covariance function.
-
-\noindent 
-\textbf{Augmented sparse GPs}
-Toward scalable modeling, we replace standard GPs with sparse GPs augmented with \textit{different} set of inducing inputs.
-This adds much flexibility to the model as each of the shared process $g_j(\x)$ can model a different pattern in the data with its own covariance function and inducing inputs. The roles of $g_j(\x)$ and $h_i(\x)$ can be quite different, so it is necessary that each has its own inducing inputs.
-Furthermore, $g_j(\x)$ can be seen as a \textit{global} function operating on the entire input space (of all output dimensions), while each $h_i(\x)$ operates only on the inputs of the $i$-th output, which can be a subspace of the input.
-
-%However, to really address the issue of scalability, this model is built upon sparse GPs from the ground up.
-
-\subsection{Prior and Likelihood}
-In this section we specify the prior and likelihood of this model. 
 \newcommand{\Zj}{\Z_j}
 \newcommand{\Zhi}{\Z^h_i}
-Let the set of inducing inputs for $g_j(\x)$ and $h_i(\x)$ be $\Z_j$ and $\Z^h_i$, and the corresponding inducing points $\u_j$ and $\v_i$, respectively.
+Consider multioutput regression of $P$ tasks with inputs $\X = \{\x_n \in \calR^D\}_{n=1}^N$ and outputs $\y = \{\y_i\}_{i=1}^P$ where $\y_i = \{y_{in}\}_{n=1}^N$. 
+Assume $Q$ latent functions with independent Gaussian process priors, $g_j(\x) \sim \GP(0, k_j(\cdot,\cdot))$, $j= 1 \hdots Q$.
+We introduce the sets of \emph{inducing variables} $\u_j$, each of which comes from $g_j(\x)$, i.e., $\u_j$ contains the function values at the inducing inputs $\Z_j$, which live in the same space as $\X$.
+These processes and inducing sets are shared by all of the outputs.
+To accommodate greater flexibility, we further allow each output to have its own independent process $h_i(\x) \sim \GP(0, k^h_i(\cdot,\cdot))$ whose the sets of inducing inputs and variables are $\Z^h_i$ and $\v_i$ respectively, where $i = 1 \hdots P$.
+% information is transfered via the inducing variables
 We denote the collective variables: $\g = \{\g_j\}$, $\h = \{\h_i \}$, $\u = \{\u_j\}$, $\v = \{\v_i\}$, $\Z = \{\Zj\}$, and $\Z^h = \{\Zhi \}$ where $\g_j = \{g_j(\x_n)\}$, $\h_i = \{h_i(\x_n)\}$. 
 The subscripts are $i = 1 \hdots P$, $j = 1 \hdots Q$, and $n = 1 \hdots N$.
+For convenience, we shall assume the same number of inducing points, $M$, for all of the processes, however this is not imposed in practice.
 
-\noindent
-\textbf{Prior}
-The prior of the augmented model is given by:
+Following the definition of the GPs and the independence of the processes, the \emph{prior} of the multioutput model can be written as:
 \begin{align}
+\label{eq:gu}
 p(\g | \u) &= \prod_{j=1}^Q p(\g_j | \u_j) = \prod_{j=1}^Q \Normal(\g_j; \BigMu_j, \tilde{\K}_j )\\
 p(\u) &= \prod_{j=1}^Q p(\u_j) = \prod_{j=1}^Q \Normal(\u_j; \vec{0}, k(\Zj, \Zj)) \\
+\label{eq:hv}
 p(\h | \v) &= \prod_{i=1}^P p(\h_i | \v_i) = \prod_{i=1}^P \Normal(\h_i; \BigMu^h_i, \tilde{\K}^h_i)\\
-p(\v) &= \prod_{i=1}^P p(\v_i) = \prod_{i=1}^P \Normal(\v_i; \vec{0}, k(\Zhi, \Zhi)),
+p(\v) &= \prod_{i=1}^P p(\v_i) = \prod_{i=1}^P \Normal(\v_i; \vec{0}, k(\Zhi, \Zhi)), \\
+ \BigMu_j &= k(\X,\Zj)k(\Zj,\Zj)^{-1}\u_j \\
+\BigMu^h_i &= k(\X,\Zhi)k(\Zhi,\Zhi)^{-1}\v_i \\
+\tilde{\K}_j &= k_j(\X,\X) - k(\X,\Zj)k(\Zj,\Zj)^{-1}k(\Zj,\X) \\
+\tilde{\K}^h_i &= k^h_i(\X,\X) - k(\X,\Zhi)k(\Zhi,\Zhi)^{-1}k(\Zhi,\X).
 \end{align}
-where $\BigMu_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}\u$ and $\tilde{\K}_j = k_j(\X,\X) - k(\X,\Zj)k(\Zj,\Zj)^{-1}k(\Zj,\X)$ and $\BigMu^h_i, \tilde{\K}^h_i$ are similarly defined.
-To avoid notational clutter, we omit the subscripts $j,h,i$ from the kernels $k_j(\cdot,\cdot)$ and $k^h_i(\cdot,\cdot)$ when it is clear from the parameters inside the parentheses which covariance function is in action. 
+In the above equations and hereafter, we omit the subscripts $j,h,i$ from the kernels $k_j(\cdot,\cdot)$ and $k^h_i(\cdot,\cdot)$ when it is clear from the parameters inside the parentheses which covariance function is in action. 
 
-\noindent
-\textbf{Likelihood}
-The likelihood as usual follows the standard iid Gaussian likelihood,
+The \emph{likelihood} with standard iid Gaussian likelihood is given by:
 \begin{align}
-p(\y | \g, \h ) = \prod_{i=1}^P \Normal( \y_i ; \sum_{j=1}^Q w_{ij} \g_j + \h_i, \beta_i^{-1} \I),
+p(\y | \g, \h ) = \prod_{i=1}^P \prod_{n=1}^N \Normal( y_{in} ; \sum_{j=1}^Q w_{ij} g_j(\x_n) + h_i(\x_n), \beta_i^{-1}),
 \end{align}
-where each term in the product is the likelihood of an output, $p( \y_i ; \g, \h_i)$.
+which says that $y_{in}$ is a linear combination of the latent functions with weight $w_{ij}$ for the $j$th shared latent process plus a contribution from the individual process $h_i$.
+As the latent values $\g$ are specified conditioned on the inducing variables $\u$, this construction implies that each output is a weighted combination of the inducing values.
+We note that if $\u$ and $\v$ are marginalized out, we obtain the semiparametric latent factor models \citep{teh-et-al-aistats-05,seeger2005semiparametric}.
+However, doing so is against the purpose of this model which encourage sharing of outputs via the inducing outputs.
+Furthermore, as we shall see in the next section, explicit representation of these variables is instrumental to scalable inference of this model.
+
+%\textbf{Augmented sparse GPs}
+%Toward scalable modeling, we replace standard GPs with sparse GPs augmented with \textit{different} set of inducing inputs.
+%This adds much flexibility to the model as each of the shared process $g_j(\x)$ can model a different pattern in the data with its own covariance function and inducing inputs. The roles of $g_j(\x)$ and $h_i(\x)$ can be quite different, so it is necessary that each has its own inducing inputs.
+%Furthermore, $g_j(\x)$ can be seen as a \textit{global} function operating on the entire input space (of all output dimensions), while each $h_i(\x)$ operates only on the inputs of the $i$-th output, which can be a subspace of the input.
