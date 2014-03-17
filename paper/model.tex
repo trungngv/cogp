@@ -4,7 +4,7 @@ This is achieved in the model by allowing the outputs to share multiple sets of 
 For exposition, consider a set of inducing points for a moment.
 Because they serve as the sufficient statistics of the individual outputs, a pattern common to the outputs can be encapsulated by these points when learning is done jointly. 
 Different patterns in the data can be captured by having  multiple set of inducing variables.
-It should be evident that these variables play a double pivotal role in the model: they represent the sufficient statistics that is crucial for sparse approximation and they collaborate sharing of information across the outputs.
+It should be evident that these variables play a double pivotal role in the model: they represent the sufficient statistics of the sparse processes and they collaborate sharing of information across the outputs.
 
 \newcommand{\Zj}{\Z_j}
 \newcommand{\Zhi}{\Z^h_i}
@@ -40,8 +40,8 @@ p(\y | \g, \h ) = \prod_{i=1}^P \prod_{n=1}^N \Normal( y_{in} ; \sum_{j=1}^Q w_{
 which says that $y_{in}$ is a linear combination of the latent functions with weight $w_{ij}$ for the $j$th shared latent process plus a contribution from the individual process $h_i$.
 As the latent values $\g$ are specified conditioned on the inducing variables $\u$, this construction implies that each output is a weighted combination of the inducing values.
 We note that if $\u$ and $\v$ are marginalized out, we obtain the semiparametric latent factor models \citep{teh-et-al-aistats-05,seeger2005semiparametric}.
-However, doing so is against the purpose of this model which encourage sharing of outputs via the inducing outputs.
-Furthermore, as we shall see in the next section, explicit representation of these variables is instrumental to scalable inference of this model.
+However, doing so is against the purpose of this model which encourage sharing of outputs via the inducing variables.
+Furthermore, as we shall see in the next section, explicit representation of these variables is instrumental to scalable inference of the model.
 
 %\textbf{Augmented sparse GPs}
 %Toward scalable modeling, we replace standard GPs with sparse GPs augmented with \textit{different} set of inducing inputs.

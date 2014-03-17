@@ -7,6 +7,210 @@
 %This leads to choosing a variational approximation of the posterior which factorizes as $q(\f, \u | \y) = p(\f | \u) q(\u | \y)$.
 %Since the conditional $p(\f | \u)$ is known, variational inference becomes learning an optimal posterior $q(\u | \y)$ only. \\
 %
+
+Inference in this model is done with variational inference.
+In section \ref{sec:variationalLowerBound}, we derive a lower bound of the marginal likelihood which has the key property of factorizing over the data points.
+The next section takes advantage of this factorization to derive stochastic variational inference which allows the model to scale to massive datasets.
+Section \ref{sec:hyperparameters} discusses learning of the inducing inputs and other hyperparameters.
+
+\subsection{VARIATIONAL LOWER BOUND \label{sec:variationalLowerBound}}
+\newcommand{\ug}{\u_g}
+\newcommand{\uh}{\u^h}
+\newcommand{\mgj}{\m_j}
+\newcommand{\mhi}{\m^h_i}
+\newcommand{\Sgj}{\S_j}
+\newcommand{\Shi}{\S^h_i}
+Our inference task is to find the posterior $p(\g, \h, \u, \v | \y)$, for which we use variational inference \citep{jordan-variational-99}. 
+Before choosing the form of the approximate posterior, observe that the posterior distribution can be written as,
+\begin{align}
+p(\g, \h, \u, \v | \y) = p(\g | \u, \y) p(\h | \v, \y) p(\u, \v | \y).
+\end{align}
+Here we recall the modeling assumption that each set of the inducing variables is the \emph{sufficient statistics} of the corresponding latent process. 
+This motivates replacing the true posteriors over $\g$ and $\h$ with their conditional distributions given the inducing variables, leading to a distribution that of the form
+\begin{align}
+q(\g, \h, \u, \v | \y)
+= p(\g|\u) p(\h|\v) q(\u,\v),
+\end{align}
+with
+\begin{align}
+q(\u,\v) &= \prod_{j=1}^Q \underbrace{\Normal(\u_j; \mgj, \Sgj)}_{q(\u_j)} \prod_{i=1}^P  \underbrace{\Normal(\v_i; \mhi, \Shi)}_{q(\v_i)}.
+\end{align}
+This technique has been used in \citep{titsiasvariational,hensmangaussian} to derive variational inference for the single output case.
+Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are given (eq. \ref{eq:gu} and \ref{eq:hv}), inference requires only learning of $q(\u, \v)$ that minimize the divergence between the approximate and true posteriors.
+This underlines the pivotal role of the inducing variables in this model as previously discussed.
+
+\noindent
+To find the best distribution $q(\u, \v)$, we  optimize the evidence lower bound (ELBO) of the log marginal:
+\begin{align}
+%\nonumber
+%\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
+%\nonumber
+%=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v 
+%+ \int q(\u, \v) \log \frac{p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
+\nonumber
+&\log p(\y) \ge \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v \\
+&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)],
+\label{eq:elbo}
+\end{align}
+which is derived using Jensen's inequality and the fact that both of $q(\u, \v)$ and $p(\u, \v)$ fully factorize.
+Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distributions, the KL divergences are analytically tractable and require $\calO(M^3)$ complexity. To compute the expected likelihood term in the ELBO we first see that
+\begin{align}
+\nonumber
+\log \text{ } &p(\y | \u, \v)
+% &= \log \Eb{p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \\
+% \nonumber
+\ge \Eb{\log p(\y | \g, \h)}_{p(\g,\h | \u, \v)}  \\
+&= \sum_{i=1}^P \sum_{n=1}^N \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g | \u) p(\h_i | \v_i)} 
+\end{align}
+where $\g_n = \{g_{jn} = (\g_j)_n\}_{j=1}^Q$.
+The inequality is due to Jensen's inequality and the equality is due to the fact that the likelihood fully factorizes.
+\newcommand{\Ahi}{\A^h_i}
+\newcommand{\Zi}{\Z_i}
+The ELBO can be computed by first solving for the individual expectations 
+$l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ (see the supplementary material), which are then substituted into eq. \ref{eq:elbo} to give:
+\begin{align}
+\nonumber
+&\log p(\y)
+\ge \sum_{i,n}
+\bigg( \log  \Normal(y_{in}; \tilde{\mu}_{in}, \beta_i^{-1})
+          - \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{jnn} \\ \nonumber
+         &- \frac{1}{2} \beta_i \tilde{k}^h_{inn}
+         - \frac{1}{2} \beta_i \sum_{j=1}^Q \trace w_{ij}^2 \S_j \mat{\Lambda}_{jn} - \beta_i \frac{1}{2} \trace \S^h_i \mat{\Lambda}_{in} 
+\bigg) \\
+\nonumber
+& - \sum_{j=1}^Q \bigg( \frac{1}{2} \log |\K_{jzz} \S_j^{-1}| + \frac{1}{2} \trace \K_{jzz}^{-1}  (\m_j \m_j^T + \S_j)\bigg) \\
+\nonumber
+& - \sum_{i=1}^P  \bigg( \frac{1}{2} \log |\K_{izz}(\Shi)^{-1}| + \frac{1}{2} \trace \K_{izz}^{-1} (\mhi (\mhi)^T + \Shi) \bigg) \\
+  &\define \calL,
+  \label{eq:L}
+\end{align}
+where $\K_{jzz} = k(\Zj, \Zj)$, $\K_{izz} = k(\Zhi, \Zhi)$, and with the help of auxiliary matrices $\A_j = k(\X,\Zj) \K_{jzz}^{-1}$ and $\Ahi = k(\X_i,\Zhi)\K_{izz}^{-1}$, 
+\begin{align}
+\tilde{\mu}_{in}
+%&= \sum_{j=1}^Q w_{ij} k(\x_n, \Zj)k(\Zj,\Zj)^{-1}\m_j + k(\x_n, \Zhi)k(\Zhi,\Zhi)^{-1}\mhi \\
+&= \sum_{j=1}^Q w_{ij} \A_j(n,:) \m_j + \Ahi(n,:) \mhi \\
+\mat{\Lambda}_{jn}
+%&= k(\Zj,\Zj)^{-1} k(\Zj, \x_n) k(\x_n, \Zj) k(\Zj,\Zj)^{-1} \\
+&= \A_j(n,:)^T \A_j(n,:)  \\
+\mat{\Lambda}_{in}
+%&= k(\Zhi,\Zhi)^{-1} k(\Zhi, \x_n) k(\x_n, \Zhi) k(\Zhi,\Zhi)^{-1}
+&= \Ahi(n,:)^T \Ahi(n,:) 
+\end{align}
+where $\tilde{k}_{jnn} = (\tilde{\K}_j)_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$,  $\mu^h_{in} = (\Mu^h_i)_n$, and $\A_j(n,:)$ selects the $n$-th row vector of $\A_j$. 
+Notice that this ELBO clearly generalizes the bound for standard GP regression derived in \citep{hensmangaussian}, which can be recovered by setting $P = Q = 1$, $w_{ij} = 1$ and $h_i(\x) = 0$.
+
+The novelty of the derived variational lower bound is that it decomposes across both of the outputs and inputs.
+This enables the use of stochastic optimization methods which makes this model applicable to much larger datasets compared to the existing GP-based multiple regression models. 
+
+\subsection{STOCHASTIC VARIATIONAL INFERENCE}
+\newcommand{\oi}{\vec{o}_i}
+% some notation
+
+So far in the description of the model and inference, it is implicitly assumed that every output has full observations at all of the inputs $\X$.
+To discern where learning occurs for each output, we make the missing data scenario more explicit.
+Specifically, each output $i$ can have observations at a different set of inputs $\X_i$. 
+We shall use $\oi$ to denote the indice of $\X_i$ (in the set $\X$) and use the indexing operator $\B(\oi)$ to select the rows corresponding to $\oi$ from any arbitrary matrix $\B$.
+We also overload $\y_i$ as the observed targets of output $i$. 
+
+%------------------------------------------
+% derivatives of q(u_j)
+\newcommand{\Lgj}{\calL^g_j}
+\newcommand{\ynoj}{\y_i^{\backslash j}}
+\newcommand{\Kjzz}{\mat{K}_{jzz}}
+From the expression of the ELBO (eq. \ref{eq:L}), we can obtain the derivatives of the variational parameters to carry out stochastic optimization.
+The derivatives of $\calL$ w.r.t the parameters of $q(\u_j)$, $\m_j$ and $\S_j$, are given by:
+\begin{align}
+\nonumber
+\deriv{\calL}{\m_j} 
+=& \sum_{i=1}^P \beta_i w_{ij} \A_j(\oi)^T \ynoj \\
+&- \bigg[\Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi)^T \A_j(\oi) \bigg] \m_j \text{,} \\
+\deriv{\calL}{\S_j} 
+=& \frac{1}{2} \S_j^{-1} - \frac{1}{2} \bigg[ \Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi)^T \A_j(\oi) \bigg],
+\end{align}
+where $\y_i^{\backslash j} = \y_i - \Ahi(\oi) \mhi - \sum_{j' \neq j} w_{ij'} \A_{j'}(\oi) \m_{j'}$.
+%\noindent As a function of the parameters of $q(\u_j)$, the lowerbound $\calL$ is:
+%\begin{align}
+%\nonumber
+%\calL^g_j \define&
+% \sum_{i=1}^P \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)  \\
+% \nonumber
+% &- \frac{1}{2} \sum_{i=1}^P \bigg(\beta_i \trace w_{ij}^2 \tilde{\K}_j(\oi,\oi) 
+% + \beta_i \trace w_{ij}^2 \S_j \A_j(\oi,:)^T \A_j(\oi,:) \bigg)
+% \\
+% &- \frac{1}{2} \log |k(\Zj,\Zj) \S_j^{-1}| -\frac{1}{2} \trace k(\Zj,\Zj)^{-1} (\m_j \m_j^T + \S_j) ,
+%\end{align}
+%where $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$, which gives $\A_j(\oi,:) = k(\X_i,\Zj) k(\Zj,\Zj)^{-1}$, and  
+%$\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$. \\
+
+%-------------------------------------------
+%  derivatives of q(v_i)
+\newcommand{\Lhi}{\calL^h_i}
+\newcommand{\Kizz}{\mat{K}_{izz}}
+\noindent The derivatives of $\calL$ w.r.t the parameters of $q(\v_i)$, $\mhi$ and $\Shi$, are given by:
+\newcommand{\ynoh}{\y_i^{\backslash h}}
+\begin{align}
+\nonumber
+\deriv{\calL}{\mhi}
+= & \beta_i \Ahi(\oi)^T \ynoh  \\
+&- \bigg[\Kizz^{-1} +  \beta_i \Ahi(\oi)^T \Ahi(\oi) \bigg] \m_i \text{,} \\
+\deriv{\calL}{\Shi} 
+=& \frac{1}{2} \S_i^{-1} - \frac{1}{2} \bigg[ \Kizz^{-1} + \beta_i \Ahi(\oi)^T \Ahi(\oi) \bigg] ,
+\end{align}
+where $\ynoh = \y_i - \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j$.
+%\noindent As a function of the parameters of $q(\v_i)$, the lower bound $\calL$ is:
+%\begin{align}
+%\nonumber
+%\Lhi \define&
+% \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)
+% - \frac{1}{2} \beta_i \trace \tilde{\K}^h_i(\oi,\oi)
+% - \frac{1}{2} \beta_i \trace \Shi (\Ahi)^T \Ahi
+% \\
+%  &- \frac{1}{2} \log |k(\Zhi,\Zhi) (\Shi)^{-1}| -\frac{1}{2} \trace k(\Zhi,\Zhi)^{-1} (\mhi (\mhi)^T + \Shi) ,
+%\end{align}
+
+% comment on computation
+\noindent It can be seen that the derivatives of the parameters of $q(\v_i)$ only involve the observations of the output $i$.
+The derivatives of the parameters of $q(\u_j)$ involve the observations across all outputs but is a sum of contributions from individual outputs.
+Therefore, computation of the derivatives can be distributed or parallelized easily.
+This key property allows the model to potentially scale to problems with a very large number of inputs and outputs.
+
+Since the optimal distributions $q(\u_j)$ and $q(\v_i)$ are in the exponential family, it is more convenient to use stochastic variational inference \citep{hensman2012fast,hensmangaussian} to perform update of their canonical parameters.
+This works by taking a step of length $l$ in the direction of the natural gradient approximated by mini-batches of the data.
+For instance, consider $q(\u_j)$ whose canonical parameters are $\Phi_1 = \S_j^{-1} \m_j$ and $\Phi_2 = -\frac{1}{2}\S_j^{-1}$.
+Their stochastic update equations at time $t + 1$ are given by:
+\begin{align}
+\Phi_{1(t+1)} &= \S_{j(t)}^{-1} \m_{j(t)} + l \bigg(\sum_{i=1}^P \beta_i w_{ij} \A_j(\oi)^T \ynoj - \S_{j(t)}^{-1} \m_{j(t)} \bigg) \\
+\Phi_{2(t+1)} &= -\frac{1}{2} \S_{j(t)}^{-1} + l \bigg(\frac{1}{2} \S_{j(t)}^{-1} - \frac{1}{2} \mat{\Lambda} \bigg),
+\end{align}
+where $\mat{\Lambda} = \Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi)^T \A_j(\oi)$.
+
+The cost of this update is $\calO(PM^3)$ or $\calO(PN_bM^2)$, depending on which is larger between the number of inducing inputs (per process) and the mini-batch size.
+For large scale problems, we tend to use a large batch size (e.g. $N_b = 1000$) to reduce the stochasticity of the optimization, hence we consider the model to have a computational complexity of $\calO(PN_bM^2)$.
+Following this assumption, the memory demand is $\calO(PN_bM)$.
+%TODO table for complexity
+\subsection{INDUCING INPUTS AND HYPER-PARAMETERS \label{sec:hyperparameters}}
+To learn the hyperparameters, which in this model include the mixing weights, the covariance hyperparameters of the latent processes, and the noise precision of each output, we follow standard practice in GP inference.
+For this model, this involves taking derivatives of the ELBO and applying standard stochastic gradient descent in alternative steps with the variational parameters, much like a variational EM algorithm. 
+The derivatives are given in the supplementary material.
+
+Learning of the inducing inputs, which was not considered in the single output case in \citep{hensmangaussian}, is also possible in our stochastic optimization approach.
+In the supplementary material, we show that with the help of vectorized operations, the derivatives of the lower bound w.r.t the inducing inputs can be computed with a cost \emph{independent} of the input dimension.
+This makes optimizing the inducing locations a practical option, which can be important for e.g. in high-dimensional problems where fixing the inducing inputs may hinder the performance.
+Indeed, our experiments on a large scale multioutput problem shows that automatic learning of the inducing inputs can lead to significant performance gain with little overhead in computation. 
+
+\subsection{PREDICTION}
+The predictive distribution of the $i$-th output for a test input $\x_*$ is given by:
+\begin{align}
+p(\fstar | \y, \x_*) = \Normal(\fstar; \sum_{j=1}^Q w_{ij} \mu_{j*} + \mu^h_{i*}, w_{ij}^2 s_{j*} + s^h_{i*}), 
+\end{align}
+where $\mu_{j*}$ and $s_{j*}$ are the mean and variance of the prediction for $g_{j*} = g_j(\x_*)$, i.e. $p(g_{j*} | \y, \x_*) = \Normal(g_{j*}; \mu_{j*}, s_{j*})$.
+Likewise, $\mu^h_{i*}$ and $s^h_{i*}$ are the mean and variance of the prediction for $h_{i*} = h_i(\x_*)$, $p(h_{i*} | \y, \x_*) = \Normal(h_{i*}; \mu^h_{i*}, s^h_{i*})$.
+Since the predictions for $g_{j*}$ and $h_{i*}$ have similar form, we only provide here the mean and variance for $\mu_{j*}$ and $s_{j*}$: 
+\begin{align}
+\mu_{j*} &= \vec{k}_{j*z} \K_{jzz}^{-1} \m_j \\ s_{j*} &= k_{j**} - \vec{k}_{j*z} \left(\K_{jzz}^{-1} - \K_{jzz}^{-1} \S_j \K_{jzz}^{-1} \right) \vec{k}_{j*z}^T
+\end{align}
+where $k_{j**} = k_j(\x_*, \x_*)$ and $\vec{k}_{j*z}$ is the covariance between the test point and the inducing inputs $\Zj$.
+ 
 %\noindent Also as a consequence of sufficient statistics, the approximate prediction for test targets $\vfstar$ at test inputs $\X_*$ is
 %\begin{align}
 %\nonumber
@@ -25,186 +229,7 @@
 %\S_* &= \K_{**} - \K_{*z} \left(\K_{zz}^{-1} - \K_{zz}^{-1} \S \K_{zz}^{-1} \right) \K_{*z}^T.
 %\end{align}
 % Here $\K_{*z}$ is the covariance matrix between test and inducing inputs, $\K_{zz}$ is the covariance matrix of the inducing inputs.
-
-Inference in this model is done with variational inference.
-In section \ref{sec:variationalLowerBound}, we derive a lower bound of the marginal likelihood which has the novel property of factorizing over the data points.
-The next section takes advantage of this factorization to derive stochastic variational inference which allows the model to scale to massive datasets.
-Section \ref{sec:hyperparameters} discusses learning of the inducing inputs and other hyperparameters.
-
-\subsection{VARIATIONAL LOWER BOUND \label{sec:variationalLowerBound}}
-\newcommand{\ug}{\u_g}
-\newcommand{\uh}{\u^h}
-\newcommand{\mgj}{\m_j}
-\newcommand{\mhi}{\m^h_i}
-\newcommand{\Sgj}{\S_j}
-\newcommand{\Shi}{\S^h_i}
-Our inference task is to find the posterior $p(\g, \h, \u, \v | \y)$, for which we use variational inference \citep{jordan-variational-99}. 
-Before choosing the form of the approximate posterior, observe that the posterior distribution can be written as,
-\begin{align}
-p(\g, \h, \u, \v | \y) = p(\g | \u, \y) p(\h | \v, \y) p(\u, \v | \y).
-\end{align}
-Here we recall the modeling assumption that each set of the inducing variables is the \emph{sufficient statistics} of the corresponding latent process. 
-This motivates the use of a distribution where the true posteriors over $\g$ and $\h$ are replaced by their conditional distributions given the inducing variables:
-\begin{align}
-q(\g, \h, \u, \v | \y)
-= p(\g|\u) p(\h|\v) q(\u,\v),
-\end{align}
-with
-\begin{align}
-q(\u,\v) &= \prod_{j=1}^Q \underbrace{\Normal(\u_j; \mgj, \Sgj)}_{q(\u_j)} \prod_{i=1}^P  \underbrace{\Normal(\v_i; \mhi, \Shi)}_{q(\v_i)}.
-\end{align}
-This technique has been used in \citep{titsiasvariational,hensmangaussian} to derive variational inference for the single output case.
-Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are given (Equation \ref{eq:gu} and \ref{eq:hv}), inference requires only learning of $q(\u, \v)$ that minimize the divergence between the approximate and true posteriors, which becomes small when the sufficiency condition holds with greater certainty.
-
-\noindent
-In variational inference, this is done by optimizing the evidence lower bound (ELBO) of the log marginal:
-\begin{align}
-%\nonumber
-%\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
-%\nonumber
-%=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v 
-%+ \int q(\u, \v) \log \frac{p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
-\nonumber
-&\log p(\y) \ge \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v \\
-&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)],
-\label{eq:elbo}
-\end{align}
-which is derived using Jensen's inequality and the fact that both of $q(\u, \v)$ and $p(\u, \v)$ fully factorize.
-Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distributions, the KL divergences are analytically tractable and require $\calO(M^3)$ computation. To compute the expected likelihood term in the ELBO we first see that
-\begin{align}
-\nonumber
-\log \text{ } &p(\y | \u, \v)
-% &= \log \Eb{p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \\
-% \nonumber
-\ge \Eb{\log p(\y | \g, \h)}_{p(\g,\h | \u, \v)}  \\
-&= \sum_{i=1}^P \sum_{n=1}^N \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_{in} | \v_i)} 
-\end{align}
-where $\g_n = \{g_{jn} = (\g_j)_n\}_{j=1}^Q$.
-The inequality is due to Jensen's inequality and the equality is due to the fact that the likelihood fully factorizes.
-\newcommand{\Ahi}{\A^h_i}
-\newcommand{\Zi}{\Z_i}
-The ELBO can be computed by first solving for the individual expectations 
-$l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ (see the supplementary material for detailed derivation), which are then substituted into equation \ref{eq:elbo} to give:
-\begin{align}
-\nonumber
-&\log p(\y)
-\ge \sum_{i,n}
-\bigg( \log  \Normal(y_{in}; \tilde{\mu}_{in}, \beta_i^{-1})
-          - \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{nn} \\ \nonumber
-         &- \frac{1}{2} \beta_i \tilde{k}^h_{inn}
-         - \frac{1}{2} \beta_i \trace  \sum_{j=1}^Q w_{ij}^2 \S_j \mat{\Lambda}_{jn} - \beta_i \frac{1}{2} \trace \S^h_i \mat{\Lambda}_{in} 
-\bigg) \\
-&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)]  \define \calL,
-\end{align}
-where, with the help of auxiliary matrices $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$ and  $\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$, 
-\begin{align}
-\tilde{\mu}_{in}
-%&= \sum_{j=1}^Q w_{ij} k(\x_n, \Zj)k(\Zj,\Zj)^{-1}\m_j + k(\x_n, \Zhi)k(\Zhi,\Zhi)^{-1}\mhi \\
-&= \sum_{j=1}^Q w_{ij} \A_j(n,:) \m_j + \Ahi(n,:) \mhi \\
-\mat{\Lambda}_{jn}
-%&= k(\Zj,\Zj)^{-1} k(\Zj, \x_n) k(\x_n, \Zj) k(\Zj,\Zj)^{-1} \\
-&= \A_j(n,:)^T \A_j(n,:)  \\
-\mat{\Lambda}_{in}
-%&= k(\Zhi,\Zhi)^{-1} k(\Zhi, \x_n) k(\x_n, \Zhi) k(\Zhi,\Zhi)^{-1}
-&= \Ahi(n,:)^T \Ahi(n,:) 
-\end{align}
-where $\tilde{k}_{nn} = (\tilde{\K})_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$,  $\mu^h_{in} = (\Mu^h_i)_n$, and $\A_j(n,:)$ selects the $n$-th row vector of $\A_j$.
-
-% More on this elbo term
-\noindent Notice that this ELBO clearly generalizes the standard GP regression. In particular, setting $P = Q = 1$, $w_i = 1$ and $h_i(\x) = 0$ we recover the bound in Hensman et al \citet{hensmangaussian}.
-Due to the decomposition of this bound, we can use stochastic gradient descent to learn the variational parameters.
-
-\subsection{STOCHASTIC VARIATIONAL INFERENCE}
-\newcommand{\oi}{\vec{o}_i}
-% some notation
-
-The optimal posteriors are found by setting the gradients of the lowerbound $\calL$ wrt to the parameters of $q(\u_j)$ and $q(\v_i)$.
-Recall that in the model, different outputs can be observed at different inputs (i.e. the case of missing values).
-Let $\oi$ be the indice of the observed inputs of the output dimension $i$.
-We denote its set of observed inputs and targets as: $\X_i = \X(\oi,:)$ and $\y_i = y_{i}(\oi)$.
-
-%\noindent As a function of the parameters of $q(\u_j)$, the lowerbound $\calL$ is:
+ 
 %\begin{align}
-%\nonumber
-%\calL^g_j \define&
-% \sum_{i=1}^P \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)  \\
-% \nonumber
-% &- \frac{1}{2} \sum_{i=1}^P \bigg(\beta_i \trace w_{ij}^2 \tilde{\K}_j(\oi,\oi) 
-% + \beta_i \trace w_{ij}^2 \S_j \A_j(\oi,:)^T \A_j(\oi,:) \bigg)
-% \\
-% &- \frac{1}{2} \log |k(\Zj,\Zj) \S_j^{-1}| -\frac{1}{2} \trace k(\Zj,\Zj)^{-1} (\m_j \m_j^T + \S_j) ,
+%p(\fstar | \y, \x_*) = \int \Normal(\fstar; \sum_{j=1}^Q w_j g_{j*} + h_{i*}, 0) p(\g_* | \y, \x_*) p(h_{i*} | \y, \x_*) \der \g_* \der h_{i*},
 %\end{align}
-%where $\A_j = k(\X,\Zj)k(\Zj,\Zj)^{-1}$, which gives $\A_j(\oi,:) = k(\X_i,\Zj) k(\Zj,\Zj)^{-1}$, and  
-%$\Ahi = k(\X_i,\Zhi)k(\Zhi,\Zhi)^{-1}$. \\
-
-%------------------------------------------
-% derivatives of q(u_j)
-\newcommand{\Lgj}{\calL^g_j}
-\newcommand{\ynoj}{\y_i^{\backslash j}}
-\newcommand{\Kjzz}{\mat{K}_{jzz}}
-\noindent The derivatives of $\calL$ wrt $\m_j$ and $\S_j$ are given by:
-\begin{align}
-\nonumber
-\deriv{\calL}{\m_j} 
-=& \sum_{i=1}^P \beta_i w_{ij} \A_j(\oi,:)^T \ynoj \\
-&- \bigg[\Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg] \m_j \\
-\deriv{\calL}{\S_j} 
-=& \frac{1}{2} \S_j^{-1} - \frac{1}{2} \bigg[ \Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi,:)^T \A_j(\oi,:) \bigg],
-\end{align}
-where $\Kjzz = k(\Zj,\Zj)$ and $\y_i^{\backslash j} = \y_i - \Ahi(\oi,:) \mhi - \sum_{j' \neq j} w_{ij'} \A_{j'}(\oi,:) \m_{j'}$.
-
-%-------------------------------------------
-%  derivatives of q(v_i)
-%\noindent As a function of the parameters of $q(\v_i)$, the lower bound $\calL$ is:
-%\begin{align}
-%\nonumber
-%\Lhi \define&
-% \log \Normal(\y_i; \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j + \Ahi \mhi, \beta_i^{-1} \I)
-% - \frac{1}{2} \beta_i \trace \tilde{\K}^h_i(\oi,\oi)
-% - \frac{1}{2} \beta_i \trace \Shi (\Ahi)^T \Ahi
-% \\
-%  &- \frac{1}{2} \log |k(\Zhi,\Zhi) (\Shi)^{-1}| -\frac{1}{2} \trace k(\Zhi,\Zhi)^{-1} (\mhi (\mhi)^T + \Shi) ,
-%\end{align}
-\newcommand{\Lhi}{\calL^h_i}
-\newcommand{\Kizz}{\mat{K}_{izz}}
-\noindent The derivatives of $\calL$ wrt $\mhi$ and $\Shi$ are given by:
-\newcommand{\ynoh}{\y_i^{\backslash h}}
-\begin{align}
-\nonumber
-\deriv{\calL}{\mhi}
-= & \beta_i (\Ahi(\oi,:))^T \ynoh \\ 
-& - \bigg[\Kizz^{-1} +  \beta_i (\Ahi(\oi,:))^T \Ahi(\oi,:) \bigg] \m_i \\
-\deriv{\calL}{\Shi} 
-&= \frac{1}{2} \S_i^{-1} - \frac{1}{2} \bigg[ \Kizz^{-1} + \beta_i \Ahi(\oi,:))^T \Ahi(\oi,:) \bigg] ,
-\end{align}
-where $\ynoh = \y_i - \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j$ and $\Kizz = k(\Zhi, \Zhi)$.
-
-% comment on computation
-\noindent It can be seen that the derivatives of the parameters of $q(\v_i)$ only involve the observations of the output dimension $i$.
-The derivatives of the parameters of $q(\u_j)$ involve the observations across all output dimensions but decompose as a sum of contributions from individual outputs.
-Therefore, computation of the derivatives (and hence the update equations) can be distributed or parallelized easily.
-This attractive property allows the model to scale to a very large number of inputs and outputs.
-
-% Comment on other hyperparameters
-
-\subsection{INDUCING INPUTS AND HYPER-PARAMETERS \label{sec:hyperparameters}}
-%\subsubsection{Update Equations}
-% and comment on the intuition of the update equations: e.g. y(x) - g(x) for h(x) 
-\subsection{PREDICTION}
-The predictive distribution of the $i$-th output for a test input $\x_*$ is 
-\begin{align}
-p(\fstar | \y, \x_*) = \int \Normal(\fstar; \sum_{j=1}^Q w_j g_{j*} + h_{i*}, 0) p(\g_* | \y, \x_*) p(h_{i*} | \y, \x_*) \der \g_* \der h_{i*},
-\end{align}
-where $p(\g_* | \y, \x_*) = \prod_{j=1}^Q \Normal(g_{j*}; \mu_{j*}, s_{j*})$ and $p(h_{i*} | \y, \x_*) = p(h_{i*}; \mu^h_{i*}, s^h_{i*})$ are the predictive distributions of the sparse GPs as given in eq. \ref{eq:sorprediction}.
-Therefore we have:
-\begin{align}
-p(\fstar | \y, \x_*) = \Normal(\fstar; \sum_{j=1}^Q w_{ij} \mu_{j*} + \mu_{i*}, w_{ij}^2 s_{j*} + s_{i*}). 
-\end{align}
-
-%\begin{linenomath}
-%\begin{align}
-%\sum_{i,h} \lambda_i \lambda_h cov [f(\x, \x')]
-%&= \sum_{i,h}   \sum_{j,j'} \lambda_i g(\x_i - \vs_j) k(\vs_j, \vs_{j'}) \lambda_h g(\x_h - \vs_j') \\
-%\end{align}
-%\end{linenomath}
-

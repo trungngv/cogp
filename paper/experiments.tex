@@ -12,7 +12,7 @@ All of the experiments are executed on an Intel(R) Core(TM) i7-2600 3.40GHz CPU 
 \subsection{TOY PROBLEM}
 In this toy problem, two related outputs are simulated from the same latent function $sin(x)$ and corrupted by independent noises: $y_1(x) = sin(x) + \epsilon$ and $y_2(x) = -sin(x) + \epsilon$, $\epsilon \sim \Normal(0,0.01)$.
 The first output has missing observations in the $(-7,-3)$ interval and the second output in the $(4,8)$ interval.
-Figure \ref{fig:toy} shows the predictive distributions by our model ($Q = 1$) and independent GPs with stochastic variational inference (GPSVI, one for each output).
+Figure \ref{fig:toy} shows the predictive distributions by our model ($Q = 1$) and independent GPs with stochastic variational inference (SVIGP, one for each output).
 It can be seen that our multioutput model gives perfect prediction in the unobserved regions where the independent models fail to interpolate despite having the same set of inducing inputs.
 This confirms the effect of transfer of information from one output to another via collaborative learning of the inducing points.
 Furthermore, the inference procedure learned that the weights are $w_{11} = 1.07$ and $w_{21} = -1.06$ which accurately reflects the correlation between the two outputs.
@@ -24,9 +24,8 @@ Furthermore, the inference procedure learned that the weights are $w_{11} = 1.07
 \includegraphics[scale=0.2]{figures/toy-svigp-y1.eps} &
 \includegraphics[scale=0.2]{figures/toy-slfm-y2.eps} &
 \includegraphics[scale=0.2]{figures/toy-svigp-y2.eps}
-\label{fig:toy}
 \end{tabular}
-\caption{Predictive distributions of the multioutput GPs (first and third figure) and independent GPs using stochastic variational inference (second and last figure) for the  toy problem. Solid black line: predictive mean; grey bar: two standard deviations; magenta dots: real observations; blue dots: missing data. The black crosses show the locations of the inducing inputs.}
+\caption{Real data and predictive distributions of our method (first and third figure) and independent GPs using stochastic variational inference (second and last figure) for the toy problem. Solid black line: predictive mean; grey bar: two standard deviations; magenta dots: real observations; blue dots: missing data. The black crosses show the locations of the inducing inputs.}
 \label{fig:toy}
 \end{figure*}
 
@@ -86,7 +85,7 @@ CGPVAR & 0.2795 & NA \\
 \includegraphics[scale=0.3]{figures/fxJPY.eps} &
 \includegraphics[scale=0.3]{figures/fxAUD.eps}
 \end{tabular}
-\caption{Real observations and predictive distributions for CAD (left), JPY (middle), and AUD (right). The color coding scheme is the same as in figure \ref{fig:toy}.}
+\caption{Real observations and predictive distributions for CAD (left), JPY (middle), and AUD (right). The color coding scheme is the same as in Figure \ref{fig:toy}.}
 \label{fig:fx}
 \end{figure*}
 
@@ -142,7 +141,7 @@ IGP & 0.8944 & 12.5319 \\
 \includegraphics[scale=0.3]{figures/cgp-weatherChimet.eps} &
 \includegraphics[scale=0.3]{figures/weatherChimet.eps}
 \end{tabular}
-\caption{Predictive distributions of the multioutput GPs (left column) and full independent GPs (right column) for the air temperature problem.}
+\caption{Real data and predictive distributions by our method (COGP, left figures), the convolved GP method with exact inference (CGP, middle figures), and full independent GPs (right figures) for the air temperature problem. The color coding is the same as in Figure \ref{fig:toy}}
 \label{fig:weather}
 \end{figure*}
 
