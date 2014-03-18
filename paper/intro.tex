@@ -13,7 +13,7 @@ The traditional approach in multiple GP regression has been to mix independent l
 The mixing can be a weighted linear combinations with fixed \citep{teh-et-al-aistats-05,bonilla-et-al-nips-08} or input-dependent \citep{wilson-et-al-icml-12,nguyen2013efficient} coefficients or convolution of processes \citep{boyle-frean-nips-05,alvarez-lawrence-nips-08}.
 The correlations of the outputs are induced through sharing of these base processes.
 % sparse approximation technique and limitatio
-Sparse approximate techniques such as the informative vector machine (IVM) \cite{lawrence2002fast} or low-rank approximations which can be formulated around the \emph{inducing points} framework \citep{quinonero2005unifying},
+Sparse approximate techniques such as the informative vector machine (IVM) \cite{lawrence2002fast} or low-rank approximations which can be formulated around the inducing pointsframework \citep{quinonero2005unifying},
 are then employed to reduce the computational and storage demands of the full models.
 Nevertheless, as shown in Table \ref{tab:complexity}, most of these models have complexity of at least $\calO(PNM^2)$ in computation and $\calO(PNM)$ thus prevents their applications to the  large scale problems we are targeting.
 
