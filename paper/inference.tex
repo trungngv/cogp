@@ -35,7 +35,7 @@ with
 \begin{align}
 q(\u,\v) &= \prod_{j=1}^Q \underbrace{\Normal(\u_j; \mgj, \Sgj)}_{q(\u_j)} \prod_{i=1}^P  \underbrace{\Normal(\v_i; \mhi, \Shi)}_{q(\v_i)}.
 \end{align}
-This technique has been used in \citep{titsiasvariational,hensmangaussian} to derive variational inference for the single output case.
+This technique has been used in \citep{titsias2009variational,hensmangaussian} to derive variational inference for the single output case.
 Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are given (eq. \ref{eq:gu} and \ref{eq:hv}), inference requires only learning of $q(\u, \v)$ that minimize the divergence between the approximate and true posteriors.
 This underlines the pivotal role of the inducing variables in this model as previously discussed.
 

@@ -39,7 +39,7 @@ p(\y | \g, \h ) = \prod_{i=1}^P \prod_{n=1}^N \Normal( y_{in} ; \sum_{j=1}^Q w_{
 \end{align}
 which says that $y_{in}$ is a linear combination of the latent functions with weight $w_{ij}$ for the $j$th shared latent process plus a contribution from the individual process $h_i$.
 As the latent values $\g$ are specified conditioned on the inducing variables $\u$, this construction implies that each output is a weighted combination of the inducing values.
-We note that if $\u$ and $\v$ are marginalized out, we obtain the semiparametric latent factor models \citep{teh-et-al-aistats-05,seeger2005semiparametric}.
+We note that if $\u$ and $\v$ are marginalized out, we obtain the semiparametric latent factor models \citep{teh-et-al-aistats-05}.
 However, doing so is against the purpose of this model which encourage sharing of outputs via the inducing variables.
 Furthermore, as we shall see in the next section, explicit representation of these variables is instrumental to scalable inference of the model.
 
