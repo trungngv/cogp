@@ -1,7 +1,6 @@
 We have presented scalable multioutput GPs for learning of correlated functions.
-The formulation around the inducing variables and their encapsulation of sufficient statistics was shown to be conducive to effective joint learning in the model. 
-The sparsity induced by these variables crucially allows inference to be performed with stochastic optimization.
-We note that although our large scale experiment was done with over 40,000 observations, which is the largest publicly available multioutput dataset we could find, the model can easily handle much bigger datasets.
+The formulation around the inducing variables and their encapsulation of sufficient statistics was shown to be conducive to not only effective but also scalable joint learning under sparsity. 
+We note that although our large scale experiment was done with over 40,000 observations -- the largest publicly available multioutput dataset we could find, the model can easily handle much bigger datasets.
 
 We discuss several interesting extensions to this work.
 First, consider the model for the single GP case, i.e., $P = 1$. By using $Q > 1$ sparse processes, the GP can now have multiple set of inducing variables.

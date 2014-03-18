@@ -53,7 +53,7 @@ To find the best distribution $q(\u, \v)$, we  optimize the evidence lower bound
 \label{eq:elbo}
 \end{align}
 which is derived using Jensen's inequality and the fact that both of $q(\u, \v)$ and $p(\u, \v)$ fully factorize.
-Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distributions, the KL divergences are analytically tractable and require $\calO(M^3)$ complexity. To compute the expected likelihood term in the ELBO we first see that
+Since $q(\u_j), q(\v_i), p(\u_j), p(\v_i)$ are all multivariate Gaussian distributions, the KL divergence terms are analytically tractable. To compute the expected likelihood term in the ELBO we first see that
 \begin{align}
 \nonumber
 \log \text{ } &p(\y | \u, \v)
@@ -99,8 +99,8 @@ where $\K_{jzz} = k(\Zj, \Zj)$, $\K_{izz} = k(\Zhi, \Zhi)$, and with the help of
 where $\tilde{k}_{jnn} = (\tilde{\K}_j)_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$,  $\mu^h_{in} = (\Mu^h_i)_n$, and $\A_j(n,:)$ selects the $n$-th row vector of $\A_j$. 
 Notice that this ELBO clearly generalizes the bound for standard GP regression derived in \citep{hensmangaussian}, which can be recovered by setting $P = Q = 1$, $w_{ij} = 1$ and $h_i(\x) = 0$.
 
-The novelty of the derived variational lower bound is that it decomposes across both of the outputs and inputs.
-This enables the use of stochastic optimization methods which makes this model applicable to much larger datasets compared to the existing GP-based multiple regression models. 
+The novelty of the derived variational lower bound is that it decomposes across not only the outputs but also the inputs.
+This enables the use of stochastic optimization methods which makes this model applicable to much larger datasets compared to the existing GP-based multioutput models. 
 
 \subsection{STOCHASTIC VARIATIONAL INFERENCE}
 \newcommand{\oi}{\vec{o}_i}
@@ -117,12 +117,12 @@ We also overload $\y_i$ as the observed targets of output $i$.
 \newcommand{\Lgj}{\calL^g_j}
 \newcommand{\ynoj}{\y_i^{\backslash j}}
 \newcommand{\Kjzz}{\mat{K}_{jzz}}
-From the expression of the ELBO (eq. \ref{eq:L}), we can obtain the derivatives of the variational parameters to carry out stochastic optimization.
-The derivatives of $\calL$ w.r.t the parameters of $q(\u_j)$, $\m_j$ and $\S_j$, are given by:
+From (eq. \ref{eq:L}), we can obtain the derivatives of the ELBO wrt the variational parameters for optimization.
+The derivatives of $\calL$ wrt the parameters of $q(\u_j)$ are given by:
 \begin{align}
-\nonumber
 \deriv{\calL}{\m_j} 
 =& \sum_{i=1}^P \beta_i w_{ij} \A_j(\oi)^T \ynoj \\
+\nonumber
 &- \bigg[\Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi)^T \A_j(\oi) \bigg] \m_j \text{,} \\
 \deriv{\calL}{\S_j} 
 =& \frac{1}{2} \S_j^{-1} - \frac{1}{2} \bigg[ \Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi)^T \A_j(\oi) \bigg],
@@ -146,7 +146,7 @@ where $\y_i^{\backslash j} = \y_i - \Ahi(\oi) \mhi - \sum_{j' \neq j} w_{ij'} \A
 %  derivatives of q(v_i)
 \newcommand{\Lhi}{\calL^h_i}
 \newcommand{\Kizz}{\mat{K}_{izz}}
-\noindent The derivatives of $\calL$ w.r.t the parameters of $q(\v_i)$, $\mhi$ and $\Shi$, are given by:
+\noindent The derivatives of $\calL$ wrt the parameters of $q(\v_i)$ are given by:
 \newcommand{\ynoh}{\y_i^{\backslash h}}
 \begin{align}
 \nonumber
@@ -172,13 +172,12 @@ where $\ynoh = \y_i - \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j$.
 \noindent It can be seen that the derivatives of the parameters of $q(\v_i)$ only involve the observations of the output $i$.
 The derivatives of the parameters of $q(\u_j)$ involve the observations across all outputs but is a sum of contributions from individual outputs.
 Therefore, computation of the derivatives can be distributed or parallelized easily.
-This key property allows the model to potentially scale to problems with a very large number of inputs and outputs.
+This property further enhances the scalability of the model, allowing it to handle big data problems with a very large number of inputs and outputs.
 
 Since the optimal distributions $q(\u_j)$ and $q(\v_i)$ are in the exponential family, it is more convenient to use stochastic variational inference \citep{hensman2012fast,hensmangaussian} to perform update of their canonical parameters.
 This works by taking a step of length $l$ in the direction of the natural gradient approximated by mini-batches of the data.
 For instance, consider $q(\u_j)$ whose canonical parameters are $\Phi_1 = \S_j^{-1} \m_j$ and $\Phi_2 = -\frac{1}{2}\S_j^{-1}$.
 Their stochastic update equations at time $t + 1$ are given by:
-\small
 \begin{align}
 \Phi_{1(t+1)} &= \S_{j(t)}^{-1} \m_{j(t)} + l \bigg(\sum_{i=1}^P \beta_i w_{ij} \A_j(\oi)^T \ynoj - \S_{j(t)}^{-1} \m_{j(t)} \bigg) \\
 \Phi_{2(t+1)} &= -\frac{1}{2} \S_{j(t)}^{-1} + l \bigg(\frac{1}{2} \S_{j(t)}^{-1} - \frac{1}{2} \mat{\Lambda} \bigg),
@@ -186,9 +185,6 @@ Their stochastic update equations at time $t + 1$ are given by:
 \normalsize
 where $\mat{\Lambda} = \Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi)^T \A_j(\oi)$.
 
-The cost of this update is $\calO(PM^3)$ or $\calO(PN_bM^2)$, depending on which is larger between the number of inducing inputs (per process) and the mini-batch size.
-For large scale problems, we tend to use a large batch size (e.g. $N_b = 1000$) to reduce the stochasticity of the optimization, hence we consider the model to have a computational complexity of $\calO(PN_bM^2)$.
-Following this assumption, the memory demand is $\calO(PN_bM)$.
 %TODO table for complexity
 \subsection{INDUCING INPUTS AND HYPER-PARAMETERS \label{sec:hyperparameters}}
 To learn the hyperparameters, which in this model include the mixing weights, the covariance hyperparameters of the latent processes, and the noise precision of each output, we follow standard practice in GP inference.
@@ -199,6 +195,39 @@ Learning of the inducing inputs, which was not considered in the single output c
 In the supplementary material, we show that with the help of vectorized operations, the derivatives of the lower bound w.r.t the inducing inputs can be computed with a cost \emph{independent} of the input dimension.
 This makes optimizing the inducing locations a practical option, which can be important for e.g. in high-dimensional problems where fixing the inducing inputs may hinder the performance.
 Indeed, our experiments on a large scale multioutput problem shows that automatic learning of the inducing inputs can lead to significant performance gain with little overhead in computation. 
+
+\subsection{COMPLEXITY ANALYSIS}
+In this section we analyze the complexity of the model and compare it to existing multioutput approaches.
+For consistency, we first unify common notations used for all models.
+We use $P$ as the number of outputs, $N$ as the number of inputs, $Q$ as the number of shared latent processes, $M_t$ as the \emph{total} number of inducing inputs.
+It is worth noting that $M_t = (P + Q) \times M$ in our COGP model, assuming that each sparse process has equal number of inducing points. 
+Also, COGP have $P$ additional individual processes, one for each output.
+
+The complexity of COGP can be read off by inspecting the ELBO (eq. \ref{eq:L}), with a key observation that it contains a sum over the outputs as well the inputs.
+This means a mini-batch containing a small subset of the inputs and outputs can be used for stochastic optimization.
+Technically, the cost is $\calO(M^3)$ or $\calO(N_bM^2)$, where $N_b$ is the size of the mini-batches, depending on which is larger between $M$ and $N_b$. 
+Though in practice we may use $N_b > M$ as a large batch size (e.g. $N_b = 1000$) helps reduce stochasticity of the optimization.
+However, here we use $\calO(M^3)$ here for easier comparison with existing models whose computational and storage demands are given in \ref{tab:complexity}. 
+As can be seen, COGP has superior complexity which is independent of the size of the inputs and outputs, thus is the only method capable of handling large scale problems.
+
+\setlength{\tabcolsep}{4pt}
+\begin{table}[t]
+\caption{Comparison of the time and storage complexity of (approximate) inference of GP-based multioutput regression models. CGP-FITC is the convolved GPs model with sparse approximation\citep{alvarez-lawrence-nips-08}. COGP is the only method with complexity \emph{independent} of the number of inputs and outputs, thus can scale to massive datasets.}
+\label{tab:complexity}
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{METHOD} & \textbf{TIME} & \textbf{STORAGE} \\ \hline
+COGP, this paper  & $\calO(M^3)$ & $\calO(M^2)$ \\
+SLFM, \citep{teh-et-al-aistats-05} & $\calO(QNM_t)$ & $\calO(QNM_t)$ \\
+MTGP, \citep{bonilla-et-al-nips-08} & $\calO(PNM_t^2)$ & $\calO(PNM_t)$\\ 
+CGP-FITC & $\calO(PNM_t^2)$ & $\calO(PNM_t)$ \\
+GPRN, \citep{wilson-et-al-icml-12} & $\calO(PQN^3)$ & $\calO(PQN^2)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
 
 \subsection{PREDICTION}
 The predictive distribution of the $i$-th output for a test input $\x_*$ is given by:
