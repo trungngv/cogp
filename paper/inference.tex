@@ -178,10 +178,12 @@ Since the optimal distributions $q(\u_j)$ and $q(\v_i)$ are in the exponential f
 This works by taking a step of length $l$ in the direction of the natural gradient approximated by mini-batches of the data.
 For instance, consider $q(\u_j)$ whose canonical parameters are $\Phi_1 = \S_j^{-1} \m_j$ and $\Phi_2 = -\frac{1}{2}\S_j^{-1}$.
 Their stochastic update equations at time $t + 1$ are given by:
+\small
 \begin{align}
 \Phi_{1(t+1)} &= \S_{j(t)}^{-1} \m_{j(t)} + l \bigg(\sum_{i=1}^P \beta_i w_{ij} \A_j(\oi)^T \ynoj - \S_{j(t)}^{-1} \m_{j(t)} \bigg) \\
 \Phi_{2(t+1)} &= -\frac{1}{2} \S_{j(t)}^{-1} + l \bigg(\frac{1}{2} \S_{j(t)}^{-1} - \frac{1}{2} \mat{\Lambda} \bigg),
 \end{align}
+\normalsize
 where $\mat{\Lambda} = \Kjzz^{-1} + \sum_{i=1}^P \beta_i w_{ij}^2 \A_j(\oi)^T \A_j(\oi)$.
 
 The cost of this update is $\calO(PM^3)$ or $\calO(PN_bM^2)$, depending on which is larger between the number of inducing inputs (per process) and the mini-batch size.
@@ -205,12 +207,14 @@ p(\fstar | \y, \x_*) = \Normal(\fstar; \sum_{j=1}^Q w_{ij} \mu_{j*} + \mu^h_{i*}
 \end{align}
 where $\mu_{j*}$ and $s_{j*}$ are the mean and variance of the prediction for $g_{j*} = g_j(\x_*)$, i.e. $p(g_{j*} | \y, \x_*) = \Normal(g_{j*}; \mu_{j*}, s_{j*})$.
 Likewise, $\mu^h_{i*}$ and $s^h_{i*}$ are the mean and variance of the prediction for $h_{i*} = h_i(\x_*)$, $p(h_{i*} | \y, \x_*) = \Normal(h_{i*}; \mu^h_{i*}, s^h_{i*})$.
-Since the predictions for $g_{j*}$ and $h_{i*}$ have similar form, we only provide here the mean and variance for $\mu_{j*}$ and $s_{j*}$: 
+These predictive means and variances are given by: 
 \begin{align}
-\mu_{j*} &= \vec{k}_{j*z} \K_{jzz}^{-1} \m_j \\ s_{j*} &= k_{j**} - \vec{k}_{j*z} \left(\K_{jzz}^{-1} - \K_{jzz}^{-1} \S_j \K_{jzz}^{-1} \right) \vec{k}_{j*z}^T
+\mu_{j*} &= \vec{k}_{j*z} \K_{jzz}^{-1} \m_j \\ s_{j*} &= k_{j**} - \vec{k}_{j*z} \left(\K_{jzz}^{-1} - \K_{jzz}^{-1} \S_j \K_{jzz}^{-1} \right) \vec{k}_{j*z}^T \\
+\mu^h_{i*} &= \vec{k}_{i*z} \K_{izz}^{-1} \mhi \\
+s^h_{i*} &= k_{i**} - \vec{k}_{i*z} \left(\K_{izz}^{-1} - \K_{izz}^{-1} \S_j \K_{izz}^{-1} \right) \vec{k}_{i*z}^T
 \end{align}
-where $k_{j**} = k_j(\x_*, \x_*)$ and $\vec{k}_{j*z}$ is the covariance between the test point and the inducing inputs $\Zj$.
- 
+where $k_{j**} = k_j(\x_*, \x_*)$, $k_{i**} = k^h_i(\x_*, \x_*)$,  $\vec{k}_{j*z}$ is the covariance between $\x_*$ and $\Zj$, and $\vec{k}_{i*z}$ is the covariance between $\x_*$ and $\Zhi$.
+
 %\noindent Also as a consequence of sufficient statistics, the approximate prediction for test targets $\vfstar$ at test inputs $\X_*$ is
 %\begin{align}
 %\nonumber

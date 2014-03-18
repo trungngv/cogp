@@ -4,7 +4,7 @@ Unfortunately, the prohibitive complexity when performing exact inference in the
 In particular, when learning $P$ multiple correlated functions over $N$ data points, the complexity is $\calO(N^3P^3)$ in computation and $\calO(N^2P^2)$ in memory.
 An example of a real-world application where multioutput regression may be useful is the tracking of  movements of a robot arm using 2 or more joint torques. 
 If one of the robot motors malfunctions and fails to record a torque, data collected from the other motors may be used to infer the missing torque values.
-However, taking 100 measurements per second already results in a total of over 40,000 data points in just 7 minutes.
+However, taking 100 measurements per second already results in a total of over 40,000 data points per torque in just 7 minutes.
 Clearly this problem is well beyond the capability of conventional multioutput GPs.
 Building scalable multioutput GPs model that can learn correlated tasks at the scale of the application just considered and potentially much larger is thus the main focus of this paper.
 
@@ -22,6 +22,7 @@ Nevertheless, as shown in Table \ref{tab:complexity}, most of these models have 
 \caption{Comparison of the time and storage complexity of (approximate) inference of GP-based multioutput regression models. CGP is the convolved GPs model \citep{alvarez-lawrence-nips-08}. For all methods, $P$, $N$, $Q$ and $M$ are the number of outputs, inputs, latent processes, and inducing points, respectively. Only our method has complexity independent of the size of the inputs and thus can scale to massive datasets.}
 \label{tab:complexity}
 \begin{center}
+\small
 \begin{tabular}{lcc}
 \toprule
 \textbf{METHOD} & \textbf{TIME} & \textbf{STORAGE} \\ \hline
@@ -70,7 +71,7 @@ We conclude with some discussion in Section \ref{sec:discussion}.
 % cite titsias
 %Consequently, various approximate methods \citep{lawrence2002fast,seeger2003bayesian,seeger2003fast, smola2001sparse,snelson2006sparse,williams2001using} have been proposed to overcome this limitation.
 %Taking insights from the seminal work of \citep{quinonero2005unifying}, most of these approximations can be formulated around the \emph{inducing points}.
-%These come from the same latent function that generates the data and can be viewed as representing its sufficient statistics \citet{titsias2009variational}.
+%These come from the same latent function that generates the data and can be viewed as representing its sufficient statistics \citep{titsias2009variational}.
 %Using these approaches, the complexity reduces to $\bigO(NB^2)$ in computation and $\bigO(NB)$ in memory where $B \ll N$ is the number of inducing points.
 %Recent development in stochastic variational inference for GPs \citep[GPSVI,][]{hensmangaussian} has led to further reduction of these costs to $\bigO(B^3)$ and $\bigO(B^2)$ respectively.
 
