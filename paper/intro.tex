@@ -6,7 +6,7 @@ the dependencies between the tasks  and  they have been shown to outperform comp
 single output learners  \citep{bonilla-et-al-nips-08,teh-et-al-aistats-05,alvarez-lawrence-nips-08,wilson-et-al-icml-12}.
 % However they are costly
 However, the prohibitive cost of performing exact inference in  GP models severely hinders 
-their application to  large-scale multi-output problems. For example, na\"{i}ve inference 
+their application to  large scale multi-output problems. For example, na\"{i}ve inference 
 in a fully coupled Gaussian process model over $P$  outputs and $N$ data-points can have 
 a complexity of $\calO(N^3P^3)$  and $\calO(N^2P^2)$ in time and memory, respectively.
 
@@ -32,14 +32,14 @@ performed more efficiently \citep{quinonero2005unifying}. These models have been
 to in the literature as sparse models. 
 Nevertheless, straightforward application of such approximate techniques will yield a computational 
 cost of at least $\calO(PNM^2)$ in time and  $\calO(PNM)$ in memory, where 
-$M$ is the number of inducing points. This high complexity still prevent us from applying GP models 
+$M$ is the number of inducing points. This high complexity still prevents us from applying GP models 
 to  large scale multi-output problems.
 
 % Useful observations
-In this work we approach the challenge of building large scale multi-output Gaussian process models  
+In this work we approach the challenge of building scalable multi-output Gaussian process models  
 based on the following observations.
 Firstly, \emph{inducing variables} are the key catalyst
-for achieving sparsity and dealing with large-scale problems in Gaussian process models.
+for achieving sparsity and dealing with large scale problems in Gaussian process models.
 In particular, they capture the \emph{sufficient statistics} of a dataset allowing the construction of sparse 
 processes that can approximate arbitrarily well the exact GP model \citep{titsias2009variational}.
 Secondly, the use of global latent variables (such as the inducing points) allows us to 
