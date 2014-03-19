@@ -60,21 +60,6 @@ $M = 100$ inducing inputs (\text{per sparse process}) were randomly selected fro
 \label{fig:fx}
 \end{figure*}
 
-The real data and predictive distributions by our model are shown in Figure \ref{fig:fx}.
-They exhibit similar behaviors to those by the convolved model with inducing kernels in \citet{alvarez2010efficient}.
-In particular, both models perform better at capturing the strong depreciation of the AUD than the fluctuations of the CAD and JPY currency.
-Further analysis of the dataset found that 4 other currencies (GBP, NZD, KRW, and MXN) also experienced the same trend during the days 
-150 -- 200.
-This information from these currencies was effectively used by the model to extrapolate the values of the AUD.
-
-%todo: result for independent gps
-We also report in Table \ref{tab:fx} the predictive performance of our model compared to the convolved GPs model with exact inference \citep[CGP,][]{alvarez-lawrence-nips-08} and independent GPs (IGP, one for each output).
-Our model outperforms both of CGP and IGP in terms of the standardized mean squared error (SMSE).
-CGP has lower negative log predictive density (NLPD), mainly due to the less conservative predictive variance of the exact CGP for the CAD currency.
-% no std because there are 3 outputs but variance is small
-For reference, the convolved GPs with approximation via the variational inducing kernels  \citep[CGPVAR,][]{alvarez2010efficient} has the SMSE of 0.2795 while the NLPD was not provided.
-Training took only 10 minutes for our model compared to 1.4 hours for the full CGP model.
-
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
 \caption{Performance comparison on the foreign exchange rate dataset. Results are averages of the 3 outputs over 5 repetitions. Smaller figures are better.}
@@ -92,6 +77,21 @@ IGP & 0.5996 & 0.4082 \\
 \end{tabular}
 \end{center}
 \end{table}
+
+The real data and predictive distributions by our model are shown in Figure \ref{fig:fx}.
+They exhibit similar behaviors to those by the convolved model with inducing kernels in \citet{alvarez2010efficient}.
+In particular, both models perform better at capturing the strong depreciation of the AUD than the fluctuations of the CAD and JPY currency.
+Further analysis of the dataset found that 4 other currencies (GBP, NZD, KRW, and MXN) also experienced the same trend during the days 
+150 -- 200.
+This information from these currencies was effectively used by the model to extrapolate the values of the AUD.
+
+%todo: result for independent gps
+We also report in Table \ref{tab:fx} the predictive performance of our model compared to the convolved GPs model with exact inference \citep[CGP,][]{alvarez-lawrence-nips-08} and independent GPs (IGP, one for each output).
+Our model outperforms both of CGP and IGP in terms of the standardized mean squared error (SMSE).
+CGP has lower negative log predictive density (NLPD), mainly due to the less conservative predictive variance of the exact CGP for the CAD currency.
+% no std because there are 3 outputs but variance is small
+For reference, the convolved GPs with approximation via the variational inducing kernels  \citep[CGPVAR,][]{alvarez2010efficient} has the SMSE of 0.2795 while the NLPD was not provided.
+Training took only 10 minutes for our model compared to 1.4 hours for the full CGP model.
 
 \subsection{AIR TEMPERATURE PREDICTION}
 Next, we consider the task of predicting air temperature at 4 different locations in the south coast of England. 
