@@ -30,7 +30,7 @@ For convenience, we shall assume all processes have the same number of inducing 
 We denote the collective variables: $\g = \{\g_j\}$, $\h = \{\h_i \}$, $\u = \{\u_j\}$, $\v = \{\v_i\}$, $\Z = \{\Zj\}$, and $\Z^h = \{\Zhi \}$ where $\g_j = \{g_j(\x_n)\}$, $\h_i = \{h_i(\x_n)\}$. 
 Note that we reserve subscript $i$ for indexing the outputs and their corresponding individual processes ($i = 1 \hdots P$), $j$ for the latent processes ($j = 1 \hdots Q$), and $n$ for the inputs ($n = 1 \hdots N$).
 %
-\subsection{Prior Model}
+\subsection{PRIOR MODEL}
 From the definition of the GPs and the conditional independence of the processes given the inducing variables, 
 the \emph{prior} of the multi-output model can be written as:
 \begin{align}
@@ -54,7 +54,7 @@ In the equations and hereafter, we omit the subscripts $j,h,i$ from the kernels 
 Here, equations \ref{eq:u} and \ref{eq:v} follow directly from the properties of GPs, while the expressions for $p(\g|\u)$ and $p(\h|\v)$ (eq. \ref{eq:gu} and \ref{eq:hv}) come from the conditionals of the multivariate Gaussian distributions.
 Instead of writing the joint priors $p(\g,\u)$ and $p(\h,\v)$, the above equivalent equations are given to emphasize the important role of the inducing variables in the model.
 %
-\subsection{Likelihood Model}
+\subsection{LIKELIHOOD MODEL}
 As mentioned above, we assume that  observations for each output 
 are  (noisy) linear combinations of the $Q$ latent functions $g_{j}(\vec{x})$ plus
 an independent function $h_{i}(\vec{x})$. Hence we have that the likelihood 
