@@ -33,7 +33,7 @@ to in the literature as sparse models.
 Nevertheless, straightforward application of such approximate techniques will yield a computational 
 cost of at least $\calO(PNM^2)$ in time and  $\calO(PNM)$ in memory, where 
 $M$ is the number of inducing points. This high complexity still prevent us from applying GP models 
-to the large scale multi-output problems we are targeting.
+to  large scale multi-output problems.
 
 % Useful observations
 In this work we approach the challenge of building large scale multi-output Gaussian process models  
@@ -67,7 +67,7 @@ inputs and outputs.
 This decomposition makes possible the application of stochastic variational inference, 
 thus allowing the model to handle a large number of observations per output and a large number of outputs.
 Furthermore, learning of all  the  parameters in the model, including
-kernel hyperparameters and inducing inputs, can be done in a consistent stochastic optimization framework.
+kernel hyperparameters and inducing inputs, can be done in a single stochastic optimization framework.
 
 We analyze our multi-out model on a toy problem  where the inducing variables are shown to be 
 conducive to the sharing of information between two related tasks. 
@@ -77,10 +77,10 @@ Finally, on a  large scale experiment regarding the learning of robot inverse dy
 the substantial benefits of collaborative learning provided by our model.
   
 % Experiments and summary of results
-The rest of the paper is organized as follows.
-We give description of the model in Section \ref{sec:model}, followed by the inference procedure in Section \ref{sec:inference}. 
-Section \ref{sec:experiments} presents empirical evaluation.
-We conclude with some discussion in Section \ref{sec:discussion}.
+%The rest of the paper is organized as follows.
+%We give description of the model in Section \ref{sec:model}, followed by the inference procedure in Section \ref{sec:inference}. 
+%Section \ref{sec:experiments} presents empirical evaluation.
+%We conclude with some discussion in Section \ref{sec:discussion}.
 
 
 

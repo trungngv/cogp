@@ -15,14 +15,15 @@ The $Q$ shared functions have independent Gaussian process priors  $g_j(\x) \sim
 Similarly, each individual function of an output also has GP prior, i.e.~$h_i(\x) \sim \GP(0, k^h_i(\cdot,\cdot))$. %with $i=1 ,\ldots P$.
 
 
-As we wish to sparsify these processes for scalability, 
+As we want to sparsify these processes, 
 we introduce the set of \emph{shared inducing variables} $\u_j$ for  each $g_j(\x)$, i.e. $\u_j$ contains the values of 
 $g_j(\x)$ at the inducing inputs $\Z_j$. Likewise, we have 
 individual inducing variables corresponding to each  $h_i(\x)$,  which we denote with with $\v_i$ and their 
 corresponding inducing inputs $\Zhi$.
 %
-The inducing inputs live in the same space as the inputs $\X$, which should be apparent since their corresponding values come from the processes defined on the input space.
-For convenience, we shall assume all processes have the same number of inducing points, $M$, however we emphasize that this is not
+The inducing inputs lie in the same space as the inputs $\X$.
+% which should be apparent since their corresponding values come from the processes defined on the input space.
+For convenience, we  assume all processes have the same number of inducing points, $M$, however we emphasize that this is not
  imposed in practice.
 
 % information is transfered via the inducing variables
