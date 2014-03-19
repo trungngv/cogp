@@ -7,10 +7,9 @@
 %This leads to choosing a variational approximation of the posterior which factorizes as $q(\f, \u | \y) = p(\f | \u) q(\u | \y)$.
 %Since the conditional $p(\f | \u)$ is known, variational inference becomes learning an optimal posterior $q(\u | \y)$ only. \\
 %
-We approximate the posterior over the latent variables $\vec{g}, \vec{h}, \vec{u}, \vec{v}$ given observations $\vec{y}$ across
-multiple outputs using variational inference.
+We approximate the posterior over the latent variables $\vec{g}, \vec{h}, \vec{u}, \vec{v}$ given observations $\vec{y}$ using variational inference.
 In section \ref{sec:variationalLowerBound} we derive a lower bound of the marginal likelihood which has the key property of factorizing over the data points and outputs. Section \ref{sec:svi}  takes advantage of this factorization to 
-carry out stochastic variational inference which allows the model to scale to very large datasets.
+derive stochastic variational inference, allowing the model to scale to very large datasets.
 Section \ref{sec:complexity} compares the complexity of the model with previous multi-output methods.
 
 \subsection{VARIATIONAL LOWER BOUND \label{sec:variationalLowerBound}}
@@ -75,8 +74,7 @@ The inequality is due to Jensen's inequality and the equality is due to the fact
 The ELBO can be computed by first solving for the individual expectations 
 %$l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ 
 $ \Eb{\log p(y_{in} | \g_n, h_{in}) }$ over ${p(\g | \u) p(\h_i | \v_i)}$ and 
-then substituting these into Equation \eqref{eq:elbo}. (Please see 
-the supplementary material for the details of the derivation.)  
+then substituting these into Equation \eqref{eq:elbo} (see the supplementary material for details). 
 Hence the resulting lower bound is given by:
 \begin{align}
 \nonumber
@@ -193,8 +191,9 @@ where $\ynoh = \y_i - \sum_{j=1}^Q w_{ij} \A_j(\oi,:) \m_j$.
 % comment on computation
 \noindent It can be seen that the derivatives of the parameters of $q(\v_i)$ only involve the observations of the output $i$.
 The derivatives of the parameters of $q(\u_j)$ involve the observations of all outputs but is a sum of contributions from individual outputs.
-Therefore, computation of the derivatives can be distributed or parallelized easily.
-This property further enhances the scalability of the model, allowing it to handle big data problems with a very large number of inputs and outputs.
+Computation of the derivatives can therefore be easily distributed or parallelized.
+%Therefore, computation of the derivatives can be distributed or parallelized easily.
+%This property further enhances the scalability of the model, allowing it to handle big data problems with a very large number of inputs and outputs.
 
 Since the optimal distributions $q(\u_j)$ and $q(\v_i)$ are in the exponential family, it is more convenient to use stochastic variational inference \citep{hensman2012fast,hensmangaussian} to perform update of their canonical parameters.
 This works by taking a step of length $l$ in the direction of the natural gradient approximated by mini-batches of the data.
@@ -215,7 +214,10 @@ For this model this involves taking derivatives of the ELBO and applying standar
 The derivatives are given in the supplementary material.
 
 Learning of the inducing inputs, which was not considered in the single output case in \citet{hensmangaussian}, is also possible in our stochastic optimization approach.
-In the supplementary material, we show that with the help of vectorized operations, the derivatives of the lower bound wrt the inducing inputs can be computed with a cost \emph{independent of the input dimensionality}.
+In the supplementary material, we show that 
+%with the help of vectorized operations, 
+the cost of computing the derivatives of the lower bound wrt the inducing inputs is subdominant to that  of updating the variational parameters.
+%can be computed with a cost \emph{independent of the input dimensionality}.
 This makes optimizing the inducing locations a practical option that can be important, for example, in high-dimensional problems where fixing the inducing inputs may hinder the performance of the model.
 Indeed, our experiments on a large scale multi-output problem show that automatic learning of the inducing inputs can lead to significant performance gain with little overhead in computation. 
 %
@@ -230,8 +232,8 @@ The complexity of COGP can be read off by inspecting the ELBO  in Equation \eqre
 a sum over the outputs as well as over the inputs.
 This means a mini-batch containing a small subset of the inputs and outputs can be used for stochastic optimization.
 Technically, the cost is $\calO(M^3)$ or $\calO(N_bM^2)$, where $N_b$ is the size of the mini-batches, depending on which is larger between $M$ and $N_b$. 
-Though in practice we may use $N_b > M$ as a large batch size (e.g.~$N_b = 1000$) helps reduce stochasticity of the optimization.
-However, here we use $\calO(M^3)$  for easier comparison with existing models whose computational and storage demands are 
+In practice, we may use $N_b > M$ as a large batch size (e.g.~$N_b = 1000$) helps reduce stochasticity of the optimization.
+However, here we use $\calO(M^3)$  for easier comparison with other models whose time and storage demands are 
 given in Table \ref{tab:complexity}. 
 We see that COGP has 
 a computational  complexity that is independent of the size of the inputs and outputs, 
@@ -239,7 +241,7 @@ thus is the only method capable of handling large scale problems.
 %
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
-\caption{Comparison of the time and storage complexity of approximate inference of  multi-output GP regression models. 
+\caption{Comparison of the time and storage complexity of approximate inference of  multi-output GP models. 
 A\&W, 2009 refers to \citet{alvarez-lawrence-nips-08}. COGP is the only method with complexity \emph{independent} of the
  number of inputs $N$ and outputs $P$, thus it can scale to very large datasets.}
 \label{tab:complexity}
@@ -270,7 +272,7 @@ These predictive means and variances are given by:
 \mu_{j*} &= \vec{k}_{j*z} \K_{jzz}^{-1} \m_j  \text{,}\\ 
 s_{j*} &= k_{j**} - \vec{k}_{j*z} \left(\K_{jzz}^{-1} - \K_{jzz}^{-1} \S_j \K_{jzz}^{-1} \right) \vec{k}_{j*z}^T  \text{,}\\
 \mu^h_{i*} &= \vec{k}_{i*z} \K_{izz}^{-1} \mhi \text{,} \\
-s^h_{i*} &= k_{i**} - \vec{k}_{i*z} \left(\K_{izz}^{-1} - \K_{izz}^{-1} \S_j \K_{izz}^{-1} \right) \vec{k}_{i*z}^T \text{,}
+s^h_{i*} &= k_{i**} - \vec{k}_{i*z} \left(\K_{izz}^{-1} - \K_{izz}^{-1} \S_i \K_{izz}^{-1} \right) \vec{k}_{i*z}^T \text{,}
 \end{align}
 where $k_{j**} = k_j(\x_*, \x_*)$, $k_{i**} = k^h_i(\x_*, \x_*)$,  $\vec{k}_{j*z}$ is the covariance between $\x_*$ and $\Zj$, and $\vec{k}_{i*z}$ is the covariance between $\x_*$ and $\Zhi$.
 

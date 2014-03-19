@@ -18,7 +18,7 @@ Similarly, each individual function of an output also has GP prior, i.e.~$h_i(\x
 As we want to sparsify these processes, 
 we introduce the set of \emph{shared inducing variables} $\u_j$ for  each $g_j(\x)$, i.e. $\u_j$ contains the values of 
 $g_j(\x)$ at the inducing inputs $\Z_j$. Likewise, we have 
-individual inducing variables corresponding to each  $h_i(\x)$,  which we denote with with $\v_i$ and their 
+individual inducing variables corresponding to each  $h_i(\x)$,  which we denote with $\v_i$ and their 
 corresponding inducing inputs $\Zhi$.
 %
 The inducing inputs lie in the same space as the inputs $\X$.
@@ -56,8 +56,7 @@ In the equations and hereafter, we omit the subscripts $j,h,i$ from the kernels 
 
 Equations \eqref{eq:u} and \eqref{eq:v} follow directly from the properties of GPs, while the expressions for $p(\g|\u)$ and $p(\h|\v)$ (Equations  \eqref{eq:gu} and \eqref{eq:hv}) come from the conditionals of the multivariate Gaussian distributions.
 Instead of writing the joint priors $p(\g,\u)$ and $p(\h,\v)$, the above equivalent equations are given to emphasize the \emph{sufficient statistics} role of $\u$ and $\v$ in the model.
-Here we use sufficient statistics in the same sense as in \citet{titsias2009variational}, i.e. 
-for any sparse process (say $g_j$), any other set of function values is independent with $\g_j$ given the inducing variables $\u_j$.
+Here by sufficient statistics we mean, for any sparse process (say $g_j$), any other set of function values is independent with $\g_j$ given the inducing variables $\u_j$.
 %
 \subsection{LIKELIHOOD MODEL}
 As mentioned above, we assume that  observations for each output 

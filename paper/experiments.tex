@@ -5,7 +5,7 @@ In the final experiment, we show that joint learning under sparsity can lead to 
 
 Since we are using stochastic optimization, the learning rates need to be chosen carefully.
 We found that the rates used in \cite{hensmangaussian} also work well for our model.
-Specifically, we used the learning rates of $0.01$ for the variational parameters, $1 \times 10^{-5}$ for the  covariance hyperparameters, and $1 \times 10^{-4}$ for the weights, noise hyperparameter, and inducing inputs.
+Specifically, we used the learning rates of $0.01$ for the variational parameters, $1 \times 10^{-5}$ for the  covariance hyperparameters, and $1 \times 10^{-4}$ for the weights, noise precisions, and inducing inputs.
 We also included a momentum term of $0.9$ for all of the parameters except the variational parameters and the inducing inputs.
 All of the experiments are executed on an Intel(R) Core(TM) i7-2600 3.40GHz CPU with 8GB of RAM using Matlab R2012a.
 %
@@ -35,7 +35,7 @@ Also we note that the inference procedure learned that the weights are $w_{11} =
 
 \subsection{FOREIGN EXCHANGE RATE PREDICTION}
 The first real world application we consider is to predict the foreign exchange rate w.r.t the US dollar of the top 10 international currencies (CAD, EUR, JPY, GBP, CHF, AUD, HKD, NZD, KRW, and MXN) and 3 precious metals (gold, silver, and platinum)\footnote{Data is available at http://fx.sauder.ubc.ca}. 
-The setting of our experiment described here is identical to that in \citep{alvarez2010efficient}.
+The setting of our experiment described here is identical to that in \citet{alvarez2010efficient}.
 The dataset consists of all the data available for the 251 working days in the year of 2007.
 There are 9, 8, and 42 days of missing values  for gold, silver, and platinum, respectively.
 We remove from the data the exchange rate of CAD on days 50--100, JPY on day 100--150, and AUD on day 150--200.
@@ -101,7 +101,8 @@ We selected the sensor signal for air temperature during the period from July 10
 The sensors record measurements every 5 minutes, resulting in a maximum of 4320 observations.
 There are missing data for Bramblemet (100 points), Chimet (15 points), and Sotonmet (1002 points), possibly due to network outages or hardware failures.
 We further simulated failure of the sensors by removing the observations from the time periods [10.2 - 10.8] for Cambermet and [13.5 - 14.2] for Chimet.
-The removed data comprises 375 data points, which is used for testing, and the remaining data consisting of 15,788 points is used for training.
+The removed data comprises 375 data points and  is used for testing. 
+The remaining data consisting of 15,788 points is used for training.
 Similar to the previous experiment, the objective is to evaluate the ability of the model to use the signals from the functioning sensors to extrapolate the missing signals.
 
 For pre-processing we normalized the outputs to have zero mean and unit variance.
@@ -133,7 +134,7 @@ It took 5 minutes on average to train our model compared to 3 hours of CGP with 
 %
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
-\caption{Performance comparison on the air temperature dataset. Results are averaged of 2 outputs over 5 repetitions. }
+\caption{Performance comparison on the air temperature dataset. Results are averages of 2 outputs over 5 repetitions. }
 \label{tab:air}
 \begin{center}
 \begin{tabular}{ccc}
@@ -168,17 +169,12 @@ Standard GP is applied to the first output as it has only 2,000 observations for
 For the second output, we used two baselines.
 The first is the subset of data (SOD) approach where 2,000 data points are randomly selected for training with a standard GP model.
 The second is the sparse GP with stochastic variational inference (SVIGP) using 500 inducing inputs and a batch size of 1,000.
-In case of COGP, we also used a batch size of 1,000 and 500 inducing points for the shared process ($Q = 1$) and each of the independent processes.
+In case of COGP, we also used a batch size of 1,000 and 500 inducing points for the shared process ($Q = 1$) and each of the individual processes.
 The squared exponential with automatic relevance determination (SEard) covariance function is used for all processes of all methods.
 Finally, the outputs are normalized to have zero mean and unit variance. 
 
-The performance of all methods, in terms of SMSE and NLPD averaged over 5 repetitions, is given in Table \ref{tab:robotarm}.
-The benefits of learning the two outputs jointly are evident, as can be seen by the significantly lower SMSE and NLPD of COGP compared to the full GP for the first output (4th torque).
-While the SMSE of the second output is essentially the same for all methods, the NLPD of COGP is substantially better than that of the independent SVIGP model which has the same amount of training data for this torque.
-The results validate the impact of collaborative learning even when under sparsity assumption, thus open up new opportunities for improvement over single task learning with independent sparse processes.
-
 \begin{table}[t]
-\caption{Performance comparison on the robot inverse dynamics dataset. In the two bottom lines, standard GP is applied to output 1 and the other method is applied to output 2. Results are averaged over 5 repetitions. Smaller figures are better.}
+\caption{Performance comparison on the robot inverse dynamics dataset. In the last two lines, standard GP is applied to output 1 and the other method is applied to output 2. Results are averaged over 5 repetitions. }
 \label{tab:robotarm}
 \begin{center}
 \begin{tabular}{lcccc}
@@ -195,11 +191,10 @@ GP, SOD & 0.3119 & 3.2198 & 0.0104 & 1.9407 \\
 \end{center}
 \end{table}
 
-Also from Table \ref{tab:robotarm}, it seems that optimizing the inducing inputs can lead to better performance than fixing them.
-More importantly, the overhead in computation is small, as demonstrated by the training time using the two options in Figure \ref{fig:time}.
-For instance, the total training time is only 1.9 hours when learning with 500 inducing inputs compared to 1.6 hours when fixing them.
-As this dataset is 21-dimensional, the small difference in training time confirms our analysis that the cost of optimizing the inducing inputs only scales sublinearly with the dimensionality of the problem.
-Thus, for datasets of high dimension, learning of the inducing inputs is a practical option.
+The performance of all methods in terms of SMSE and NLPD is given in Table \ref{tab:robotarm}.
+The benefits of learning the two outputs jointly are evident, as can be seen by the significantly lower SMSE and NLPD of COGP compared to the full GP for the first output (4th torque).
+While the SMSE of the second output is essentially the same for all methods, the NLPD of COGP is substantially better than that of the independent SVIGP model which has the same amount of training data for this torque.
+The results validate the impact of collaborative learning even when under sparsity assumption, thus open up new opportunities for improvement over single task learning with independent sparse processes.
 
 % table for smses, nlpds, training tiem
 \begin{figure}
@@ -207,3 +202,10 @@ Thus, for datasets of high dimension, learning of the inducing inputs is a pract
 \caption{The cost of optimizing versus fixing the inducing inputs.}
 \label{fig:time}
 \end{figure}
+
+Also from Table \ref{tab:robotarm}, we see that optimizing the inducing inputs can lead to better performance than fixing them.
+More importantly, the overhead in computation is small, as demonstrated by the training time using the two options in Figure \ref{fig:time}.
+For instance, the total training time is only 1.9 hours when learning with 500 inducing inputs compared to 1.6 hours when fixing them.
+As this dataset is 21-dimensional, the small difference in training time confirms that learning of the inducing inputs is a practical option even when dealing with problems of high dimensions.
+%As this dataset is 21-dimensional, the small difference in training time our analysis that the cost of optimizing the inducing inputs only scales sublinearly with the dimensionality of the problem.
+%Thus, for datasets of high dimension, learning of the inducing inputs is a practical option.
