@@ -19,11 +19,13 @@ other motors may be used to infer the missing torque values.
 However, taking 100 measurements per second already results in a total of over 40,000 data points 
 per torque in just 7 minutes.
 Clearly this problem is well beyond the capability of conventional multiple output GPs.
-Building scalable multi-output GP models that can learn correlated tasks at the scale of 
+Building  multi-output GP models that can learn correlated tasks at the scale of 
 these types of problems  is thus the main focus of this paper.
 
 % Tranditional approaches in single output setting, based e..g. on inducing points are not good enough 
-In the single output setting most approximation techniques for GP inference can be understood 
+In the single output setting previous attempts to scale up  GP inference 
+resort to approximate inference. Most  approximation techniques 
+ can be understood 
 within a single probabilistic framework that uses a set of \emph{inducing points}  in order to 
 obtain an approximate process (or a low-rank approximate covariance) over which inference can be 
 performed more efficiently \citep{quinonero2005unifying}. These models have been referred 
@@ -43,11 +45,12 @@ processes that can approximate arbitrarily well the exact GP model \citep{titsia
 Secondly, the use of global latent variables (such as the inducing points) allows us to 
 induce dependencies in a highly correlated model efficiently. 
 This observation is exploited in \cite{hensmangaussian} for single output GP regression models 
-where by explicitly representing a distribution over the inducing variables, stochastic variational inference 
+where, by explicitly representing a distribution over the inducing variables, stochastic variational inference 
 can be used to work with millions of data points.
 Finally, the key to multi-output and multi-task learning is to model dependencies between the outputs  
-based on realistic assumptions of what can be shared across the tasks. It turns out that is 
-reasonable to assume that multiple tasks can share some sparsity structure. 
+based on realistic assumptions of what can be shared across the tasks. It turns out that 
+sharing  ``sparsity structure'' can not only be a reasonable assumption but also a crucial component
+when modeling dependencies between different related tasks.
 
 
 % Our approach starts from mixing latent process
@@ -55,7 +58,7 @@ reasonable to assume that multiple tasks can share some sparsity structure.
 % sharing inducing points across the latent process
 Based on these observations, we propose the collaborative multi-output Gaussian Process (COGP) model 
 where each output is a weighted combination of sparse latent processes.
- Each process has its own set of inducing points that sufficiently encapsulates the process signal and characteristics.
+ Each latent process has its own set of inducing points that sufficiently encapsulates the process signal and characteristics.
 Correlations among the outputs are fostered via sharing of multiple inducing point sets 
 which in turn create a medium through which joint inference happens efficiently.
 % exploit stochastic variational inference
@@ -63,7 +66,7 @@ In particular, we derive a variational lower bound of the model evidence that de
 inputs and outputs. 
 This decomposition makes possible the application of stochastic variational inference, 
 thus allowing the model to handle a large number of observations per output and a large number of outputs.
-Furthermore, learning of all of the  parameters in the model, including
+Furthermore, learning of all  the  parameters in the model, including
 kernel hyperparameters and inducing inputs, can be done in a consistent stochastic optimization framework.
 
 We analyze our multi-out model on a toy problem  where the inducing variables are shown to be 
