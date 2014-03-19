@@ -43,7 +43,7 @@
 \maketitle
 
 \section{Gaussian Identities}
-Let $\y$, $\g = \{\g_j\}_{j=1}^q$, and $\h$ be random variables with multivariate Gaussian distributions: 
+Let $\g = \{\g_j\}_{j=1}^q$, $\h$, and $\y$ be random variables with multivariate Gaussian distributions: 
 $p(\y | \g, \h) = \Normal(\y; \sum_{j=1}^Q \W_j \g_j + \W \h, \beta^{-1} \I)$, $p(\g_j) = \Normal(\g_j; \m_j, \S_j)$, and $p(\h) = \Normal(\h; \m, \S)$.
 The following identity is important in deriving the evidence lower bound:
 \begin{align}
@@ -62,18 +62,45 @@ The identity can be proved by using this fact:
 \end{align}
 
 
-\section{Expectation of an Individual Likelihood Term}
-Applying the identity in eq. \ref{eq:identity}, the expectation of an individual likelihood term with respect to the posterior distribution is given by:
+\section{Derivation of the Variational Lower Bound}
+The variational lower bound of the log marginal (eq. 13 in the main text) is given by:
+\begin{align}
+\nonumber
+\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
+\nonumber
+%=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v  \\ 
+%\nonumber
+&+ \int q(\u, \v) \log \frac{p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
+\nonumber
+=& \int q(\u, \v) \log p(\y | \u, \v)  \der \u \der \v \\
+\nonumber
+&- \sum_{j=1}^Q \KL[q(\u_j) || p(\u_j)] - \sum_{i=1}^P \KL[q(\v_i) || p(\v_i)],
+\end{align}
+
+Since the KL terms are analytically tractable, we compute the first term in the above sum. 
+This is done first by deriving a lower bound to the likelihood $p(\y | \u, \v)$ (eq. 14 in the main text).
+\begin{align}
+\nonumber
+\log \text{ } p(\y | \u, \v)
+&= \log \Eb{p(\y | \g, \h)}_{p(\g,\h | \u, \v)} \\
+\nonumber
+&\ge \Eb{\log p(\y | \g, \h)}_{p(\g,\h | \u, \v)}  \\
+\nonumber
+&= \sum_{i=1}^P \sum_{n=1}^N \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g | \u) p(\h_i | \v_i)} 
+\end{align}
+Applying the identity in eq. \ref{eq:identity}, 
+the expectation of an individual likelihood term with respect to the posterior distribution is given by: 
 \begin{align}
 \nonumber
 l_{in} =& \int \log p(y_{in} | \g_n, h_{in}) \prod_{j=1}^Q p(g_{jn} | \u_j) p(h_{in} | \u_i) \der \g_n \der h_{in} \\
 \nonumber
 =& \log \Normal(y_{in}; \sum_{j=1}^Q w_{ij} \mu_{jn}+ \mu^h_{in}, \beta_i^{-1}) \\
-&- \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{nn} 
+&- \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{jnn} 
 - \frac{1}{2} \beta_i \tilde{k}^h_{inn},
-\label{eq:lin}
 \end{align}
-where $\tilde{k}_{nn} = (\tilde{\K})_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$, and $\mu^h_{in} = (\Mu^h_i)_n$.
+where $\tilde{k}_{jnn} = (\tilde{\K}_j)_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$, and $\mu^h_{in} = (\Mu^h_i)_n$.
+
+Substituting $l_{in}$ into the expression for the lower bound of $\log p(\y | \u, \v)$ (again, this is eq. 14 in the main text), and applying the identity in eq. \ref{eq:identity} to carry out the integral we obtain the lower bound as given in the main text.
 
 % previous detailed derivation
 %\begin{align}
@@ -97,8 +124,8 @@ where $\tilde{k}_{nn} = (\tilde{\K})_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i
 %\end{align}
 
 \section{Derivatives of the ELBO}
-For convenience, we derive the gradients of the lower bound for the case of a single GP (i.e. the bound in \citet{hensmangaussian}).
-The derivatives of the ELBO of the collaborative multioutput GPs model are  typically linear combination of the derivatives here.
+For exposition, we derive the gradients of the lower bound for the case of a single GP (i.e. the bound in \citet{hensmangaussian}).
+The derivatives of the ELBO of the collaborative multioutput GPs model are typically linear combination of the derivatives here.
 The lower bound as a function of all parameters is
 \begin{align}
 \nonumber
@@ -132,7 +159,9 @@ Firstly, the derivative of $\A$ wrt a covariance hyperparameter $t$ is given by:
 The derivatives of $\calL_1, \calL_2, \calL_3 \text{ and } \calL_4$ are thus given by:
 \begin{align}
 \deriv{\calL_1}{t} =& \beta (\y - \A\m)^T \deriv{\A}{t} \m \\
-\deriv{\calL_2}{t} =& \frac{1}{2}\beta \trace \left(\deriv{\K_{NN}}{t} - \A \deriv{\K_{MN}}{t} - \deriv{\A}{t} \K_{MN}\right) \\
+\deriv{\calL_2}{t} =& \frac{1}{2}\beta \trace \left(\deriv{\K_{NN}}{t} - \A \deriv{\K_{MN}}{t} - \deriv{\A}{t} \K_{MN}\right)
+\end{align}
+\begin{align}
 \deriv{\calL_3}{t} =& \beta \trace \left(\A \S \deriv{\A^T}{t} \right) \\
 \nonumber
 \deriv{\calL_4}{t} =& \frac{1}{2}  \trace \left(\K_{MM}^{-1} \deriv{ \K_{MM}}{t}\right) \\
@@ -202,8 +231,11 @@ where
 \end{align}
 %TODO: give the correct cost
 Notice that $\D_1$ and $\D_2$ can be pre-computed with a cost of $\calO(M^3)$ (or $\calO(N_bM^2)$ if the minibatch size $N_b > M$).
-The computational cost of taking derivatives of $MD$ inducing parameters is thus $\calO(M^3 + MDM) = \calO(M^3)$ as the cost of the two $\trace$ operators is $\calO(M)$ due to the fact that only $\calO(M)$ elements of $\deriv{\K_{MM}}{t}$ or $\deriv{\K_{NM}}{t}$ are non-zero.
-This fact can be further exploited to perform vectorized operation, for e.g. in Matlab, such that the iteration over all inducing inputs can be avoided.
+The computational cost of taking derivatives of $MD$ inducing parameters is thus $\calO(M^3 + MDM) = \calO(M^3)$ as the cost of the two trace operators is $\calO(M)$ due to the fact that only $\calO(M)$ elements of $\deriv{\K_{MM}}{t}$ or $\deriv{\K_{NM}}{t}$ are non-zero.
+
+For implementation with MATLAB, a loop over $M \times D$ parameters of the inducing inputs can be very slow for even moderate values of $M$ and $D$.
+The aforementioned fact about $\deriv{\K_{MM}}{t}$ and $\deriv{\K_{NM}}{t}$ can be used to perform vectorized operations that compute the derivatives of all $M$ parameters given a specific dimension at a cost of $\calO(M^2)$.
+The loop is the executed over the input dimension $D$, leading to a complexity of still $\calO(DM^2)$ only.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
