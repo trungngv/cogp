@@ -7,10 +7,10 @@
 %This leads to choosing a variational approximation of the posterior which factorizes as $q(\f, \u | \y) = p(\f | \u) q(\u | \y)$.
 %Since the conditional $p(\f | \u)$ is known, variational inference becomes learning an optimal posterior $q(\u | \y)$ only. \\
 %
-
-Inference in this model is done with variational inference.
-In section \ref{sec:variationalLowerBound}, we derive a lower bound of the marginal likelihood which has the key property of factorizing over the data points.
-The next section takes advantage of this factorization to derive stochastic variational inference which allows the model to scale to massive datasets.
+We approximate the posterior over the latent variables $\vec{g}, \vec{h}, \vec{u}, \vec{v}$ given observations $\vec{y}$ across
+multiple outputs using variational inference.
+In section \ref{sec:variationalLowerBound} we derive a lower bound of the marginal likelihood which has the key property of factorizing over the data points and outputs. Section \ref{sec:svi}  takes advantage of this factorization to 
+carry out stochastic variational inference which allows the model to scale to very large datasets.
 Section \ref{sec:hyperparameters} discusses learning of the inducing inputs and other hyperparameters.
 
 \subsection{VARIATIONAL LOWER BOUND \label{sec:variationalLowerBound}}
@@ -21,12 +21,12 @@ Section \ref{sec:hyperparameters} discusses learning of the inducing inputs and 
 \newcommand{\Sgj}{\S_j}
 \newcommand{\Shi}{\S^h_i}
 Our inference task is to find the posterior $p(\g, \h, \u, \v | \y)$, for which we use variational inference \citep{jordan-variational-99}. 
-Before choosing the form of the approximate posterior, observe that the posterior distribution can be written as,
+Before choosing the form of the approximate posterior, observe that the posterior distribution can be written as:
 \begin{align}
 p(\g, \h, \u, \v | \y) = p(\g | \u, \y) p(\h | \v, \y) p(\u, \v | \y).
 \end{align}
 Here we recall the modeling assumption that each set of the inducing variables is the \emph{sufficient statistics} of the corresponding latent process. 
-This motivates replacing the true posteriors over $\g$ and $\h$ with their conditional distributions given the inducing variables, leading to a distribution that of the form
+This motivates replacing the true posteriors over $\g$ and $\h$ with their conditional distributions given the inducing variables, leading to a distribution that of the form:
 \begin{align}
 q(\g, \h, \u, \v | \y)
 = p(\g|\u) p(\h|\v) q(\u,\v),
@@ -35,8 +35,12 @@ with
 \begin{align}
 q(\u,\v) &= \prod_{j=1}^Q \underbrace{\Normal(\u_j; \mgj, \Sgj)}_{q(\u_j)} \prod_{i=1}^P  \underbrace{\Normal(\v_i; \mhi, \Shi)}_{q(\v_i)}.
 \end{align}
-This technique has been used in \citep{titsias2009variational,hensmangaussian} to derive variational inference for the single output case.
-Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are given (eq. \ref{eq:gu} and \ref{eq:hv}), inference requires only learning of $q(\u, \v)$ that minimize the divergence between the approximate and true posteriors.
+This technique has been used by \citet{titsias2009variational} and \citet{hensmangaussian} 
+to derive variational inference algorithms for the single output case.
+Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are known (Equations \ref{eq:gu} and \ref{eq:hv}), 
+we only need to 
+learn $q(\u, \v)$ so as to minimize the divergence between the approximate posterior and
+the true posteriors.
 This underlines the pivotal role of the inducing variables in this model as previously discussed.
 
 \noindent
@@ -66,43 +70,57 @@ where $\g_n = \{g_{jn} = (\g_j)_n\}_{j=1}^Q$.
 The inequality is due to Jensen's inequality and the equality is due to the fact that the likelihood fully factorizes.
 \newcommand{\Ahi}{\A^h_i}
 \newcommand{\Zi}{\Z_i}
+
 The ELBO can be computed by first solving for the individual expectations 
-$l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ (see the supplementary material), which are then substituted into eq. \ref{eq:elbo} to give:
+%$l_{in} \define \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g_n | \u) p(\h_in | \v_i)}$ 
+$ \Eb{\log p(y_{in} | \g_n, h_{in}) }$ over ${p(\g | \u) p(\h_i | \v_i)}$ and 
+then substituting these into Equation \ref{eq:elbo}. (Please see 
+the supplementary material for the details of the derivation.)  
+Hence the resulting lower bound is given by:
 \begin{align}
 \nonumber
-&\log p(\y)
-\ge \sum_{i,n}
+%&\log p(\y)
+ & \calL = 
+\sum_{i,n}
 \bigg( \log  \Normal(y_{in}; \tilde{\mu}_{in}, \beta_i^{-1})
           - \frac{1}{2} \beta_i \sum_{j=1}^Q w_{ij}^2 \tilde{k}_{jnn} \\ \nonumber
          &- \frac{1}{2} \beta_i \tilde{k}^h_{inn}
          - \frac{1}{2} \beta_i \sum_{j=1}^Q \trace w_{ij}^2 \S_j \mat{\Lambda}_{jn} - \beta_i \frac{1}{2} \trace \S^h_i \mat{\Lambda}_{in} 
 \bigg) \\
 \nonumber
-& - \sum_{j=1}^Q \bigg( \frac{1}{2} \log |\K_{jzz} \S_j^{-1}| + \frac{1}{2} \trace \K_{jzz}^{-1}  (\m_j \m_j^T + \S_j)\bigg) \\
+& - \sum_{j=1}^Q \bigg( \frac{1}{2} \log |\K_{jzz} \S_j^{-1}| + \frac{1}{2} \trace \K_{jzz}^{-1}  \left( \m_j \m_j^T + \S_j \right)\bigg) \\
 \nonumber
-& - \sum_{i=1}^P  \bigg( \frac{1}{2} \log |\K_{izz}(\Shi)^{-1}| + \frac{1}{2} \trace \K_{izz}^{-1} (\mhi (\mhi)^T + \Shi) \bigg) \\
-  &\define \calL,
+& - \sum_{i=1}^P  \bigg( \frac{1}{2} \log |\K_{izz}(\Shi)^{-1}| \\
+& \quad \qquad + \frac{1}{2} \trace \K_{izz}^{-1} \left( \mhi (\mhi)^T   +   \Shi \right) \bigg)  \text{,}
   \label{eq:L}
 \end{align}
-where $\K_{jzz} = k(\Zj, \Zj)$, $\K_{izz} = k(\Zhi, \Zhi)$, and with the help of auxiliary matrices $\A_j = k(\X,\Zj) \K_{jzz}^{-1}$ and $\Ahi = k(\X_i,\Zhi)\K_{izz}^{-1}$, 
+%
+where $\K_{jzz} = k(\Zj, \Zj)$, $\K_{izz} = k(\Zhi, \Zhi)$, and:
 \begin{align}
 \tilde{\mu}_{in}
 %&= \sum_{j=1}^Q w_{ij} k(\x_n, \Zj)k(\Zj,\Zj)^{-1}\m_j + k(\x_n, \Zhi)k(\Zhi,\Zhi)^{-1}\mhi \\
-&= \sum_{j=1}^Q w_{ij} \A_j(n,:) \m_j + \Ahi(n,:) \mhi \\
+&= \sum_{j=1}^Q w_{ij} \A_j(n,:) \m_j + \Ahi(n,:) \mhi \text{,}\\
 \mat{\Lambda}_{jn}
 %&= k(\Zj,\Zj)^{-1} k(\Zj, \x_n) k(\x_n, \Zj) k(\Zj,\Zj)^{-1} \\
-&= \A_j(n,:)^T \A_j(n,:)  \\
+&= \A_j(n,:)^T \A_j(n,:)  \text{,}\\
 \mat{\Lambda}_{in}
 %&= k(\Zhi,\Zhi)^{-1} k(\Zhi, \x_n) k(\x_n, \Zhi) k(\Zhi,\Zhi)^{-1}
-&= \Ahi(n,:)^T \Ahi(n,:) 
+&= \Ahi(n,:)^T \Ahi(n,:)  \text{,}
 \end{align}
-where $\tilde{k}_{jnn} = (\tilde{\K}_j)_{nn}$, $\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$, $\mu_{jn} = (\Mu_j)_n$,  $\mu^h_{in} = (\Mu^h_i)_n$, and $\A_j(n,:)$ selects the $n$-th row vector of $\A_j$. 
-Notice that this ELBO clearly generalizes the bound for standard GP regression derived in \citep{hensmangaussian}, which can be recovered by setting $P = Q = 1$, $w_{ij} = 1$ and $h_i(\x) = 0$.
+with $\tilde{k}_{jnn} = (\tilde{\K}_j)_{nn}$; 
+$\tilde{k}^h_{inn} = (\tilde{\K}^h_i)_{nn}$; 
+$\mu_{jn} = (\Mu_j)_n$;
+ $\mu^h_{in} = (\Mu^h_i)_n$; 
+and we have defined the auxiliary matrices $\A_j = k(\X,\Zj) \K_{jzz}^{-1}$ and $\Ahi = k(\X_i,\Zhi)\K_{izz}^{-1}$ and 
+used $\A_j(n,:)$ to denote the $n$-th row vector of $\A_j$. 
+Notice that this ELBO clearly generalizes the bound for standard GP regression derived in \cite{hensmangaussian}, which can be recovered by setting $P = Q = 1$, $w_{ij} = 1$ and $h_i(\x) = 0$.
 
-The novelty of the derived variational lower bound is that it decomposes across not only the outputs but also the inputs.
-This enables the use of stochastic optimization methods which makes this model applicable to much larger datasets compared to the existing GP-based multioutput models. 
-
-\subsection{STOCHASTIC VARIATIONAL INFERENCE}
+The novelty of the  variational lower bound in Equation  \eqref{eq:L} is that it decomposes across both inputs and outputs.
+This enables the use of stochastic optimization methods, which 
+allow the model to handle  ver large datasets for which existing GP-based multi-output models are simply 
+impractical.  
+%
+\subsection{STOCHASTIC VARIATIONAL INFERENCE \label{sec:svi}}
 \newcommand{\oi}{\vec{o}_i}
 % some notation
 
