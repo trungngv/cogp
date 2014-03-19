@@ -3,14 +3,14 @@ A toy problem is first used to study the transfer of learning between two relate
 We then compare the model with existing multioutput models on the tasks of predicting foreign exchange rate and air temperature.
 In the final experiment, we show that joint learning under sparsity can lead to significant performance gain on a large scale dataset of inverse dynamics of a robot arm. 
 
-Since we are using stochastic optimization, the learn rates need to be chosen carefully.
-We found that the rates used in \citep{hensmangaussian} also work well for our model.
-Specifically, we used the learn rates of $0.01$ for the variational parameters, $1 \times 10^{-5}$ for the  covariance hyperparameters, and $1 \times 10^{-4}$ for the weights, noise hyperparameter, and inducing inputs.
+Since we are using stochastic optimization, the learning rates need to be chosen carefully.
+We found that the rates used in \cite{hensmangaussian} also work well for our model.
+Specifically, we used the learning rates of $0.01$ for the variational parameters, $1 \times 10^{-5}$ for the  covariance hyperparameters, and $1 \times 10^{-4}$ for the weights, noise hyperparameter, and inducing inputs.
 We also included a momentum term of $0.9$ for all of the parameters except the variational parameters and the inducing inputs.
 All of the experiments are executed on an Intel(R) Core(TM) i7-2600 3.40GHz CPU with 8GB of RAM using Matlab R2012a.
-
+%
 \subsection{TOY PROBLEM}
-In this toy problem, two related outputs are simulated from the same latent function $sin(x)$ and corrupted by independent noises: $y_1(x) = sin(x) + \epsilon$ and $y_2(x) = -sin(x) + \epsilon$, $\epsilon \sim \Normal(0,0.01)$.
+In this toy problem, two related outputs are simulated from the same latent function $sin(x)$ and corrupted by independent noise: $y_1(x) = sin(x) + \epsilon$ and $y_2(x) = -sin(x) + \epsilon$, $\epsilon \sim \Normal(0,0.01)$.
 Each output is given 200 observations with missing values in the $(-7,-3)$ interval for the first output and the $(4,8)$ interval for the second output.
 We used $Q = 1$ latent sparse process with squared exponential kernel, $h_1(x) = h_2(x) = 0$, and $M = 15$ inducing inputs for our model.
 
@@ -19,7 +19,7 @@ The locations of the inducing inputs are fixed and identical for both methods.
 It is apparent from the figure that the independent GPs fail to predict the functions in the unobserved regions, especially for output 1.
 In contrast, by using information from the observed intervals of one output to interpolate the missing signal of the other, COGP makes perfect prediction for both outputs.
 This confirms the effectiveness of collaborative learning of sparse processes via the shared inducing variables. 
-Also note that the inference procedure learned that the weights are $w_{11} = 1.07$ and $w_{21} = -1.06$ which accurately reflects the correlation between the two outputs.
+Also we note that the inference procedure learned that the weights are $w_{11} = 1.07$ and $w_{21} = -1.06$ which accurately reflects the correlation between the two outputs.
 
 \begin{figure*}
 \centering
@@ -38,7 +38,7 @@ The first real world application we consider is to predict the foreign exchange 
 The setting of our experiment described here is identical to that in \citep{alvarez2010efficient}.
 The dataset consists of all the data available for the 251 working days in the year of 2007.
 There are 9, 8, and 42 days of missing values  for gold, silver, and platinum, respectively.
-We remove from the data the exchange rate of CAD on days 50-100, JPY on day 100-150, and AUD on day 150-200.
+We remove from the data the exchange rate of CAD on days 50--100, JPY on day 100--150, and AUD on day 150--200.
 Note that these 3 currencies are from very different geographical locations, making the problem more interesting. 
 The 153 points are used for testing, and the remaining 3051 data points are used for training.
 Since the missing data corresponds to long contiguous sections, the objective here is to evaluate the capacity of the model to impute the missing currency values based on other currencies.
@@ -47,7 +47,7 @@ Since the missing data corresponds to long contiguous sections, the objective he
 For preprocessing we normalized the outputs to have zero mean and unit variance.
 Since the exchange rates are driven by a small number of latent market forces \citep[see e.g.][]{alvarez2010efficient}, we tried different values of $Q = {1,2,3}$ and selected $Q = 2$ which gave the best model evidence (ELBO).
 We used the squared-exponential covariance function for the shared processes and the noise covariance function for the individual process of each output.
-The inducing inputs $(M = 100, \text{per sparse process})$  are randomly selected from the training data and fixed throughout training.
+$M = 100$ inducing inputs (\text{per sparse process}) were randomly selected from the training data and fixed throughout training.
 
 \begin{figure*}
 \centering
@@ -61,13 +61,14 @@ The inducing inputs $(M = 100, \text{per sparse process})$  are randomly selecte
 \end{figure*}
 
 The real data and predictive distributions by our model are shown in Figure \ref{fig:fx}.
-They exhibit similar behaviors to those by the convolved model with inducing kernels in \citep{alvarez2010efficient}.
+They exhibit similar behaviors to those by the convolved model with inducing kernels in \citet{alvarez2010efficient}.
 In particular, both models perform better at capturing the strong depreciation of the AUD than the fluctuations of the CAD and JPY currency.
-Our investigation of the dataset found that 4 other currencies (GBP, NZD, KRW, and MXN) also experienced the same trend during the days 150 - 200.
+Further analysis of the dataset found that 4 other currencies (GBP, NZD, KRW, and MXN) also experienced the same trend during the days 
+150 -- 200.
 This information from these currencies was effectively used by the model to extrapolate the values of the AUD.
 
 %todo: result for independent gps
-We also report in Table \ref{tab:fx} the predictive accuracy of our model compared to the convolved GPs model with exact inference \citep[CGP,][]{alvarez-lawrence-nips-08} and independent GPs (IGP, one for each output).
+We also report in Table \ref{tab:fx} the predictive performance of our model compared to the convolved GPs model with exact inference \citep[CGP,][]{alvarez-lawrence-nips-08} and independent GPs (IGP, one for each output).
 Our model outperforms both of CGP and IGP in terms of the standardized mean squared error (SMSE).
 CGP has lower negative log predictive density (NLPD), mainly due to the less conservative predictive variance of the exact CGP for the CAD currency.
 % no std because there are 3 outputs but variance is small
@@ -76,7 +77,7 @@ Training took only 10 minutes for our model compared to 1.4 hours for the full C
 
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
-\caption{Performance comparison on the foreign exchange rate dataset. Results are averaged of the 3 outputs over 5 repetitions. Smaller figures are better.}
+\caption{Performance comparison on the foreign exchange rate dataset. Results are averages of the 3 outputs over 5 repetitions. Smaller figures are better.}
 \label{tab:fx}
 \begin{center}
 \begin{tabular}{ccc}
@@ -85,7 +86,7 @@ Training took only 10 minutes for our model compared to 1.4 hours for the full C
 COGP  & \textbf{0.2125} & -0.8394 \\
 CGP & 0.2427 & \textbf{-2.9474} \\
 IGP & 0.5996 & 0.4082 \\
-CGPVAR & 0.2795 & NA \\
+%CGPVAR & 0.2795 & NA \\
 %ICM & 0.3927 &
 \bottomrule
 \end{tabular}
@@ -105,8 +106,8 @@ Similar to the previous experiment, the objective is to evaluate the ability of 
 
 For pre-processing we normalized the outputs to have zero mean and unit variance.
 We used $Q = 2$ sparse processes with the squared exponential covariance function and individual processes with the noise covariance function.
-The inducing inputs $(M = 200)$ are randomly selected from the training set and fixed throughout training.
-
+$M=200$  inducing inputs  were randomly selected from the training set and fixed throughout training.
+%
 \begin{figure*}
 \centering
 \begin{tabular}{ccc}
@@ -129,7 +130,7 @@ For Cambermet, both COGP and CGP can capture the rising in temperature from the 
 The comparative performance of the models are summarized in Table \ref{tab:air}, from which it can be seen that our model outperforms CGP in terms of both SMSE and NLPD.
 %All results are averaged of the 2 outputs over 5 repetitions.
 It took 5 minutes on average to train our model compared to 3 hours of CGP with exact inference.
-
+%
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
 \caption{Performance comparison on the air temperature dataset. Results are averaged of 2 outputs over 5 repetitions. }
@@ -146,7 +147,7 @@ IGP & 0.8944 & 12.5319 \\
 \end{tabular}
 \end{center}
 \end{table}
-
+%
 It is also worth noting the characteristics of the sparse processes learned by our model as they indeed correspond to different patterns in the data.
 In particular, one process has the inverse lengthscale of 136 which captures the global increase in temperature during the training period while the other has the inverse lengthscale of 0.5 to model the local variations within a single day.
 
@@ -156,7 +157,7 @@ The data consists of 48,933 mapping from a 21-dimensional input space (7 joints 
 %The problem is strongly nonlinear due to complex superpositions of sine and cosine functions in robot dynamics \citep{vijayakumar2000locally}.
 %Furthermore, exploratory analysis using standard GP with automatic relevance determination suggests that all of the 21 dimensions are relevant.
 It has been used in previous work \citep[see e.g.][]{rasmussen-williams-book,vijayakumar2000locally} but only for single task learning. 
-In \citep{chai2008multi}, multitask learning of robot inverse dynamics was considered but on a different and much smaller dataset.
+\citet{chai2008multi} considered multitask learning of robot inverse dynamics  but on a different and much smaller dataset.
 
 Here we consider joint learning for the 4th and 7th torques where the first has 2,000 points  while the second has the full data of 44,484 points for training.
 The test set consists of 8,898 observations equally divided between the two outputs.
@@ -195,7 +196,7 @@ GP, SOD & 0.3119 & 3.2198 & 0.0104 & 1.9407 \\
 \end{table}
 
 Also from Table \ref{tab:robotarm}, it seems that optimizing the inducing inputs can lead to better performance than fixing them.
-More importantly, the overhead in computation is slight, as demonstrated by the training time using the two options in Figure \ref{fig:time}.
+More importantly, the overhead in computation is small, as demonstrated by the training time using the two options in Figure \ref{fig:time}.
 For instance, the total training time is only 1.9 hours when learning with 500 inducing inputs compared to 1.6 hours when fixing them.
 As this dataset is 21-dimensional, the small difference in training time confirms our analysis that the cost of optimizing the inducing inputs only scales sublinearly with the dimensionality of the problem.
 Thus, for datasets of high dimension, learning of the inducing inputs is a practical option.
