@@ -1,27 +1,38 @@
-Before diving into details of the specification, we discuss the modeling philosophy behind our collaborative multioutput Gaussian processes.
+Before diving into technical details of the model specification, 
+we discuss the modeling philosophy behind our collaborative multi-output Gaussian processes.
 To learn the outputs jointly, we need a mechanism through which information can be transferred among the outputs.
-This is achieved in the model by allowing the outputs to share multiple sets of inducing variables, each of which captures a different pattern common to the outputs.
-%For exposition, consider a set of inducing points for a moment.
-%Because they serve as the sufficient statistics of the individual outputs, a pattern common to the outputs can be encapsulated in these points when learning is done jointly. 
-%Different patterns in the data can be captured by having  multiple set of inducing variables.
-These variables indeed play a double pivotal role in the model: they collaborate sharing of information across the outputs and they provide the notion of  sufficient statistics that induces sparse processes. 
+This is achieved in the model by allowing the outputs to share multiple sets of inducing variables, 
+each of which captures a different pattern common to the outputs.
+These variables  play a double pivotal role in the model: they collaboratively share  information 
+across the outputs and  provide \emph{sufficient statistics}  so as to induce sparse processes. 
 
 \newcommand{\Zj}{\Z_j}
 \newcommand{\Zhi}{\Z^h_i}
-Consider multiple output regression of $P$ tasks with inputs $\X = \{\x_n \in \calR^D\}_{n=1}^N$ and outputs $\y = \{\y_i\}_{i=1}^P$ where $\y_i = \{y_{in}\}_{n=1}^N$.
-We shall model each output as a weighted combination of $Q$ shared latent functions, plus an individual latent function unique to that output for greater flexibility.
-The $Q$ shared functions have independent Gaussian process priors, $g_j(\x) \sim \GP(0, k_j(\cdot,\cdot))$, $j= 1 \hdots Q$.
-As we wish to use sparse processes, we introduce the set of \emph{inducing variables} $\u_j$ for  each $g_j(\x)$, i.e., $\u_j$ contains the values of $g_j(\x)$ at the inducing inputs $\Z_j$.
-Similarly, each individual function of an output also has GP prior, i.e., $h_i(\x) \sim \GP(0, k^h_i(\cdot,\cdot))$ with inducing inputs $\Zhi$ and inducing values $\v_i$.
+Consider the joint regression of $P$ tasks with inputs $\X = \{\x_n \in \calR^D\}_{n=1}^N$ and outputs $\y = \{\y_i\}_{i=1}^P$ where $\y_i = \{y_{in}\}_{n=1}^N$.
+We  model each output as a weighted combination of $Q$ shared latent functions $\{ g_{j}\}_{j=1}^{Q}$, plus an individual latent 
+function $\{ h_{i}\}_{i=1}^{P}$ unique to that output for greater flexibility.
+The $Q$ shared functions have independent Gaussian process priors  $g_j(\x) \sim \GP(0, k_j(\cdot,\cdot))$. %, with $j= 1, \ldots Q$.
+Similarly, each individual function of an output also has GP prior, i.e.~$h_i(\x) \sim \GP(0, k^h_i(\cdot,\cdot))$. %with $i=1 ,\ldots P$.
+
+
+As we wish to sparsify these processes for scalability, 
+we introduce the set of \emph{shared inducing variables} $\u_j$ for  each $g_j(\x)$, i.e. $\u_j$ contains the values of 
+$g_j(\x)$ at the inducing inputs $\Z_j$. Likewise, we have 
+individual inducing variables corresponding to each  $h_i(\x)$,  which we denote with with $\v_i$ and their 
+corresponding inducing inputs $\Zhi$.
+%
 The inducing inputs live in the same space as the inputs $\X$, which should be apparent since their corresponding values come from the processes defined on the input space.
-For convenience, we shall assume all of the processes have the same number of inducing points, $M$, however we emphasize that this is \emph{not} imposed in practice.
+For convenience, we shall assume all processes have the same number of inducing points, $M$, however we emphasize that this is not
+ imposed in practice.
 
 % information is transfered via the inducing variables
 
-As notations we denote the collective variables: $\g = \{\g_j\}$, $\h = \{\h_i \}$, $\u = \{\u_j\}$, $\v = \{\v_i\}$, $\Z = \{\Zj\}$, and $\Z^h = \{\Zhi \}$ where $\g_j = \{g_j(\x_n)\}$, $\h_i = \{h_i(\x_n)\}$. 
+We denote the collective variables: $\g = \{\g_j\}$, $\h = \{\h_i \}$, $\u = \{\u_j\}$, $\v = \{\v_i\}$, $\Z = \{\Zj\}$, and $\Z^h = \{\Zhi \}$ where $\g_j = \{g_j(\x_n)\}$, $\h_i = \{h_i(\x_n)\}$. 
 Note that we reserve subscript $i$ for indexing the outputs and their corresponding individual processes ($i = 1 \hdots P$), $j$ for the latent processes ($j = 1 \hdots Q$), and $n$ for the inputs ($n = 1 \hdots N$).
-
-From the definition of the GPs and the independence of the processes, the \emph{prior} of the multioutput model can be written as:
+%
+\subsection{Prior Model}
+From the definition of the GPs and the conditional independence of the processes given the inducing variables, 
+the \emph{prior} of the multi-output model can be written as:
 \begin{align}
 \label{eq:gu}
 p(\g | \u) &= \prod_{j=1}^Q p(\g_j | \u_j) = \prod_{j=1}^Q \Normal(\g_j; \BigMu_j, \tilde{\K}_j )\\
@@ -42,16 +53,21 @@ where
 In the equations and hereafter, we omit the subscripts $j,h,i$ from the kernels $k_j(\cdot,\cdot)$ and $k^h_i(\cdot,\cdot)$ when it is clear from the parameters inside the parentheses which covariance function is in action.
 Here, equations \ref{eq:u} and \ref{eq:v} follow directly from the properties of GPs, while the expressions for $p(\g|\u)$ and $p(\h|\v)$ (eq. \ref{eq:gu} and \ref{eq:hv}) come from the conditionals of the multivariate Gaussian distributions.
 Instead of writing the joint priors $p(\g,\u)$ and $p(\h,\v)$, the above equivalent equations are given to emphasize the important role of the inducing variables in the model.
-
-The \emph{likelihood} with standard iid Gaussian likelihood is given by:
+%
+\subsection{Likelihood Model}
+As mentioned above, we assume that  observations for each output 
+are  (noisy) linear combinations of the $Q$ latent functions $g_{j}(\vec{x})$ plus
+an independent function $h_{i}(\vec{x})$. Hence we have that the likelihood 
+with standard iid Gaussian noise is given by:
 \begin{align}
 p(\y | \g, \h ) = \prod_{i=1}^P \prod_{n=1}^N \Normal( y_{in} ; \sum_{j=1}^Q w_{ij} g_j(\x_n) + h_i(\x_n), \beta_i^{-1}),
 \end{align}
-which says that $y_{in}$ is a linear combination of the latent functions with weight $w_{ij}$ for the $j$th shared latent process plus a contribution from the individual process $h_i$.
+where $w_{ij}$ are the corresponding weights and $\beta_i$ is the precision of each Gaussian.
+%which says that $y_{in}$ is a linear combination of the latent functions with weight $w_{ij}$ for the $j$th shared latent process plus a contribution from the individual process $h_i$.
 As the latent values $\g$ are specified conditioned on the inducing variables $\u$, this construction implies that each output is a weighted combination of the inducing values.
-We note that if $\u$ and $\v$ are marginalized out, we obtain the semiparametric latent factor models \citep{teh-et-al-aistats-05}.
-However, doing so is against the purpose of this model which encourage sharing of outputs via the inducing variables.
-Furthermore, as we shall see in the next section, explicit representation of these variables is instrumental to scalable inference of the model.
+We note that if $\u$ and $\v$ are marginalized out, we obtain the semiparametric latent factor model \citep{teh-et-al-aistats-05}.
+However, doing so is against the purpose of our model which encourages sharing of outputs via the inducing variables.
+Furthermore, as we shall see in the next section, explicit representation of these variables is fundamental to scalable inference of the model.
 
 %\textbf{Augmented sparse GPs}
 %Toward scalable modeling, we replace standard GPs with sparse GPs augmented with \textit{different} set of inducing inputs.
