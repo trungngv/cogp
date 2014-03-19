@@ -23,16 +23,17 @@ corresponding inducing inputs $\Zhi$.
 %
 The inducing inputs lie in the same space as the inputs $\X$.
 % which should be apparent since their corresponding values come from the processes defined on the input space.
-For convenience, we  assume all processes have the same number of inducing points, $M$, however we emphasize that this is not
+For convenience, we  assume all processes have the same number of inducing points, $M$.
+However we emphasize that this is not
  imposed in practice.
 
 % information is transfered via the inducing variables
 
 We denote the collective variables: $\g = \{\g_j\}$, $\h = \{\h_i \}$, $\u = \{\u_j\}$, $\v = \{\v_i\}$, $\Z = \{\Zj\}$, and $\Z^h = \{\Zhi \}$ where $\g_j = \{g_j(\x_n)\}$, $\h_i = \{h_i(\x_n)\}$. 
-Note that we reserve subscript $i$ for indexing the outputs and their corresponding individual processes ($i = 1 \hdots P$), $j$ for the latent processes ($j = 1 \hdots Q$), and $n$ for the inputs ($n = 1 \hdots N$).
+Note that we reserve subscript $i$ for indexing the outputs and their corresponding individual processes ($i = 1 \hdots P$), $j$ for the shared latent processes ($j = 1 \hdots Q$), and $n$ for the inputs ($n = 1 \hdots N$).
 %
 \subsection{PRIOR MODEL}
-From the definition of the GPs and the conditional independence of the processes given the inducing variables, 
+From the definition of the GPs and the independence of the processes, 
 the \emph{prior} of the multi-output model can be written as:
 \begin{align}
 \label{eq:gu}
@@ -52,8 +53,11 @@ where the corresponding means and covariances of the Gaussians are given by:
 \tilde{\K}^h_i &= k^h_i(\X,\X) - k(\X,\Zhi)k(\Zhi,\Zhi)^{-1}k(\Zhi,\X).
 \end{align}
 In the equations and hereafter, we omit the subscripts $j,h,i$ from the kernels $k_j(\cdot,\cdot)$ and $k^h_i(\cdot,\cdot)$ when it is clear from the parameters inside the parentheses which covariance function is in action.
-Here, equations \ref{eq:u} and \ref{eq:v} follow directly from the properties of GPs, while the expressions for $p(\g|\u)$ and $p(\h|\v)$ (eq. \ref{eq:gu} and \ref{eq:hv}) come from the conditionals of the multivariate Gaussian distributions.
-Instead of writing the joint priors $p(\g,\u)$ and $p(\h,\v)$, the above equivalent equations are given to emphasize the important role of the inducing variables in the model.
+
+Equations \eqref{eq:u} and \eqref{eq:v} follow directly from the properties of GPs, while the expressions for $p(\g|\u)$ and $p(\h|\v)$ (Equations  \eqref{eq:gu} and \eqref{eq:hv}) come from the conditionals of the multivariate Gaussian distributions.
+Instead of writing the joint priors $p(\g,\u)$ and $p(\h,\v)$, the above equivalent equations are given to emphasize the \emph{sufficient statistics} role of $\u$ and $\v$ in the model.
+Here we use sufficient statistics in the same sense as in \citet{titsias2009variational}, i.e. 
+for any sparse process (say $g_j$), any other set of function values is independent with $\g_j$ given the inducing variables $\u_j$.
 %
 \subsection{LIKELIHOOD MODEL}
 As mentioned above, we assume that  observations for each output 

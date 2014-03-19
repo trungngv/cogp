@@ -1,6 +1,6 @@
 We evaluate the proposed approach with four experiments.
 A toy problem is first used to study the transfer of learning between two related processes via the shared inducing points.
-We then compare the model with existing multioutput models on the tasks of predicting foreign exchange rate and air temperature.
+We then compare the model with existing multi-output models on the tasks of predicting foreign exchange rate and air temperature.
 In the final experiment, we show that joint learning under sparsity can lead to significant performance gain on a large scale dataset of inverse dynamics of a robot arm. 
 
 Since we are using stochastic optimization, the learning rates need to be chosen carefully.
@@ -163,7 +163,7 @@ Here we consider joint learning for the 4th and 7th torques where the first has 
 The test set consists of 8,898 observations equally divided between the two outputs.
 Note that the data was collected at 100Hz for 7.5 minutes in total, hence ideal for this experiment which evaluates the effectiveness of joint learning under the assumption of sparsity in the output spaces.
 
-Since none of the existing multioutput models are applicable to problems of this scale, we compare with independent models that learn each output separately.
+Since none of the existing multi-output models are applicable to problems of this scale, we compare with independent models that learn each output separately.
 Standard GP is applied to the first output as it has only 2,000 observations for training.
 For the second output, we used two baselines.
 The first is the subset of data (SOD) approach where 2,000 data points are randomly selected for training with a standard GP model.
