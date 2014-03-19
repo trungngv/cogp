@@ -4,7 +4,8 @@ We note that although our large scale experiment was done with over 40,000 obser
 
 We discuss several interesting extensions to this work.
 First, consider the model for the single GP case, i.e., $P = 1$. By using $Q > 1$ sparse processes, the GP can now have multiple set of inducing variables.
-These can be make local to capture varying characteristics of the latent process in different local input regions, for e.g. similar to \citep{nguyen2014fast}, leading to scalable GPs with non-stationary properties. 
+These can be made local to capture varying characteristics of the latent process in different  input regions, for e.g. similar to the 
+work by \citet{nguyen2014fast}, leading to scalable GPs with non-stationary properties. 
 
-A further extension is to replace the constant mixing weights in the model with input-dependent coefficients like in the Gaussian process regression networks \citep[GPRN][]{wilson-et-al-icml-12} to accommodate adaptive dependencies among the outputs.
-We leave the details of these extensions to future work.
+A further extension is to replace the constant mixing weights in the model with input-dependent coefficients as in the Gaussian process regression networks framework \citep[GPRN,][]{wilson-et-al-icml-12} to accommodate adaptive dependencies among the outputs.
+We leave  these extensions to future work.
