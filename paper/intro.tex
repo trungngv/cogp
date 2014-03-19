@@ -1,45 +1,80 @@
-% paper on multioutput so this should appear first in the introduction
-Gaussian processes \citep[GPs,][]{rasmussen-williams-book} are perhaps the dominant approach for learning functions in non-parametric Bayesian regression.
-Unfortunately, the prohibitive complexity when performing exact inference in the GP framework severely hinders its application to real world problems. 
-In particular, when learning $P$ multiple correlated functions over $N$ data points, the complexity is $\calO(N^3P^3)$ in computation and $\calO(N^2P^2)$ in memory.
-An example of a real-world application where multioutput regression may be useful is the tracking of  movements of a robot arm using 2 or more joint torques. 
-If one of the robot motors malfunctions and fails to record a torque, data collected from the other motors may be used to infer the missing torque values.
-However, taking 100 measurements per second already results in a total of over 40,000 data points per torque in just 7 minutes.
+% Gaussian processes are good for bayesian regression, Very flexible in multi-output settings, for e.g. bonilla, alvarez, wilson
+Gaussian process models  \citep[GPs,][]{rasmussen-williams-book}  are a popular choice in 
+Bayesian regression due to their ability to capture complex dependencies and non-linearities in data.
+In particular, when having multiple outputs or tasks they have proved effective in modeling 
+the dependencies between the tasks  and  they have been shown to outperform competitive baselines and 
+single output learners  \citep{bonilla-et-al-nips-08,teh-et-al-aistats-05,alvarez-lawrence-nips-08,wilson-et-al-icml-12}.
+% However they are costly
+However, the prohibitive cost of performing exact inference in  GP models severely hinders 
+their application to  large-scale multi-output problems. For example, na\"{i}ve inference 
+in a fully coupled Gaussian process model over $P$  outputs and $N$ data-points can have 
+a complexity of $\calO(N^3P^3)$  and $\calO(N^2P^2)$ in time and memory, respectively.
+
+
+% Motivating example is good
+A motivating  example of a large scale multi-output application 
+is the tracking of  movements of a robot arm using 2 or more joint torques. 
+If one of the robot motors malfunctions and fails to record a torque, data collected from the 
+other motors may be used to infer the missing torque values.
+However, taking 100 measurements per second already results in a total of over 40,000 data points 
+per torque in just 7 minutes.
 Clearly this problem is well beyond the capability of conventional multiple output GPs.
-Building scalable multioutput GPs model that can learn correlated tasks at the scale of the application just considered and much larger is thus the main focus of this paper.
+Building  multi-output GP models that can learn correlated tasks at the scale of 
+these types of problems  is thus the main focus of this paper.
 
-% traditional approach 
-The traditional approach in multiple GP regression has been to mix independent latent processes to generate correlated functions.
-The mixing can be a weighted linear combinations with fixed \citep{teh-et-al-aistats-05,bonilla-et-al-nips-08} or input-dependent \citep{wilson-et-al-icml-12,nguyen2013efficient} coefficients or convolution of processes \citep{boyle-frean-nips-05,alvarez-lawrence-nips-08}.
-The correlations of the outputs are induced through sharing of these base processes.
-% sparse approximation technique and limitatio
-Sparse approximate techniques such as the informative vector machine (IVM) \cite{lawrence2002fast} or low-rank approximations based around the inducing points framework \citep{quinonero2005unifying},
-are then employed to reduce the computational and storage demands of the full models.
-Nevertheless, most of these models have complexity of at least $\calO(PNM^2)$ in computation and $\calO(PNM)$ in memory, where $M$ is the number of inducing points.
-thus prevents their applications to the  large scale problems we are targeting.
+% Tranditional approaches in single output setting, based e..g. on inducing points are not good enough 
+In the single output setting previous attempts to scale up  GP inference 
+resort to approximate inference. Most  approximation techniques 
+ can be understood 
+within a single probabilistic framework that uses a set of \emph{inducing points}  in order to 
+obtain an approximate process (or a low-rank approximate covariance) over which inference can be 
+performed more efficiently \citep{quinonero2005unifying}. These models have been referred 
+to in the literature as sparse models. 
+Nevertheless, straightforward application of such approximate techniques will yield a computational 
+cost of at least $\calO(PNM^2)$ in time and  $\calO(PNM)$ in memory, where 
+$M$ is the number of inducing points. This high complexity still prevent us from applying GP models 
+to the large scale multi-output problems we are targeting.
 
-% we approach from different perspective 
-In this work, we approach the challenge of building scalable multioutput Gaussian processes based on several observations.
-First, \emph{sparsity} is an inevitable assumption in very large scale GPs, as evident by the vast amount of research on sparse approximations in the single output setting. % can cite ref here 
-Second, the \emph{inducing variables} are the key catalyst for effective and scalable learning under sparsity.
-In particular, they capture the \emph{sufficient statistics} of a dataset and lead to optimization of sparse processes that converge to the exact GP model \citep{titsias2009variational}.
-This is further exploited in \cite{hensmangaussian} where by explicitly representing a distribution over the inducing variables, stochastic variational inference can be used to work with millions of data points.
+% Useful observations
+In this work we approach the challenge of building large scale multi-output Gaussian process models  
+based on the following observations.
+Firstly, \emph{inducing variables} are the key catalyst
+for achieving sparsity and dealing with large-scale problems in Gaussian process models.
+In particular, they capture the \emph{sufficient statistics} of a dataset allowing the construction of sparse 
+processes that can approximate arbitrarily well the exact GP model \citep{titsias2009variational}.
+Secondly, the use of global latent variables (such as the inducing points) allows us to 
+induce dependencies in a highly correlated model efficiently. 
+This observation is exploited in \cite{hensmangaussian} for single output GP regression models 
+where, by explicitly representing a distribution over the inducing variables, stochastic variational inference 
+can be used to work with millions of data points.
+Finally, the key to multi-output and multi-task learning is to model dependencies between the outputs  
+based on realistic assumptions of what can be shared across the tasks. It turns out that 
+sharing  ``sparsity structure'' can not only be a reasonable assumption but also a crucial component
+when modeling dependencies between different related tasks.
 
-% can we do joint learning of multiple output under the sparsity assumption (meantioned above) for 
-Motivated by these observations, we propose the collaborative multioutput GPs (COGP) model where each output is a weighted combination of sparse processes. 
-Accompanying each process is its own set of inducing points that sufficiently encapsulates the process signals and characteristics.
-Correlations among the outputs are fostered via sharing of multiple inducing sets which in turn create a medium through which joint inference happens.
 
-% contribution from inference for large scale
-This formulation around inducing points and sparse processes enables scalable inference of the model.
-In particular, we derive a variational lower bound of the model evidence that factorizes across not only the outputs but also the inputs.
-This factorization makes possible the application of stochastic variational inference, thus allowing the model to handle large scale problems, in terms of both of the number of inputs and outputs.
-Also, learning of all of the  hyperparameters, including the inducing inputs, can be done in a consistent stochastic optimization framework.
+% Our approach starts from mixing latent process
+% having inducing points for sparsity
+% sharing inducing points across the latent process
+Based on these observations, we propose the collaborative multi-output Gaussian Process (COGP) model 
+where each output is a weighted combination of sparse latent processes.
+ Each latent process has its own set of inducing points that sufficiently encapsulates the process signal and characteristics.
+Correlations among the outputs are fostered via sharing of multiple inducing point sets 
+which in turn create a medium through which joint inference happens efficiently.
+% exploit stochastic variational inference
+In particular, we derive a variational lower bound of the model evidence that decomposes across 
+inputs and outputs. 
+This decomposition makes possible the application of stochastic variational inference, 
+thus allowing the model to handle a large number of observations per output and a large number of outputs.
+Furthermore, learning of all  the  parameters in the model, including
+kernel hyperparameters and inducing inputs, can be done in a consistent stochastic optimization framework.
 
-The effectiveness of the model is first verified on a toy problem where the inducing variables are shown to be conducive to the sharing of information between two related tasks. 
-Further experiments are conducted on two moderate-sized datasets in which the model shows better performance compared to other baselines.
-Our large scale experiment confirms the substantial benefits of collaborative learning brought about by the model, 
-thus opening up new opportunities for improving the performance over learning with single sparse process. 
+We analyze our multi-out model on a toy problem  where the inducing variables are shown to be 
+conducive to the sharing of information between two related tasks. 
+Additionally, we  evaluate  our model on two moderate-sized datasets in which we show that it
+can outperform previous non-scalable multi-output approaches as well as single output baselines.
+Finally, on a  large scale experiment regarding the learning of robot inverse dynamics we show 
+the substantial benefits of collaborative learning provided by our model.
   
 % Experiments and summary of results
 The rest of the paper is organized as follows.
@@ -47,21 +82,16 @@ We give description of the model in Section \ref{sec:model}, followed by the inf
 Section \ref{sec:experiments} presents empirical evaluation.
 We conclude with some discussion in Section \ref{sec:discussion}.
 
-%Gaussian processes (GPs) \citep{rasmussen-williams-book} are perhaps the prior of choice in nonparametric Bayesian regression not only in the standard setting but also in multioutput learning \citep{} .
-% it is beauty but also a beast
-%Unfortunately, given a dataset of size $N$, exact inference for GP regression requires $\calO(N^3)$ for computation and $\calO(N^2)$ for memory, which can only be applied to problems in non-realistic settings.
-% cite titsias
-%Consequently, various approximate methods \citep{lawrence2002fast,seeger2003bayesian,seeger2003fast, smola2001sparse,snelson2006sparse,williams2001using} have been proposed to overcome this limitation.
-%Taking insights from the seminal work of \citep{quinonero2005unifying}, most of these approximations can be formulated around the \emph{inducing points}.
-%These come from the same latent function that generates the data and can be viewed as representing its sufficient statistics \citep{titsias2009variational}.
-%Using these approaches, the complexity reduces to $\bigO(NB^2)$ in computation and $\bigO(NB)$ in memory where $B \ll N$ is the number of inducing points.
-%Recent development in stochastic variational inference for GPs \citep[GPSVI,][]{hensmangaussian} has led to further reduction of these costs to $\bigO(B^3)$ and $\bigO(B^2)$ respectively.
 
-% While the important advance by GPSVI has made possible the application of GPs to datasets of millions of data points, the assumption that the statistics of the data is sufficiently captured by a, typically small, set of inducing variables might be too strong and limiting.
-%This is addressed in \citep{nguyen2014fast} by using local sets of inducing points, as opposed to a global set, such that each local inducing sets sufficiently support a different local region of the input space.
-%Yet another approach to this challenge is multi-task / multi-output learning, which is the focus of this paper.
-%Specifically we pose the question: \emph{under the sparsity constraint of individual outputs}, can multiple output learning be effective?
-%We believe this to be an interesting and  important research problem toward scalable multioutput GP models.
-%Here we emphasize the word \emph{sparsity}, as it has been evident from the vast literature on GP approximations that  sparsity is the impeccable assumption to deal with large scale datasets.
-%When learning things together, the hope is that information from different tasks can be used collaboratively to compensate for the sparsity enforcement to the individual outputs.
+
+
+
+% Some citations that can be brought back somewhere
+%The traditional approach in multiple GP regression has been to mix independent latent processes to generate correlated functions.
+%The mixing can be a weighted linear combinations with fixed \citep{teh-et-al-aistats-05,bonilla-et-al-nips-08} or input-dependent \citep{wilson-et-al-icml-12,nguyen2013efficient} coefficients or convolution of processes \citep{boyle-frean-nips-05,alvarez-lawrence-nips-08}.
+%The correlations of the outputs are induced through sharing of these base processes.
+
+
+
+
  
