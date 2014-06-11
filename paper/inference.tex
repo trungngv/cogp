@@ -7,7 +7,7 @@
 %This leads to choosing a variational approximation of the posterior which factorizes as $q(\f, \u | \y) = p(\f | \u) q(\u | \y)$.
 %Since the conditional $p(\f | \u)$ is known, variational inference becomes learning an optimal posterior $q(\u | \y)$ only. \\
 %
-We approximate the posterior over the latent variables $\vec{g}, \vec{h}, \vec{u}, \vec{v}$ given observations $\vec{y}$ using variational inference.
+We approximate the posterior over the latent variables $\vec{g}, \vec{h}, \vec{u}, \vec{v}$ given observations $\vec{y}$ using variational inference \citep{jordan-variational-99}.
 In section \ref{sec:variationalLowerBound} we derive a lower bound of the marginal likelihood which has the key property of factorizing over the data points and outputs. Section \ref{sec:svi}  takes advantage of this factorization to 
 derive stochastic variational inference, allowing the model to scale to very large datasets.
 Section \ref{sec:complexity} compares the complexity of the model with previous multi-output methods.
@@ -19,7 +19,7 @@ Section \ref{sec:complexity} compares the complexity of the model with previous 
 \newcommand{\mhi}{\m^h_i}
 \newcommand{\Sgj}{\S_j}
 \newcommand{\Shi}{\S^h_i}
-Our inference task is to find the posterior $p(\g, \h, \u, \v | \y)$, for which we use variational inference \citep{jordan-variational-99}. 
+In variational inference, we find the "closest" approximate distribution to the true posterior in terms of the $\KL$ divergence.
 We first observe that the true posterior distribution can be written as:
 \begin{align}
 p(\g, \h, \u, \v | \y) = p(\g | \u, \y) p(\h | \v, \y) p(\u, \v | \y).
@@ -43,7 +43,7 @@ the true posteriors.
 The quality of approximation depends entirely on the posterior over the inducing variables, thus underlining their pivotal role in the model as previously discussed.
 
 \noindent
-To find the best distribution $q(\u, \v)$, we  optimize the evidence lower bound (ELBO) of the log marginal:
+To find the "best" $q(\u, \v)$, we  optimize the evidence lower bound (ELBO) of the log marginal:
 \begin{align}
 %\nonumber
 %\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
