@@ -1,18 +1,15 @@
-We propose the collaborative multi-output Gaussian process (GP)  model 
-where each output is a weighted combination of sparse latent processes.
- Each latent process has its own set of inducing points that sufficiently encapsulates the process signal and characteristics.
-Correlations among the outputs are fostered via sharing of multiple inducing point sets, 
-which facilitate  the  application of variational inference and the derivation of 
+We introduce the collaborative multi-output Gaussian process (GP) model for learning dependent tasks with very large datasets. 
+The model fosters task correlations by mixing sparse processes and sharing multiple sets of inducing points. 
+This facilitates  the  application of variational inference and the derivation of 
 an evidence lower bound  that decomposes across inputs and outputs. 
-We learn all the parameters of the model from data in a  single stochastic optimization framework
+We learn all the parameters of the model in a  single stochastic optimization framework
 that scales to a large number of observations per output and a large number of outputs.
 %
-We analyze our multi-output model on a toy problem  and evaluate its performance on 
-two medium-sized datasets and a large dataset showing the benefits of collaborative learning 
-and the superior performance of our approach compared to single output learning and previous 
-multi-output GP models.
-   
-%% limitation of learning with multiple GPs
+We demonstrate our approach on a toy problem, two medium-sized datasets and a large dataset.
+The model achieves superior performance compared to single output learning and previous multi-output GP models, confirming the 
+benefits of correlating sparsity structure of the outputs via the inducing points.
+
+   %% limitation of learning with multiple GPs
 %Learning of correlated functions in the popular Gaussian processes (GPs) framework is often performed by mixing latent processes.
 %However, when these constituent processes are standard GPs, the applicability of this approach is severely inhibited by their intensive computational and memory demands.
 %% our approach
