@@ -82,16 +82,15 @@ the substantial benefits of collaborative learning provided by our model.
 %Section \ref{sec:experiments} presents empirical evaluation.
 %We conclude with some discussion in Section \ref{sec:discussion}.
 
-
-
-
-
 % Some citations that can be brought back somewhere
-%The traditional approach in multiple GP regression has been to mix independent latent processes to generate correlated functions.
-%The mixing can be a weighted linear combinations with fixed \citep{teh-et-al-aistats-05,bonilla-et-al-nips-08} or input-dependent \citep{wilson-et-al-icml-12,nguyen2013efficient} coefficients or convolution of processes \citep{boyle-frean-nips-05,alvarez-lawrence-nips-08}.
-%The correlations of the outputs are induced through sharing of these base processes.
-
-
-
-
+\paragraph{Related work}
+Most GP-based multi-output models create correlated outputs by mixing a set of one or more independent latent processes.
+The mixing can be a linear combinations with fixed coefficients \citep[see e.g.][]{teh-et-al-aistats-05,bonilla-et-al-nips-08}; this is known in the geostatistics community as ''linear model of coregionalization'' \citep{goovaerts1997geostatistics}.
+Such models may also be reformulated in a common Bayesian framework, for example by placing a spike and slab prior over the coefficients \citep{titsias2011spike}.
+More complex dependencies can be induced by using 
+ input-dependent coefficients \citep{wilson-et-al-icml-12,nguyen2013efficient}  or convolving processes \citep{boyle-frean-nips-05,alvarez-lawrence-nips-08,alvarez2010efficient}.
  
+While we also use the mixing construction, the key difference in our model is the role of inducing variables.
+In particular, when used in previous models to reduce the computational costs \citep[see e.g.][]{alvarez-lawrence-nips-08,alvarez2010efficient}, the inducing points are integrated out or collapsed. 
+In contrast, our model maintains an explicit representation of the posterior over the inducing variables that is learned using data from all outputs.
+The explicit representation furthermore facilitates scalable learning in a similar fashion to \citep{hensmangaussian}, making it applicable to much larger datasets. 
