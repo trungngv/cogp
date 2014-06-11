@@ -34,8 +34,19 @@ Also we note that the inference procedure learned that the weights are $w_{11} =
 \end{figure*}
 
 \subsection{FOREIGN EXCHANGE RATE PREDICTION}
+\begin{figure*}
+\centering
+\begin{tabular}{ccc}
+\includegraphics[scale=0.28]{figures/fxCAD.eps} &
+\includegraphics[scale=0.28]{figures/fxJPY.eps} &
+\includegraphics[scale=0.28]{figures/fxAUD.eps}
+\end{tabular}
+\caption{Real observations and predictive distributions for CAD (left), JPY (middle), and AUD (right). The color coding scheme is the same as in Figure \ref{fig:toy}.}
+\label{fig:fx}
+\end{figure*}
+
 The first real world application we consider is to predict the foreign exchange rate w.r.t the US dollar of the top 10 international currencies (CAD, EUR, JPY, GBP, CHF, AUD, HKD, NZD, KRW, and MXN) and 3 precious metals (gold, silver, and platinum)\footnote{Data is available at http://fx.sauder.ubc.ca}. 
-The setting of our experiment described here is identical to that in \citet{alvarez2010efficient}.
+The setting of our experiment described here is identical to that in \citep{alvarez2010efficient}.
 The dataset consists of all the data available for the 251 working days in the year of 2007.
 There are 9, 8, and 42 days of missing values  for gold, silver, and platinum, respectively.
 We remove from the data the exchange rate of CAD on days 50--100, JPY on day 100--150, and AUD on day 150--200.
@@ -48,17 +59,6 @@ For preprocessing we normalized the outputs to have zero mean and unit variance.
 Since the exchange rates are driven by a small number of latent market forces \citep[see e.g.][]{alvarez2010efficient}, we tried different values of $Q = {1,2,3}$ and selected $Q = 2$ which gave the best model evidence (ELBO).
 We used the squared-exponential covariance function for the shared processes and the noise covariance function for the individual process of each output.
 $M = 100$ inducing inputs (\text{per sparse process}) were randomly selected from the training data and fixed throughout training.
-
-\begin{figure*}
-\centering
-\begin{tabular}{ccc}
-\includegraphics[scale=0.3]{figures/fxCAD.eps} &
-\includegraphics[scale=0.3]{figures/fxJPY.eps} &
-\includegraphics[scale=0.3]{figures/fxAUD.eps}
-\end{tabular}
-\caption{Real observations and predictive distributions for CAD (left), JPY (middle), and AUD (right). The color coding scheme is the same as in Figure \ref{fig:toy}.}
-\label{fig:fx}
-\end{figure*}
 
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
@@ -94,11 +94,31 @@ For reference, the convolved GPs with approximation via the variational inducing
 Training took only 10 minutes for our model compared to 1.4 hours for the full CGP model.
 
 \subsection{AIR TEMPERATURE PREDICTION}
+%
+\setlength{\tabcolsep}{4pt}
+\begin{table}[t]
+\caption{Performance comparison on the air temperature dataset. Results are averages of 2 outputs over 5 repetitions. }
+\label{tab:air}
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+\textbf{METHOD} & \textbf{SMSE} & \textbf{NLPD} \\
+\hline
+COGP & \textbf{0.1077} & \textbf{2.1712} \\
+CGP & 0.1125 & 2.2219 \\
+IGP & 0.8944 & 12.5319 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+%
 Next, we consider the task of predicting air temperature at 4 different locations in the south coast of England. 
-The data is gathered from a network of weather sensors (named Bramblemet, Sotonmet, Cambermet, and Chimet), each of which measures several environmental variables \citep{osborne2008towards}\footnote{Data is available at seperate web pages, see e.g. http://www.bramblemet.co.uk}.
+The air temperatures are recorded by a network of weather sensors (named Bramblemet, Sotonmet, Cambermet, and Chimet) during the period from July 10 to July 15, 2013.
+Measurements were taken every 5 minutes, resulting in a maximum of 4320 observations.
+%The data is gathered from a network of weather sensors (named Bramblemet, Sotonmet, Cambermet, and Chimet), each of which measures several environmental variables \citep{osborne2008towards}\footnote{Data is available at seperate web pages, see e.g. http://www.bramblemet.co.uk}.
 %The sensors are close geographically so we can expect correlation in air temperature.
-We selected the sensor signal for air temperature during the period from July 10 to July 15, 2013.
-The sensors record measurements every 5 minutes, resulting in a maximum of 4320 observations.
+%We selected the sensor signal for air temperature during the period from July 10 to July 15, 2013.
+%The sensors record measurements every 5 minutes, resulting in a maximum of 4320 observations.
 There are missing data for Bramblemet (100 points), Chimet (15 points), and Sotonmet (1002 points), possibly due to network outages or hardware failures.
 We further simulated failure of the sensors by removing the observations from the time periods [10.2 - 10.8] for Cambermet and [13.5 - 14.2] for Chimet.
 The removed data comprises 375 data points and  is used for testing. 
@@ -131,24 +151,7 @@ For Cambermet, both COGP and CGP can capture the rising in temperature from the 
 The comparative performance of the models are summarized in Table \ref{tab:air}, from which it can be seen that our model outperforms CGP in terms of both SMSE and NLPD.
 %All results are averaged of the 2 outputs over 5 repetitions.
 It took 5 minutes on average to train our model compared to 3 hours of CGP with exact inference.
-%
-\setlength{\tabcolsep}{4pt}
-\begin{table}[t]
-\caption{Performance comparison on the air temperature dataset. Results are averages of 2 outputs over 5 repetitions. }
-\label{tab:air}
-\begin{center}
-\begin{tabular}{ccc}
-\toprule
-\textbf{METHOD} & \textbf{SMSE} & \textbf{NLPD} \\
-\hline
-COGP & \textbf{0.1077} & \textbf{2.1712} \\
-CGP & 0.1125 & 2.2219 \\
-IGP & 0.8944 & 12.5319 \\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{table}
-%
+
 It is also worth noting the characteristics of the sparse processes learned by our model as they indeed correspond to different patterns in the data.
 In particular, one process has the inverse lengthscale of 136 which captures the global increase in temperature during the training period while the other has the inverse lengthscale of 0.5 to model the local variations within a single day.
 
@@ -162,7 +165,7 @@ It has been used in previous work \citep[see e.g.][]{rasmussen-williams-book,vij
 
 Here we consider joint learning for the 4th and 7th torques where the first has 2,000 points  while the second has the full data of 44,484 points for training.
 The test set consists of 8,898 observations equally divided between the two outputs.
-Note that the data was collected at 100Hz for 7.5 minutes in total, hence ideal for this experiment which evaluates the effectiveness of joint learning under the assumption of sparsity in the output spaces.
+%Note that the data was collected at 100Hz for 7.5 minutes in total, hence ideal for this experiment which evaluates the effectiveness of joint learning under the assumption of sparsity in the output spaces.
 
 Since none of the existing multi-output models are applicable to problems of this scale, we compare with independent models that learn each output separately.
 Standard GP is applied to the first output as it has only 2,000 observations for training.
@@ -170,8 +173,8 @@ For the second output, we used two baselines.
 The first is the subset of data (SOD) approach where 2,000 data points are randomly selected for training with a standard GP model.
 The second is the sparse GP with stochastic variational inference (SVIGP) using 500 inducing inputs and a batch size of 1,000.
 In case of COGP, we also used a batch size of 1,000 and 500 inducing points for the shared process ($Q = 1$) and each of the individual processes.
-The squared exponential with automatic relevance determination (SEard) covariance function is used for all processes of all methods.
-Finally, the outputs are normalized to have zero mean and unit variance. 
+%The squared exponential with automatic relevance determination (SEard) covariance function is used for all processes of all methods.
+%Finally, the outputs are normalized to have zero mean and unit variance. 
 
 \begin{table}[t]
 \caption{Performance comparison on the robot inverse dynamics dataset. In the last two lines, standard GP is applied to output 1 and the other method is applied to output 2. Results are averaged over 5 repetitions. }
@@ -196,16 +199,15 @@ The benefits of learning the two outputs jointly are evident, as can be seen by 
 While the SMSE of the second output is essentially the same for all methods, the NLPD of COGP is substantially better than that of the independent SVIGP model which has the same amount of training data for this torque.
 The results validate the impact of collaborative learning even when under sparsity assumption, thus open up new opportunities for improvement over single task learning with independent sparse processes.
 
-% table for smses, nlpds, training tiem
-\begin{figure}
-\includegraphics[scale=0.4]{figures/sarcosTime.eps}
-\caption{The cost of optimizing versus fixing the inducing inputs.}
-\label{fig:time}
-\end{figure}
-
 Also from Table \ref{tab:robotarm}, we see that optimizing the inducing inputs can lead to better performance than fixing them.
 More importantly, the overhead in computation is small, as demonstrated by the training time using the two options in Figure \ref{fig:time}.
 For instance, the total training time is only 1.9 hours when learning with 500 inducing inputs compared to 1.6 hours when fixing them.
 As this dataset is 21-dimensional, the small difference in training time confirms that learning of the inducing inputs is a practical option even when dealing with problems of high dimensions.
 %As this dataset is 21-dimensional, the small difference in training time our analysis that the cost of optimizing the inducing inputs only scales sublinearly with the dimensionality of the problem.
 %Thus, for datasets of high dimension, learning of the inducing inputs is a practical option.
+% table for smses, nlpds, training tiem
+\begin{figure}
+\includegraphics[width=0.7\linewidth]{figures/sarcosTime.eps}
+\caption{The cost of optimizing versus fixing the inducing inputs.}
+\label{fig:time}
+\end{figure}
