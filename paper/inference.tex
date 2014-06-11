@@ -20,12 +20,12 @@ Section \ref{sec:complexity} compares the complexity of the model with previous 
 \newcommand{\Sgj}{\S_j}
 \newcommand{\Shi}{\S^h_i}
 Our inference task is to find the posterior $p(\g, \h, \u, \v | \y)$, for which we use variational inference \citep{jordan-variational-99}. 
-We first observe that true the posterior distribution can be written as:
+We first observe that the true posterior distribution can be written as:
 \begin{align}
 p(\g, \h, \u, \v | \y) = p(\g | \u, \y) p(\h | \v, \y) p(\u, \v | \y).
 \end{align}
 Here we recall the modeling assumption that each set of the inducing variables is the \emph{sufficient statistics} of the corresponding latent process. 
-This motivates replacing the true posteriors over $\g$ and $\h$ with their conditional distributions given the inducing variables, leading to a distribution that of the form:
+This motivates replacing the true posteriors over $\g$ and $\h$ with their conditional distributions given the inducing variables, leading to a distribution of the form:
 \begin{align}
 q(\g, \h, \u, \v | \y)
 = p(\g|\u) p(\h|\v) q(\u,\v),
@@ -40,7 +40,7 @@ Since the conditionals $p(\g | \u)$ and $p(\h | \v)$ are known (Equations \eqref
 we only need to 
 learn $q(\u, \v)$ so as to minimize the divergence between the approximate posterior and
 the true posteriors.
-The quality of aproximation depends entirely on the posterior over the inducing variables, thus underlining their pivotal role in the model as previously discussed.
+The quality of approximation depends entirely on the posterior over the inducing variables, thus underlining their pivotal role in the model as previously discussed.
 
 \noindent
 To find the best distribution $q(\u, \v)$, we  optimize the evidence lower bound (ELBO) of the log marginal:
@@ -116,7 +116,7 @@ Notice that this ELBO clearly generalizes the bound for standard GP regression d
 
 The novelty of the  variational lower bound in Equation  \eqref{eq:L} is that it decomposes across both inputs and outputs.
 This enables the use of stochastic optimization methods, which 
-allow the model to handle  ver large datasets for which existing GP-based multi-output models are simply 
+allow the model to handle  very large datasets for which existing GP-based multi-output models are simply 
 impractical.  
 %
 \subsection{STOCHASTIC VARIATIONAL INFERENCE \label{sec:svi}}
