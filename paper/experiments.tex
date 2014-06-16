@@ -41,7 +41,7 @@ Additionally, we note that the inference procedure learned that the weights are 
 \includegraphics[scale=0.28]{figures/fxJPY.eps} &
 \includegraphics[scale=0.28]{figures/fxAUD.eps}
 \end{tabular}
-\caption{Real observations and predictive distributions for CAD (left), JPY (middle), and AUD (right). The color coding scheme is the same as in Figure \ref{fig:toy}.}
+\caption{Real observations and predictive distributions for CAD (left), JPY (middle), and AUD (right). The model used  information from other currencies to effectively extrapolate the exchange rates of AUD. The color coding scheme is the same as in Figure \ref{fig:toy}.}
 \label{fig:fx}
 \end{figure*}
 
@@ -210,6 +210,6 @@ As this dataset is 21-dimensional, this small difference in training time confir
 % table for smses, nlpds, training tiem
 \begin{figure}
 \includegraphics[width=0.7\linewidth]{figures/sarcosTime.eps}
-\caption{The cost of optimizing versus fixing the inducing inputs.}
+\caption{Learning of the inducing inputs is a practical option as the overhead in training time is small.}
 \label{fig:time}
 \end{figure}

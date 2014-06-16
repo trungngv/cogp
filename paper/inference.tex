@@ -24,7 +24,7 @@ We first observe that the true posterior distribution can be written as:
 \begin{align}
 p(\g, \h, \u, \v | \y) = p(\g | \u, \y) p(\h | \v, \y) p(\u, \v | \y).
 \end{align}
-Here we recall the modeling assumption that each set of  inducing variables is the \emph{sufficient statistics} of the corresponding latent process. 
+Here we recall the modeling assumption that each set of  inducing variables is the sufficient statistics of the corresponding latent process. 
 This motivates replacing the true posteriors over $\g$ and $\h$ with their conditional distributions given the inducing variables, leading to a distribution of the form:
 \begin{align}
 q(\g, \h, \u, \v | \y)
@@ -227,9 +227,9 @@ Indeed, our experiments on a large scale multi-output problem show that automati
 \subsection{COMPLEXITY ANALYSIS \label{sec:complexity}}
 In this section we analyze the complexity of the model and compare it to existing multi-output approaches.
 For consistency, we first unify common notations used for all models.
-We use $P$ as the number of outputs, $N$ as the number of inputs, $Q$ as the number of shared latent processes, $M_t$ as the \emph{total} number of inducing inputs.
+We use $P$ as the number of outputs; $N$ as the number of inputs; $Q$ as the number of shared latent processes; and $M_t$ as the \emph{total} number of inducing inputs.
 It is worth noting that $M_t = (P + Q) \times M$ in our COGP model, assuming that each sparse process has equal number of inducing points. 
-Also, COGP have $P$ additional individual processes, one for each output.
+Also, COGP has $P$ additional individual processes, one for each output.
 
 The complexity of COGP can be read off by inspecting the ELBO  in Equation \eqref{eq:L}, with the key observation that it contains 
 a sum over the outputs as well as over the inputs.

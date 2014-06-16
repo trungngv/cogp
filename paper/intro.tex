@@ -2,12 +2,12 @@
 Gaussian process models  \citep[GPs,][]{rasmussen-williams-book}  are a popular choice in 
 Bayesian regression due to their ability to capture complex dependencies and non-linearities in data.
 In particular, when having multiple outputs or tasks they have proved effective in modeling 
-the dependencies between the tasks  and  they have been shown to outperform competitive baselines and 
+the dependencies between the tasks, outperforming  competitive baselines and 
 single output learners  \citep{bonilla-et-al-nips-08,teh-et-al-aistats-05,alvarez-lawrence-nips-08,wilson-et-al-icml-12}.
 % However they are costly
 However, the prohibitive cost of performing exact inference in  GP models severely hinders 
 their application to  large scale multi-output problems. For example, na\"{i}ve inference 
-in a fully coupled Gaussian process model over $P$  outputs and $N$ data-points can have 
+in a fully coupled Gaussian process model over $P$  outputs and $N$ data points can have 
 a complexity of $\calO(N^3P^3)$  and $\calO(N^2P^2)$ in time and memory, respectively.
 
 
@@ -24,7 +24,7 @@ these types of problems  is thus the main focus of this paper.
 
 % Tranditional approaches in single output setting, based e..g. on inducing points are not good enough 
 In the single output setting previous attempts to scale up  GP inference 
-resort to approximate inference. Most  approximation techniques 
+resort to approximate inference. Most  approximation methods  
  can be understood 
 within a single probabilistic framework that uses a set of \emph{inducing points}  in order to 
 obtain an approximate process (or a low-rank approximate covariance) over which inference can be 
@@ -38,7 +38,7 @@ to  large scale multi-output problems.
 % Useful observations
 In this work we approach the challenge of building scalable multi-output Gaussian process models  
 based on the following observations.
-Firstly, \emph{inducing variables} are the key catalyst
+Firstly, inducing variables are the key catalyst
 for achieving sparsity and dealing with large scale problems in Gaussian process models.
 In particular, they capture the \emph{sufficient statistics} of a dataset allowing the construction of sparse 
 processes that can approximate arbitrarily well the exact GP model \citep{titsias2009variational}.
@@ -57,12 +57,12 @@ when modeling dependencies between different related tasks.
 % having inducing points for sparsity
 % sharing inducing points across the latent process
 Based on these observations, we propose the collaborative multi-output Gaussian Process (COGP) model 
-where each output is a weighted combination of sparse latent processes.
- Each latent process has its own set of inducing points that sufficiently encapsulates the process signal and characteristics.
-Correlations among the outputs are fostered via sharing of multiple inducing point sets 
-which in turn create a medium through which joint inference happens efficiently.
+where latent processes are mixed to generate dependent outputs. 
+Each process is sparse and characterized by its own set of inducing points.
+The sparsity structure enabling output correlations is thus created via the shared inducing sets. 
+To learn this structure, we maintain an explicit representation of the posterior over the inducing points which in turn allows inference to be carried out efficiently.
 % exploit stochastic variational inference
-In particular, we derive a variational lower bound of the model evidence that decomposes across 
+In particular, we obtain a variational lower bound of the model evidence that decomposes across 
 inputs and outputs. 
 This decomposition makes possible the application of stochastic variational inference, 
 thus allowing the model to handle a large number of observations per output and a large number of outputs.

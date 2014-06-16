@@ -55,7 +55,7 @@ where the corresponding means and covariances of the Gaussians are given by:
 In the equations and hereafter, we omit the subscripts $j,h,i$ from the kernels $k_j(\cdot,\cdot)$ and $k^h_i(\cdot,\cdot)$ when it is clear from the parameters inside the parentheses which covariance function is in action.
 
 Equations \eqref{eq:u} and \eqref{eq:v} follow directly from the properties of GPs, while the expressions for $p(\g|\u)$ and $p(\h|\v)$ (Equations  \eqref{eq:gu} and \eqref{eq:hv}) come from the conditionals of the multivariate Gaussian distributions.
-Instead of writing the joint priors $p(\g,\u)$ and $p(\h,\v)$, the above equivalent equations are given to emphasize the \emph{sufficient statistics} role of $\u$ and $\v$ in the model.
+Instead of writing the joint priors $p(\g,\u)$ and $p(\h,\v)$, the above equivalent equations are given to emphasize the sufficient statistics role of $\u$ and $\v$ in the model.
 Here by sufficient statistics we mean, for any sparse process (say $g_j$), any other set of function values is 
 independent of $\g_j$ given the inducing variables $\u_j$.
 %
