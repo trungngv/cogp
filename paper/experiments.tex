@@ -148,12 +148,12 @@ The real data and the predictive distributions by our model, CGP with exact infe
 It is clear that the independent GPs model is clueless in the test regions and thus simply uses the average temperature as its prediction.
 For Cambermet, both COGP and CGP can capture the rising in temperature from the morning till the afternoon and the fall afterward.
 %For Chimet, both models perform poorly but CGP more so as it falsely predicts  wild fluctuations that are non-existent in the data. 
-The comparative performance of the models are summarized in Table \ref{tab:air}, from which it can be seen that our model outperforms CGP in terms of both SMSE and NLPD.
+The  performance of the models are summarized in Table \ref{tab:air},  which shows that our model outperforms CGP in terms of both SMSE and NLPD.
 %All results are averaged of the 2 outputs over 5 repetitions.
 It took 5 minutes on average to train our model compared to 3 hours of CGP with exact inference.
 
-It is also worth noting the characteristics of the sparse processes learned by our model as they indeed correspond to different patterns in the data.
-In particular, one process has the inverse lengthscale of 136 which captures the global increase in temperature during the training period while the other has the inverse lengthscale of 0.5 to model the local variations within a single day.
+It is also worth noting the characteristics of the sparse processes learned by our model as they  correspond to different patterns in the data.
+In particular, one process has an inverse lengthscale of 136 which captures the global increase in temperature during the training period while the other has an inverse lengthscale of 0.5 to model the local variations within a single day.
 
 \subsection{ROBOT INVERSE DYNAMICS}
 Our last experiment is with a dataset relating to an inverse dynamics model of a 7-degree-of-freedom anthropomorphic robot arm \citep{vijayakumar2000locally}.
