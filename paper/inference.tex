@@ -19,12 +19,12 @@ Section \ref{sec:complexity} compares the complexity of the model with previous 
 \newcommand{\mhi}{\m^h_i}
 \newcommand{\Sgj}{\S_j}
 \newcommand{\Shi}{\S^h_i}
-In variational inference, we find the "closest" approximate distribution to the true posterior in terms of the $\KL$ divergence.
+In variational inference, we find the ``closest'' approximate distribution to the true posterior in terms of the $\KL$ divergence.
 We first observe that the true posterior distribution can be written as:
 \begin{align}
 p(\g, \h, \u, \v | \y) = p(\g | \u, \y) p(\h | \v, \y) p(\u, \v | \y).
 \end{align}
-Here we recall the modeling assumption that each set of the inducing variables is the \emph{sufficient statistics} of the corresponding latent process. 
+Here we recall the modeling assumption that each set of  inducing variables is the \emph{sufficient statistics} of the corresponding latent process. 
 This motivates replacing the true posteriors over $\g$ and $\h$ with their conditional distributions given the inducing variables, leading to a distribution of the form:
 \begin{align}
 q(\g, \h, \u, \v | \y)
@@ -43,7 +43,7 @@ the true posteriors.
 The quality of approximation depends entirely on the posterior over the inducing variables, thus underlining their pivotal role in the model as previously discussed.
 
 \noindent
-To find the "best" $q(\u, \v)$, we  optimize the evidence lower bound (ELBO) of the log marginal:
+To find the best $q(\u, \v)$, we  optimize the evidence lower bound (ELBO) of the log marginal:
 \begin{align}
 %\nonumber
 %\log p(\y) \ge& \int q(\u, \v) \log \frac{p(\y | \u, \v) p(\u, \v)}{q(\u, \v)} \der \u \der \v \\
@@ -67,7 +67,8 @@ To compute the expected likelihood term in the ELBO we first see that
 &= \sum_{i=1}^P \sum_{n=1}^N \Eb{\log p(y_{in} | \g_n, h_{in}) }_{p(\g | \u) p(\h_i | \v_i)} 
 \end{align}
 where $\g_n = \{g_{jn} = (\g_j)_n\}_{j=1}^Q$.
-The inequality is due to Jensen's inequality and the equality is due to the fact that the likelihood fully factorizes.
+The inequality is due to Jensen's inequality and the equality is due to %the fact that the likelihood fully factorizes.
+the factorization of the likelihood. 
 \newcommand{\Ahi}{\A^h_i}
 \newcommand{\Zi}{\Z_i}
 
@@ -112,7 +113,7 @@ $\mu_{jn} = (\Mu_j)_n$;
  $\mu^h_{in} = (\Mu^h_i)_n$; 
 and we have defined the auxiliary matrices $\A_j = k(\X,\Zj) \K_{jzz}^{-1}$ and $\Ahi = k(\X_i,\Zhi)\K_{izz}^{-1}$ and 
 used $\A_j(n,:)$ to denote the $n$-th row vector of $\A_j$. 
-Notice that this ELBO clearly generalizes the bound for standard GP regression derived in \cite{hensmangaussian}, which can be recovered by setting $P = Q = 1$, $w_{ij} = 1$ and $h_i(\x) = 0$.
+Notice that this ELBO  generalizes the bound for standard GP regression derived in \cite{hensmangaussian}, which can be recovered by setting $P = Q = 1$, $w_{ij} = 1$ and $h_i(\x) = 0$.
 
 The novelty of the  variational lower bound in Equation  \eqref{eq:L} is that it decomposes across both inputs and outputs.
 This enables the use of stochastic optimization methods, which 
@@ -216,9 +217,11 @@ The derivatives are given in the supplementary material.
 Learning of the inducing inputs, which was not considered in the single output case in \citet{hensmangaussian}, is also possible in our stochastic optimization approach.
 In the supplementary material, we show that 
 %with the help of vectorized operations, 
-the cost of computing the derivatives of the lower bound wrt the inducing inputs is subdominant to that  of updating the variational parameters.
+the additional cost of computing the derivatives of the lower bound wrt the inducing inputs is not significantly 
+higher than the cost of updating the variational parameters.
 %can be computed with a cost \emph{independent of the input dimensionality}.
-This makes optimizing the inducing locations a practical option that can be important, for example, in high-dimensional problems where fixing the inducing inputs may hinder the performance of the model.
+This makes optimizing the inducing locations a practical option, which can be critical 
+in high-dimensional problems. %where fixing the inducing inputs may hinder the performance of the model.
 Indeed, our experiments on a large scale multi-output problem show that automatic learning of the inducing inputs can lead to significant performance gain with little overhead in computation. 
 %
 \subsection{COMPLEXITY ANALYSIS \label{sec:complexity}}
@@ -228,7 +231,7 @@ We use $P$ as the number of outputs, $N$ as the number of inputs, $Q$ as the num
 It is worth noting that $M_t = (P + Q) \times M$ in our COGP model, assuming that each sparse process has equal number of inducing points. 
 Also, COGP have $P$ additional individual processes, one for each output.
 
-The complexity of COGP can be read off by inspecting the ELBO  in Equation \eqref{eq:L}, with a key observation that it contains 
+The complexity of COGP can be read off by inspecting the ELBO  in Equation \eqref{eq:L}, with the key observation that it contains 
 a sum over the outputs as well as over the inputs.
 This means a mini-batch containing a small subset of the inputs and outputs can be used for stochastic optimization.
 Technically, the cost is $\calO(M^3)$ or $\calO(N_bM^2)$, where $N_b$ is the size of the mini-batches, depending on which is larger between $M$ and $N_b$. 
@@ -237,7 +240,7 @@ However, here we use $\calO(M^3)$  for easier comparison with other models whose
 given in Table \ref{tab:complexity}. 
 We see that COGP has 
 a computational  complexity that is independent of the size of the inputs and outputs, 
-thus is the only method capable of handling large scale problems.
+which makes it the only method capable of handling large scale problems.
 %
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
