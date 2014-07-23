@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="COGP : Collaborative multi-output Gaussian processes" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>COGP</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/trungngv/multiplegp">View on GitHub</a>
+
+          <h1 id="project_title">COGP</h1>
+          <h2 id="project_tagline">Collaborative multi-output Gaussian processes</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/trungngv/multiplegp/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/trungngv/multiplegp/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="collaborative-multi-output-gaussian-processes" class="anchor" href="#collaborative-multi-output-gaussian-processes"><span class="octicon octicon-link"></span></a>Collaborative multi-output Gaussian processes</h1>
+
+<p>Code for the paper "Collaborative multi-output Gaussian processes". 
+Collaborative multi-output Gaussian processes (COGP) is the first scalable multi-output GPs model capable of dealing with very large number of inputs and outputs (big data, if you will).</p>
+
+<p>If you use the code or data we provide, please acknowledge by citing our paper:</p>
+
+<p>Trung V. Nguyen and Edwin V. Bonilla, Collaborative multi-output Gaussian processes, in UAI 2014</p>
+
+<p>This documentation is quite rudimentary and will be updated for more details when time allows.</p>
+
+<h3>
+<a name="1-contents" class="anchor" href="#1-contents"><span class="octicon octicon-link"></span></a>1. Contents</h3>
+
+<ul>
+<li>
+<strong>data</strong> : 3 datasets (fx : foreign exchange rates, weather : air temperature, sarcos : robot inverse dynamics)</li>
+<li>
+<strong>libs</strong> : dependent libraries for the code</li>
+<li>
+<strong>note</strong> and <strong>paper</strong> : latex source of the paper (note is for the earlier version -- can be ignored)</li>
+<li>
+<strong>results</strong> : contain figures in the paper</li>
+<li>
+<strong>src</strong>: the main code directory</li>
+</ul><h3>
+<a name="2-code-structure-src-directory" class="anchor" href="#2-code-structure-src-directory"><span class="octicon octicon-link"></span></a>2. Code structure (src directory)</h3>
+
+<ul>
+<li>
+<strong>datautils</strong>: utilities for reading and processing data</li>
+<li>
+<strong>gpsvi</strong> : old implementation of Stochastic variational inference for Gaussian processes (Hensman's UAI paper) -- replaced by svi_*.m files</li>
+<li>
+<strong>test</strong> : gradient checks for the optimisation code</li>
+<li>
+<strong>tmp</strong>: old content -- can be ignored</li>
+<li>
+<strong>scripts</strong> : scripts used to run the experiments</li>
+</ul><h3>
+<a name="3-how-to-use" class="anchor" href="#3-how-to-use"><span class="octicon octicon-link"></span></a>3. How to use</h3>
+
+<p>The demo script <strong>src/scripts/demo_slfm.m</strong> contains an example.
+Once the data structure is set up properly (see the script file), <strong>slfm_learn()</strong> can be used to train a model and <strong>slfm_predict()</strong> is used to make prediction.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">COGP maintained by <a href="https://github.com/trungngv">trungngv</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
