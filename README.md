@@ -9,21 +9,24 @@ Trung V. Nguyen and Edwin V. Bonilla, Collaborative multi-output Gaussian proces
 
 This documentation is quite rudimentary and will be updated for more details when time allows.
 
-1. Contents
+Contents
+
 - data : 3 datasets (fx : foreign exchange rates, weather : air temperature, sarcos : robot inverse dynamics)
 - libs : dependent libraries for the code
 - note and paper : latex source of the paper (note is for the earlier version -- can be ignored)
 - results : contain figures in the paper
 - src: the main code directory
 
-2. Code structure (src directory)
+Code structure (src directory)
+
 - datautils: utilities for reading and processing data
 - gpsvi : old implementation of Stochastic variational inference for Gaussian processes (Hensman's UAI paper) -- replaced by svi_*.m files
 - test : gradient checks for the optimisation code
 - tmp: old content -- can be ignored
 - scripts : scripts used to run the experiments
 
-3. How to use
+How to use
+
 The demo script src/scripts/demo_slfm.m contains an example.
 Once the data structure is set up properly (see the script file), slfm_learn() can be used to train a model and slfm_predict() is used to make prediction.
 
